@@ -32,7 +32,10 @@ export default function CoursePage() {
 
   useEffect(() => {
     fetch(`/api/courses/${id}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('not found')
+        return r.json()
+      })
       .then((data) => {
         setCourse(data)
         setLoading(false)
@@ -62,7 +65,7 @@ export default function CoursePage() {
     )
   }
 
-  const structured = course.structuredContent
+  const structured = course.structuredContent || { title: '', plan: [], keywords: [], sections: [], summary: '' }
 
   return (
     <div className="min-h-screen bg-slate-50">
