@@ -12,7 +12,7 @@ const redis = new Redis(connection)
 const prisma = new PrismaClient()
 
 const OLLAMA_URL = 'http://localhost:11434/api/generate'
-const MODEL = 'llama3.2'
+const MODEL = 'llama3.2:1b'
 const CHUNK_SIZE = 8000
 
 
