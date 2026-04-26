@@ -11,3 +11,8 @@ body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
 }
+
+/* Force light mode — désactive le dark mode automatique */
+* {
+  color-scheme: light;
+}
