@@ -1,9 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 import { redis } from './redis'
 import crypto from 'crypto'
 
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 })
 
 function hashContent(content: string): string {
@@ -15,20 +15,22 @@ export async function callClaude(
   systemPrompt: string,
   cacheKey?: string
 ): Promise<string> {
-  const key = cacheKey || `claude:${hashContent(systemPrompt + prompt)}`
+  const key = cacheKey || `groq:${hashContent(systemPrompt + prompt)}`
 
   // Vérifier le cache Redis
   const cached = await redis.get(key)
   if (cached) return cached
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+  const response = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
     max_tokens: 4096,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: prompt }],
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt },
+    ],
   })
 
-  const result = response.content[0].type === 'text' ? response.content[0].text : ''
+  const result = response.choices[0]?.message?.content || ''
 
   // Mettre en cache 24h
   await redis.setex(key, 86400, result)
