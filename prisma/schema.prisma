@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  folders  Folder[]
+  courses  Course[]
+  sessions Session[]
+  accounts Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Folder {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#6366f1")
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses Course[]
+}
+
+model Course {
+  id              String   @id @default(cuid())
+  title           String
+  rawContent      String
+  structuredContent Json?
+  keywords        Json?
+  userId          String
+  folderId        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder     Folder?     @relation(fields: [folderId], references: [id])
+  quizzes    Quiz[]
+  flashcards Flashcard[]
+  scores     Score[]
+}
+
+model Quiz {
+  id        String   @id @default(cuid())
+  courseId  String
+  questions Json
+  createdAt DateTime @default(now())
+
+  course  Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  results QuizResult[]
+}
+
+model QuizResult {
+  id        String   @id @default(cuid())
+  quizId    String
+  score     Int
+  total     Int
+  answers   Json
+  createdAt DateTime @default(now())
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
+
+model Flashcard {
+  id       String @id @default(cuid())
+  courseId String
+  question String
+  answer   String
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Score {
+  id        String   @id @default(cuid())
+  courseId  String
+  score     Int
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
