@@ -11,7 +11,7 @@ const connection = { host: url.hostname, port: parseInt(url.port) || 6379 }
 const redis = new Redis(connection)
 const prisma = new PrismaClient()
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 const CHUNK_SIZE = 6000
 
