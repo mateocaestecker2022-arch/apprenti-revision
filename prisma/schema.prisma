@@ -67,6 +67,7 @@ model Course {
   rawContent      String
   structuredContent Json?
   keywords        Json?
+  status          String   @default("processing")
   userId          String
   folderId        String?
   createdAt       DateTime @default(now())

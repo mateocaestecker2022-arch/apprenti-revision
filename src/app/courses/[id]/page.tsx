@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
 interface Keyword { term: string; definition: string }
@@ -19,6 +19,7 @@ interface Course {
   rawContent: string
   structuredContent: StructuredContent
   keywords: Keyword[]
+  status: string
   updatedAt: string
   folder?: { name: string; color: string }
 }
@@ -29,24 +30,49 @@ export default function CoursePage() {
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'structured' | 'raw'>('structured')
+  const [elapsed, setElapsed] = useState(0)
+  const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  useEffect(() => {
+  function fetchCourse() {
     fetch(`/api/courses/${id}`)
       .then((r) => {
         if (!r.ok) throw new Error('not found')
         return r.json()
       })
-      .then((data) => {
+      .then((data: Course) => {
         setCourse(data)
         setLoading(false)
+        if (data.status === 'ready' || data.status === 'error') {
+          if (pollRef.current) clearInterval(pollRef.current)
+          if (timerRef.current) clearInterval(timerRef.current)
+        }
       })
       .catch(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchCourse()
+    // Poll toutes les 5 secondes
+    pollRef.current = setInterval(fetchCourse, 5000)
+    // Timer affiché pendant le processing
+    timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000)
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
   }, [id])
 
   async function handleDelete() {
     if (!confirm('Supprimer ce cours ?')) return
     await fetch(`/api/courses/${id}`, { method: 'DELETE' })
     router.push('/dashboard')
+  }
+
+  function formatElapsed(s: number) {
+    if (s < 60) return `${s}s`
+    return `${Math.floor(s / 60)}m${s % 60}s`
   }
 
   if (loading) {
@@ -61,6 +87,61 @@ export default function CoursePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <p className="text-gray-500">Cours introuvable</p>
+      </div>
+    )
+  }
+
+  // Écran de traitement en cours
+  if (course.status === 'processing') {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <nav className="bg-white border-b px-6 py-4 flex items-center gap-4">
+          <a href="/dashboard" className="text-gray-500 hover:text-gray-700 text-sm">← Dashboard</a>
+          <h1 className="text-lg font-bold text-indigo-600">Traitement en cours</h1>
+        </nav>
+        <main className="max-w-2xl mx-auto px-6 py-20 text-center">
+          <div className="bg-white rounded-2xl border shadow-sm p-12">
+            <div className="flex justify-center mb-6">
+              <svg className="animate-spin h-14 w-14 text-indigo-600" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">L&apos;IA restructure ton cours</h2>
+            <p className="text-gray-500 mb-2">
+              Le traitement est en arrière-plan. Cette page se met à jour automatiquement.
+            </p>
+            <p className="text-gray-400 text-sm mb-6">
+              Temps écoulé : <span className="font-mono text-indigo-600">{formatElapsed(elapsed)}</span>
+            </p>
+            <div className="bg-indigo-50 rounded-xl p-4 text-sm text-indigo-700">
+              Tu peux fermer cette page et revenir plus tard — le traitement continue en arrière-plan.
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Écran d'erreur
+  if (course.status === 'error') {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <nav className="bg-white border-b px-6 py-4 flex items-center gap-4">
+          <a href="/dashboard" className="text-gray-500 hover:text-gray-700 text-sm">← Dashboard</a>
+        </nav>
+        <main className="max-w-2xl mx-auto px-6 py-20 text-center">
+          <div className="bg-white rounded-2xl border shadow-sm p-12">
+            <p className="text-red-600 text-lg font-semibold mb-4">Erreur lors du traitement</p>
+            <p className="text-gray-500 mb-6">Une erreur s&apos;est produite. Essaie de supprimer ce cours et de le recréer.</p>
+            <button
+              onClick={handleDelete}
+              className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+            >
+              Supprimer et recommencer
+            </button>
+          </div>
+        </main>
       </div>
     )
   }
