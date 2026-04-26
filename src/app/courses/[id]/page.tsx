@@ -132,8 +132,11 @@ export default function CoursePage() {
           <button onClick={() => setShowRaw(!showRaw)} className="text-gray-400 hover:text-gray-600 text-sm border rounded-lg px-3 py-1.5">
             {showRaw ? 'Cours structuré' : 'Cours original'}
           </button>
+          <a href={`/courses/${id}/flashcards`} className="border border-indigo-300 text-indigo-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-50 transition">
+            🃏 Flashcards
+          </a>
           <a href={`/courses/${id}/quiz`} className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-            Générer un quiz
+            🧠 Quiz
           </a>
           <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-sm px-2">Supprimer</button>
         </div>
