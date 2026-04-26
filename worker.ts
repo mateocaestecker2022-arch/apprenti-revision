@@ -2,7 +2,7 @@ import { Worker } from 'bullmq'
 import { PrismaClient, Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { Redis } from 'ioredis'
-import Groq from 'groq-sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
 const url = new URL(redisUrl)
@@ -10,9 +10,9 @@ const connection = { host: url.hostname, port: parseInt(url.port) || 6379 }
 
 const redis = new Redis(connection)
 const prisma = new PrismaClient()
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-const MODEL = 'llama-3.1-8b-instant'
 const CHUNK_SIZE = 6000
 
 function hashContent(content: string): string {
@@ -39,19 +39,15 @@ function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 async function callGroq(prompt: string, retries = 3): Promise<string> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const res = await groq.chat.completions.create({
-        model: MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2048,
-        temperature: 0.3,
-      })
-      return res.choices[0]?.message?.content || ''
+      const result = await geminiModel.generateContent(prompt)
+      return result.response.text()
     } catch (err: unknown) {
       const status = (err as { status?: number }).status
       if (status === 429) {
-        // Rate limit — attendre 20s avant de réessayer
-        console.log(`[Worker] Rate limit, attente 20s...`)
-        await sleep(20000)
+        console.log(`[Worker] Rate limit Gemini, attente 30s...`)
+        await sleep(30000)
+      } else if (attempt < retries - 1) {
+        await sleep(5000)
       } else {
         throw err
       }
