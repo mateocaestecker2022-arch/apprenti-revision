@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { Redis } from 'ioredis'
 
@@ -147,8 +147,8 @@ const worker = new Worker(
         where: { id: courseId },
         data: {
           title: (structured.title as string) || 'Cours sans titre',
-          structuredContent: structured,
-          keywords: (structured.keywords as object[]) || [],
+          structuredContent: structured as Prisma.InputJsonValue,
+          keywords: (structured.keywords as Prisma.InputJsonValue) || [],
           status: 'ready',
         },
       })
