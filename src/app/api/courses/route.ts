@@ -44,8 +44,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Contenu trop court' }, { status: 400 })
   }
 
+  // Limiter à 6000 caractères pour respecter les limites Groq
+  const truncated = content.length > 6000
+    ? content.slice(0, 6000) + '\n\n[Contenu tronqué pour le traitement]'
+    : content
+
   try {
-    const raw = await callClaude(content, SYSTEM_PROMPT)
+    const raw = await callClaude(truncated, SYSTEM_PROMPT)
 
     // Extraire le JSON de la réponse
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
@@ -58,7 +63,7 @@ export async function POST(req: NextRequest) {
     const course = await prisma.course.create({
       data: {
         title: structured.title || 'Cours sans titre',
-        rawContent: content,
+        rawContent: truncated,
         structuredContent: structured,
         keywords: structured.keywords || [],
         userId: session.user.id,
