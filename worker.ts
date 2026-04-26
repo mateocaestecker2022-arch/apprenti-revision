@@ -2,7 +2,7 @@ import { Worker } from 'bullmq'
 import { PrismaClient, Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { Redis } from 'ioredis'
-import http from 'http'
+import Groq from 'groq-sdk'
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
 const url = new URL(redisUrl)
@@ -10,11 +10,10 @@ const connection = { host: url.hostname, port: parseInt(url.port) || 6379 }
 
 const redis = new Redis(connection)
 const prisma = new PrismaClient()
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-const OLLAMA_URL = 'http://localhost:11434/api/generate'
-const MODEL = 'llama3.2:1b'
-const CHUNK_SIZE = 8000
-
+const MODEL = 'llama-3.1-8b-instant'
+const CHUNK_SIZE = 6000
 
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
@@ -27,7 +26,7 @@ function splitIntoChunks(text: string): string[] {
     let end = i + CHUNK_SIZE
     if (end < text.length) {
       const lastNewline = text.lastIndexOf('\n', end)
-      if (lastNewline > i + 2000) end = lastNewline
+      if (lastNewline > i + 1500) end = lastNewline
     }
     chunks.push(text.slice(i, end).trim())
     i = end
@@ -35,29 +34,30 @@ function splitIntoChunks(text: string): string[] {
   return chunks
 }
 
-function callOllama(prompt: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify({ model: MODEL, prompt, stream: false })
-    const req = http.request(
-      { hostname: 'localhost', port: 11434, path: '/api/generate', method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
-        timeout: 600_000 },
-      (res) => {
-        let data = ''
-        res.on('data', (chunk) => { data += chunk })
-        res.on('end', () => {
-          try {
-            const parsed = JSON.parse(data) as { response?: string }
-            resolve(parsed.response || '')
-          } catch { resolve('') }
-        })
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
+
+async function callGroq(prompt: string, retries = 3): Promise<string> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const res = await groq.chat.completions.create({
+        model: MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2048,
+        temperature: 0.3,
+      })
+      return res.choices[0]?.message?.content || ''
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status
+      if (status === 429) {
+        // Rate limit — attendre 20s avant de réessayer
+        console.log(`[Worker] Rate limit, attente 20s...`)
+        await sleep(20000)
+      } else {
+        throw err
       }
-    )
-    req.setTimeout(600_000, () => { req.destroy(); reject(new Error('Ollama timeout')) })
-    req.on('error', reject)
-    req.write(body)
-    req.end()
-  })
+    }
+  }
+  return ''
 }
 
 const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert universitaire. Restructure ce cours dans ce format JSON exact.
@@ -98,7 +98,7 @@ async function processCourse(content: string): Promise<object> {
   let result: object
 
   if (content.length <= CHUNK_SIZE) {
-    const raw = await callOllama(`${SYSTEM_PROMPT}\n\n${content}`)
+    const raw = await callGroq(`${SYSTEM_PROMPT}\n\n${content}`)
     const match = raw.match(/\{[\s\S]*\}/)
     if (!match) throw new Error('No JSON in response')
     result = JSON.parse(match[0])
@@ -113,8 +113,9 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
 
-    for (const chunk of chunks) {
-      const raw = await callOllama(`${chunkSystem}\n\n${chunk}`)
+    for (let ci = 0; ci < chunks.length; ci++) {
+      if (ci > 0) await sleep(5000) // 5s entre chunks pour éviter rate limit
+      const raw = await callGroq(`${chunkSystem}\n\n${chunks[ci]}`)
       const match = raw.match(/\{[\s\S]*\}/)
       if (match) {
         try {
@@ -122,10 +123,11 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après.`
           allSections.push(...(parsed.sections || []))
         } catch {}
       }
+      console.log(`[Worker] Chunk ${ci + 1}/${chunks.length} traité`)
     }
 
     const titres = allSections.map(s => s.title).slice(0, 20).join(', ')
-    const metaRaw = await callOllama(
+    const metaRaw = await callGroq(
       `Tu es un assistant pédagogique. Génère un titre et un résumé pour un cours dont les sections sont : ${titres}
 Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","Section 2"],"summary":"Résumé en 4-5 phrases."}`
     )
