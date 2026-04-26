@@ -65,7 +65,7 @@ const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert universitaire. Res
 Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
 {
   "title": "Titre du cours",
-  "plan": ["Point 1 du plan", "Point 2 du plan", "Point 3 du plan"],
+  "plan": ["Titre section 1", "Titre section 2"],
   "sections": [
     {
       "title": "Titre de la section",
@@ -74,16 +74,18 @@ Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
       ],
       "points": [
         "Point essentiel développé en 3-5 phrases avec explications, exemples concrets et contexte.",
-        "Deuxième point essentiel également très développé avec causes, conséquences et mécanismes expliqués."
-      ]
+        "Deuxième point essentiel très développé avec causes, conséquences et mécanismes expliqués."
+      ],
+      "retenir": "Phrase de synthèse courte résumant l'essentiel à retenir de cette section."
     }
   ],
   "summary": "Résumé complet du cours en 4-5 phrases couvrant tous les points essentiels"
 }
 
 RÈGLES ABSOLUES :
-- "notions" : termes importants avec définitions précises et complètes (contexte, usage)
-- "points" : chaque point est un paragraphe de 3-5 phrases minimum, développé avec exemples
+- "notions" : termes importants avec définitions précises et complètes
+- "points" : chaque point est un paragraphe de 3-5 phrases, développé avec exemples
+- "retenir" : une phrase synthèse de la section
 - "plan" : liste simple des titres de section
 - Conserve TOUTES les informations du cours original
 - Réponds UNIQUEMENT avec le JSON valide`
@@ -104,9 +106,9 @@ async function processCourse(content: string): Promise<object> {
     const chunks = splitIntoChunks(content)
 
     const chunkSystem = `Tu es un assistant pédagogique expert. Restructure cette partie de cours en JSON valide.
-Chaque section doit avoir des notions clés définies et des points essentiels développés (3-5 phrases chacun).
+Chaque section doit avoir : notions clés définies, points essentiels développés (3-5 phrases), et une phrase "à retenir".
 Format JSON uniquement :
-{"sections":[{"title":"Titre","notions":[{"term":"Terme","definition":"Définition complète"}],"points":["Point développé en 3-5 phrases avec exemples et explications."]}]}
+{"sections":[{"title":"Titre","notions":[{"term":"Terme","definition":"Définition complète"}],"points":["Point développé en 3-5 phrases avec exemples."],"retenir":"Phrase synthèse à retenir."}]}
 Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []

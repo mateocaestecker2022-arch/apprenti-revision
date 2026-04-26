@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
 interface Notion { term: string; definition: string }
-interface Section { title: string; notions: Notion[]; points: string[] }
+interface Section { title: string; notions: Notion[]; points: string[]; retenir?: string }
 interface StructuredContent {
   title: string
   plan: string[]
@@ -214,7 +214,7 @@ export default function CoursePage() {
 
                 {/* Points essentiels */}
                 {section.points && section.points.length > 0 && (
-                  <div>
+                  <div className="mb-5">
                     <p className="text-xs font-bold text-green-600 uppercase tracking-widest mb-3 flex items-center gap-1">
                       📝 Points Essentiels
                     </p>
@@ -226,6 +226,14 @@ export default function CoursePage() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* À retenir */}
+                {section.retenir && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <p className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-1">⚡ À retenir</p>
+                    <p className="text-gray-700 text-sm leading-relaxed">{section.retenir}</p>
                   </div>
                 )}
               </div>
