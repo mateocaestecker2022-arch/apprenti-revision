@@ -1,13 +1,11 @@
-import Groq from 'groq-sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { redis } from './redis'
 import crypto from 'crypto'
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-})
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-const MODEL = 'llama-3.3-70b-versatile'
-const CHUNK_SIZE = 2500 // caractères
+const CHUNK_SIZE = 15000 // Gemini supporte beaucoup plus de tokens
 
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
@@ -20,7 +18,7 @@ function splitIntoChunks(text: string): string[] {
     let end = i + CHUNK_SIZE
     if (end < text.length) {
       const lastNewline = text.lastIndexOf('\n', end)
-      if (lastNewline > i + 2000) end = lastNewline
+      if (lastNewline > i + 3000) end = lastNewline
     }
     chunks.push(text.slice(i, end).trim())
     i = end
@@ -28,16 +26,11 @@ function splitIntoChunks(text: string): string[] {
   return chunks
 }
 
-async function callGroq(systemPrompt: string, userPrompt: string): Promise<string> {
-  const response = await groq.chat.completions.create({
-    model: MODEL,
-    max_tokens: 1500,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-    ],
-  })
-  return response.choices[0]?.message?.content || ''
+async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
+  const result = await model.generateContent(
+    `${systemPrompt}\n\n${userPrompt}`
+  )
+  return result.response.text()
 }
 
 export async function callClaude(
@@ -45,7 +38,7 @@ export async function callClaude(
   systemPrompt: string,
   cacheKey?: string
 ): Promise<string> {
-  const key = cacheKey || `groq:${hashContent(systemPrompt + prompt)}`
+  const key = cacheKey || `gemini:${hashContent(systemPrompt + prompt)}`
 
   const cached = await redis.get(key)
   if (cached) return cached
@@ -53,21 +46,20 @@ export async function callClaude(
   let result: string
 
   if (prompt.length <= CHUNK_SIZE) {
-    result = await callGroq(systemPrompt, prompt)
+    result = await callGemini(systemPrompt, prompt)
   } else {
     const chunks = splitIntoChunks(prompt)
 
     const chunkSystem = `Tu es un assistant pédagogique. Restructure cette partie de cours en JSON :
-{"sections":[{"title":"Titre","level":1,"content":"Contenu complet"}],"keywords":[{"term":"Terme","definition":"Définition"}]}
-Réponds UNIQUEMENT avec le JSON.`
+{"sections":[{"title":"Titre","level":1,"content":"Contenu complet et détaillé"}],"keywords":[{"term":"Terme","definition":"Définition"}]}
+Réponds UNIQUEMENT avec le JSON valide, sans markdown.`
 
     const allSections: Array<{title: string, level: number, content: string}> = []
     const allKeywords: Array<{term: string, definition: string}> = []
 
     for (const chunk of chunks) {
-      await new Promise(r => setTimeout(r, 3000))
-      const raw = await callGroq(chunkSystem, chunk)
-      const match = raw.match(/\{[\s\S]*\}/)
+      const raw = await callGemini(chunkSystem, chunk)
+      const match = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').match(/\{[\s\S]*\}/)
       if (match) {
         try {
           const parsed = JSON.parse(match[0])
@@ -78,12 +70,13 @@ Réponds UNIQUEMENT avec le JSON.`
     }
 
     const titres = allSections.map(s => s.title).slice(0, 20).join(', ')
-    const metaRaw = await callGroq(
-      'Tu es un assistant pédagogique. Réponds UNIQUEMENT avec du JSON.',
+    const metaRaw = await callGemini(
+      'Tu es un assistant pédagogique. Réponds UNIQUEMENT avec du JSON valide, sans markdown.',
       `Génère un titre, un plan et un résumé pour un cours dont les sections sont : ${titres}
-Format: {"title":"Titre","plan":[{"level":1,"text":"I. Titre"}],"summary":"Résumé"}`
+Format: {"title":"Titre du cours","plan":[{"level":1,"text":"I. Titre"}],"summary":"Résumé en 2-3 phrases"}`
     )
-    const metaMatch = metaRaw.match(/\{[\s\S]*\}/)
+    const cleanMeta = metaRaw.replace(/```json\n?/g, '').replace(/```\n?/g, '')
+    const metaMatch = cleanMeta.match(/\{[\s\S]*\}/)
     let meta = { title: 'Cours', plan: [], summary: '' }
     if (metaMatch) {
       try { meta = JSON.parse(metaMatch[0]) } catch {}
