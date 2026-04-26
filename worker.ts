@@ -60,34 +60,33 @@ function callOllama(prompt: string): Promise<string> {
   })
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert universitaire. Restructure ce cours en développant ABONDAMMENT chaque partie.
+const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert universitaire. Restructure ce cours dans ce format JSON exact.
 
 Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
 {
   "title": "Titre du cours",
-  "plan": [
-    { "level": 1, "text": "I. Titre principal" },
-    { "level": 2, "text": "A. Sous-titre" },
-    { "level": 3, "text": "1. Point détaillé" }
-  ],
-  "keywords": [
-    { "term": "Terme", "definition": "Définition complète et précise avec contexte" }
-  ],
+  "plan": ["Point 1 du plan", "Point 2 du plan", "Point 3 du plan"],
   "sections": [
     {
       "title": "Titre de la section",
-      "level": 1,
-      "content": "Développement complet : explications détaillées, exemples concrets, causes, conséquences, mécanismes. Minimum 5-8 phrases par section."
+      "notions": [
+        { "term": "Terme clé", "definition": "Définition complète et précise avec contexte d'utilisation" }
+      ],
+      "points": [
+        "Point essentiel développé en 3-5 phrases avec explications, exemples concrets et contexte.",
+        "Deuxième point essentiel également très développé avec causes, conséquences et mécanismes expliqués."
+      ]
     }
   ],
-  "summary": "Résumé complet du cours en 4-5 phrases couvrant les points essentiels"
+  "summary": "Résumé complet du cours en 4-5 phrases couvrant tous les points essentiels"
 }
 
-IMPORTANT :
-- Chaque section doit être TRÈS développée (5-8 phrases minimum, exemples, explications approfondies)
-- Les définitions doivent être complètes avec contexte et usage
-- Ne résume PAS, DÉVELOPPE et EXPLIQUE en détail
-- Conserve TOUTES les informations du cours original`
+RÈGLES ABSOLUES :
+- "notions" : termes importants avec définitions précises et complètes (contexte, usage)
+- "points" : chaque point est un paragraphe de 3-5 phrases minimum, développé avec exemples
+- "plan" : liste simple des titres de section
+- Conserve TOUTES les informations du cours original
+- Réponds UNIQUEMENT avec le JSON valide`
 
 async function processCourse(content: string): Promise<object> {
   const cacheKey = `ollama:${hashContent(SYSTEM_PROMPT + content)}`
@@ -105,13 +104,12 @@ async function processCourse(content: string): Promise<object> {
     const chunks = splitIntoChunks(content)
 
     const chunkSystem = `Tu es un assistant pédagogique expert. Restructure cette partie de cours en JSON valide.
-Développe ABONDAMMENT chaque section (5-8 phrases, exemples, explications détaillées). Ne résume pas, explique en profondeur.
+Chaque section doit avoir des notions clés définies et des points essentiels développés (3-5 phrases chacun).
 Format JSON uniquement :
-{"sections":[{"title":"Titre","level":1,"content":"Développement très détaillé avec exemples et explications approfondies"}],"keywords":[{"term":"Terme","definition":"Définition complète avec contexte"}]}
-Réponds UNIQUEMENT avec le JSON, sans texte avant ou après.`
+{"sections":[{"title":"Titre","notions":[{"term":"Terme","definition":"Définition complète"}],"points":["Point développé en 3-5 phrases avec exemples et explications."]}]}
+Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après.`
 
-    const allSections: Array<{title: string, level: number, content: string}> = []
-    const allKeywords: Array<{term: string, definition: string}> = []
+    const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
 
     for (const chunk of chunks) {
       const raw = await callOllama(`${chunkSystem}\n\n${chunk}`)
@@ -120,26 +118,24 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ou après.`
         try {
           const parsed = JSON.parse(match[0])
           allSections.push(...(parsed.sections || []))
-          allKeywords.push(...(parsed.keywords || []))
         } catch {}
       }
     }
 
     const titres = allSections.map(s => s.title).slice(0, 20).join(', ')
     const metaRaw = await callOllama(
-      `Tu es un assistant pédagogique. Génère un titre, un plan et un résumé pour un cours dont les sections sont : ${titres}
-Format JSON valide uniquement : {"title":"Titre","plan":[{"level":1,"text":"I. Titre"}],"summary":"Résumé en 2-3 phrases"}`
+      `Tu es un assistant pédagogique. Génère un titre et un résumé pour un cours dont les sections sont : ${titres}
+Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","Section 2"],"summary":"Résumé en 4-5 phrases."}`
     )
     const metaMatch = metaRaw.match(/\{[\s\S]*\}/)
-    let meta: { title: string; plan: Array<{level: number; text: string}>; summary: string } = { title: 'Cours', plan: [], summary: '' }
+    let meta: { title: string; plan: string[]; summary: string } = { title: 'Cours', plan: [], summary: '' }
     if (metaMatch) {
       try { meta = JSON.parse(metaMatch[0]) } catch {}
     }
 
     result = {
       title: meta.title,
-      plan: meta.plan,
-      keywords: allKeywords,
+      plan: meta.plan.length > 0 ? meta.plan : allSections.map(s => s.title),
       sections: allSections,
       summary: meta.summary,
     }
