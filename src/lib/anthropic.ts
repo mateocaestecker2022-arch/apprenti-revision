@@ -6,9 +6,8 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 })
 
-// llama-3.1-8b-instant : 30 000 TPM gratuit, très rapide
-const MODEL = 'llama-3.1-8b-instant'
-const CHUNK_SIZE = 8000 // caractères
+const MODEL = 'llama-3.3-70b-versatile'
+const CHUNK_SIZE = 2500 // caractères
 
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
@@ -32,7 +31,7 @@ function splitIntoChunks(text: string): string[] {
 async function callGroq(systemPrompt: string, userPrompt: string): Promise<string> {
   const response = await groq.chat.completions.create({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 1500,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -66,6 +65,7 @@ Réponds UNIQUEMENT avec le JSON.`
     const allKeywords: Array<{term: string, definition: string}> = []
 
     for (const chunk of chunks) {
+      await new Promise(r => setTimeout(r, 3000))
       const raw = await callGroq(chunkSystem, chunk)
       const match = raw.match(/\{[\s\S]*\}/)
       if (match) {
