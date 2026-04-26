@@ -2,7 +2,7 @@ import { Worker } from 'bullmq'
 import { PrismaClient, Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { Redis } from 'ioredis'
-import { Agent, fetch as undiciFetch } from 'undici'
+import http from 'http'
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
 const url = new URL(redisUrl)
@@ -15,12 +15,6 @@ const OLLAMA_URL = 'http://localhost:11434/api/generate'
 const MODEL = 'llama3.2'
 const CHUNK_SIZE = 8000
 
-// Timeout de 10 minutes pour Ollama sur CPU
-const ollamaAgent = new Agent({
-  headersTimeout: 600_000,
-  bodyTimeout: 600_000,
-  connectTimeout: 10_000,
-})
 
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
@@ -41,15 +35,29 @@ function splitIntoChunks(text: string): string[] {
   return chunks
 }
 
-async function callOllama(prompt: string): Promise<string> {
-  const res = await undiciFetch(OLLAMA_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, prompt, stream: false }),
-    dispatcher: ollamaAgent,
-  } as Parameters<typeof undiciFetch>[1])
-  const data = await res.json() as { response?: string }
-  return data.response || ''
+function callOllama(prompt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({ model: MODEL, prompt, stream: false })
+    const req = http.request(
+      { hostname: 'localhost', port: 11434, path: '/api/generate', method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+        timeout: 600_000 },
+      (res) => {
+        let data = ''
+        res.on('data', (chunk) => { data += chunk })
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(data) as { response?: string }
+            resolve(parsed.response || '')
+          } catch { resolve('') }
+        })
+      }
+    )
+    req.setTimeout(600_000, () => { req.destroy(); reject(new Error('Ollama timeout')) })
+    req.on('error', reject)
+    req.write(body)
+    req.end()
+  })
 }
 
 const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert. Ton rôle est de restructurer des cours universitaires de manière claire et efficace.
