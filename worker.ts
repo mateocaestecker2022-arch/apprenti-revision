@@ -2,6 +2,7 @@ import { Worker } from 'bullmq'
 import { PrismaClient, Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { Redis } from 'ioredis'
+import { Agent, fetch as undiciFetch } from 'undici'
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
 const url = new URL(redisUrl)
@@ -13,6 +14,13 @@ const prisma = new PrismaClient()
 const OLLAMA_URL = 'http://localhost:11434/api/generate'
 const MODEL = 'llama3.2'
 const CHUNK_SIZE = 8000
+
+// Timeout de 10 minutes pour Ollama sur CPU
+const ollamaAgent = new Agent({
+  headersTimeout: 600_000,
+  bodyTimeout: 600_000,
+  connectTimeout: 10_000,
+})
 
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
@@ -34,11 +42,12 @@ function splitIntoChunks(text: string): string[] {
 }
 
 async function callOllama(prompt: string): Promise<string> {
-  const res = await fetch(OLLAMA_URL, {
+  const res = await undiciFetch(OLLAMA_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: MODEL, prompt, stream: false }),
-  })
+    dispatcher: ollamaAgent,
+  } as Parameters<typeof undiciFetch>[1])
   const data = await res.json() as { response?: string }
   return data.response || ''
 }
