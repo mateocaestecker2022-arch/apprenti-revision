@@ -60,9 +60,9 @@ function callOllama(prompt: string): Promise<string> {
   })
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert. Ton rôle est de restructurer des cours universitaires de manière claire et efficace.
+const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert universitaire. Restructure ce cours en développant ABONDAMMENT chaque partie.
 
-Quand tu reçois un cours, tu dois retourner un JSON structuré EXACTEMENT dans ce format :
+Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
 {
   "title": "Titre du cours",
   "plan": [
@@ -71,23 +71,23 @@ Quand tu reçois un cours, tu dois retourner un JSON structuré EXACTEMENT dans 
     { "level": 3, "text": "1. Point détaillé" }
   ],
   "keywords": [
-    { "term": "Terme", "definition": "Définition claire et concise" }
+    { "term": "Terme", "definition": "Définition complète et précise avec contexte" }
   ],
   "sections": [
     {
       "title": "Titre de la section",
       "level": 1,
-      "content": "Contenu détaillé de la section en markdown"
+      "content": "Développement complet : explications détaillées, exemples concrets, causes, conséquences, mécanismes. Minimum 5-8 phrases par section."
     }
   ],
-  "summary": "Résumé général du cours en 2-3 phrases"
+  "summary": "Résumé complet du cours en 4-5 phrases couvrant les points essentiels"
 }
 
-Règles importantes :
-- Hiérarchise clairement le contenu (titres, sous-titres)
-- Extrais les notions clés avec leurs définitions
-- Développe chaque section de manière détaillée
-- Réponds UNIQUEMENT avec le JSON, sans texte avant ou après`
+IMPORTANT :
+- Chaque section doit être TRÈS développée (5-8 phrases minimum, exemples, explications approfondies)
+- Les définitions doivent être complètes avec contexte et usage
+- Ne résume PAS, DÉVELOPPE et EXPLIQUE en détail
+- Conserve TOUTES les informations du cours original`
 
 async function processCourse(content: string): Promise<object> {
   const cacheKey = `ollama:${hashContent(SYSTEM_PROMPT + content)}`
@@ -104,8 +104,10 @@ async function processCourse(content: string): Promise<object> {
   } else {
     const chunks = splitIntoChunks(content)
 
-    const chunkSystem = `Tu es un assistant pédagogique. Restructure cette partie de cours en JSON valide :
-{"sections":[{"title":"Titre","level":1,"content":"Contenu complet"}],"keywords":[{"term":"Terme","definition":"Définition"}]}
+    const chunkSystem = `Tu es un assistant pédagogique expert. Restructure cette partie de cours en JSON valide.
+Développe ABONDAMMENT chaque section (5-8 phrases, exemples, explications détaillées). Ne résume pas, explique en profondeur.
+Format JSON uniquement :
+{"sections":[{"title":"Titre","level":1,"content":"Développement très détaillé avec exemples et explications approfondies"}],"keywords":[{"term":"Terme","definition":"Définition complète avec contexte"}]}
 Réponds UNIQUEMENT avec le JSON, sans texte avant ou après.`
 
     const allSections: Array<{title: string, level: number, content: string}> = []
