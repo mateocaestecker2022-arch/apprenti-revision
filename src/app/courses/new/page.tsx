@@ -12,6 +12,14 @@ export default function NewCoursePage() {
   const [fileName, setFileName] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
+  function estimateTime(text: string): string {
+    const chunks = Math.ceil(text.length / 2500)
+    const seconds = chunks * 5
+    if (seconds < 60) return `environ ${seconds} secondes`
+    const minutes = Math.ceil(seconds / 60)
+    return `environ ${minutes} minute${minutes > 1 ? 's' : ''}`
+  }
+
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -151,13 +159,18 @@ export default function NewCoursePage() {
               className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
             >
               {loading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                  </svg>
-                  L&apos;IA restructure votre cours...
-                </>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    L&apos;IA restructure votre cours...
+                  </div>
+                  <span className="text-xs text-indigo-200">
+                    Nous estimons un temps de traitement de {estimateTime(content)} pour votre document
+                  </span>
+                </div>
               ) : (
                 'Restructurer avec l\'IA'
               )}
