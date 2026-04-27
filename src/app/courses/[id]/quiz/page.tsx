@@ -36,7 +36,15 @@ export default function QuizPage() {
         setLoading(false)
         return
       }
-      setQuestions(data.questions)
+      const shuffled = data.questions.map((q: Question) => {
+        const indices = [0, 1, 2, 3].sort(() => Math.random() - 0.5)
+        return {
+          ...q,
+          options: indices.map((i) => q.options[i]),
+          answer: indices.indexOf(q.answer),
+        }
+      })
+      setQuestions(shuffled)
       setCurrent(0)
       setSelected(null)
       setAnswers([])
