@@ -35,11 +35,11 @@ jobs:
             npx prisma db push --accept-data-loss
 
             # Build
-            npm run build
+            NODE_OPTIONS='--max-old-space-size=4096' npm run build
 
             # Copier les fichiers statiques pour le mode standalone
             cp -r .next/static .next/standalone/.next/
-            cp -r public .next/standalone/
+            cp -r public .next/standalone/ 2>/dev/null || true
 
             # Redémarrer l'app Next.js
             pm2 reload apprenti-revision || pm2 start node --name "apprenti-revision" -- .next/standalone/server.js
