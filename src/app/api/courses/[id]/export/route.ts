@@ -134,7 +134,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const buffer = await zip.generateAsync({ type: 'nodebuffer' })
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${filename}.docx"`,
@@ -176,7 +176,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const buffer = await zip.generateAsync({ type: 'nodebuffer' })
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/vnd.oasis.opendocument.text',
         'Content-Disposition': `attachment; filename="${filename}.odt"`,
