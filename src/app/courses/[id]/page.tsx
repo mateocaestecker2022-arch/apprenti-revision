@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { AssignFolderButton } from '@/components/AssignFolderButton'
 
 interface Notion { term: string; definition: string }
 interface Section { title: string; notions: Notion[]; points: string[]; retenir?: string }
@@ -11,6 +12,7 @@ interface StructuredContent {
   sections: Section[]
   summary: string
 }
+interface Folder { id: string; name: string; color: string }
 interface Course {
   id: string
   title: string
@@ -18,7 +20,8 @@ interface Course {
   structuredContent: StructuredContent
   status: string
   updatedAt: string
-  folder?: { name: string; color: string }
+  folderId?: string | null
+  folder?: { id: string; name: string; color: string }
 }
 
 export default function CoursePage() {
@@ -28,6 +31,8 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(true)
   const [showRaw, setShowRaw] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [folders, setFolders] = useState<Folder[]>([])
+  const [showExport, setShowExport] = useState(false)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -47,6 +52,7 @@ export default function CoursePage() {
 
   useEffect(() => {
     fetchCourse()
+    fetch('/api/folders').then(r => r.json()).then(data => setFolders(Array.isArray(data) ? data : []))
     pollRef.current = setInterval(fetchCourse, 5000)
     timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000)
     return () => {
@@ -128,10 +134,35 @@ export default function CoursePage() {
             <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">{course.folder.name}</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button onClick={() => setShowRaw(!showRaw)} className="text-gray-400 hover:text-gray-600 text-sm border rounded-lg px-3 py-1.5">
             {showRaw ? 'Cours structuré' : 'Cours original'}
           </button>
+          {course && (
+            <AssignFolderButton courseId={course.id} currentFolderId={course.folderId} folders={folders} />
+          )}
+          {/* Export */}
+          <div className="relative">
+            <button onClick={() => setShowExport(!showExport)} className="text-gray-500 hover:text-gray-700 text-sm border rounded-lg px-3 py-1.5">
+              ⬇️ Exporter
+            </button>
+            {showExport && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowExport(false)} />
+                <div className="absolute right-0 top-9 z-50 bg-white border rounded-xl shadow-lg py-1 min-w-[160px]">
+                  <button onClick={() => { window.print(); setShowExport(false) }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-slate-50">
+                    🖨️ PDF (impression)
+                  </button>
+                  <a href={`/api/courses/${id}/export?format=docx`} onClick={() => setShowExport(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50">
+                    📄 Word (.docx)
+                  </a>
+                  <a href={`/api/courses/${id}/export?format=odt`} onClick={() => setShowExport(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50">
+                    📝 LibreOffice (.odt)
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
           <a href={`/courses/${id}/flashcards`} className="border border-indigo-300 text-indigo-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-50 transition">
             🃏 Flashcards
           </a>

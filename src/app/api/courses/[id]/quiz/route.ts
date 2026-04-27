@@ -18,9 +18,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     sections?: Array<{ title: string; points?: string[]; notions?: Array<{ term: string; definition: string }> }>
   } | null
 
-  const context = (structured?.sections
-    ?.map(s => `${s.title}: ${(s.points || []).slice(0, 2).join(' ')}`)
-    .join('\n') || course.rawContent).slice(0, 2500)
+  // Construire un contexte complet depuis le contenu structuré
+  const context = structured?.sections
+    ? structured.sections.map(s => {
+        const parts = [`## ${s.title}`]
+        if (s.notions?.length) parts.push(s.notions.map(n => `${n.term}: ${n.definition}`).join('\n'))
+        if (s.points?.length) parts.push(s.points.join('\n'))
+        if (s.retenir) parts.push(`À retenir: ${s.retenir}`)
+        return parts.join('\n')
+      }).join('\n\n').slice(0, 4000)
+    : course.rawContent.slice(0, 4000)
 
   // Récupérer les questions des derniers quiz pour les éviter
   const pastQuizzes = await prisma.quiz.findMany({
@@ -31,17 +38,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const pastQuestions = pastQuizzes
     .flatMap(q => (q.questions as Array<{ question: string }>))
     .map(q => q.question)
-    .slice(0, 15)
+    .slice(0, 20)
 
   const avoidSection = pastQuestions.length > 0
     ? `\nÉVITE ces questions déjà posées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
     : ''
 
-  const prompt = `Tu es un professeur. Génère 10 questions de QCM VARIÉES et DIFFÉRENTES sur ce cours.
-Réponds UNIQUEMENT avec ce JSON valide :
-{"questions":[{"question":"Question ?","options":["A. Option","B. Option","C. Option","D. Option"],"answer":0,"explanation":"Explication en 2-3 phrases qui explique pourquoi c'est la bonne réponse et ce qu'il faut retenir."}]}
-"answer" est l'index (0-3) de la bonne réponse. Varie les positions de la bonne réponse (pas toujours la même lettre).
-Les explications doivent être détaillées : explique le concept, donne le contexte, et aide à retenir la notion.
+  const prompt = `Tu es un professeur expert. Génère 20 questions de QCM VARIÉES couvrant l'ensemble du cours.
+Réponds UNIQUEMENT avec ce JSON valide (sans texte avant ou après) :
+{"questions":[{"question":"Question ?","options":["Option A","Option B","Option C","Option D"],"answer":0,"explanation":"Explication en 2-3 phrases : pourquoi c'est la bonne réponse, le concept clé, et ce qu'il faut retenir."}]}
+Règles :
+- "answer" est l'index (0-3) de la bonne réponse
+- Varie les positions de la bonne réponse (pas toujours 0 ou 2)
+- Couvre toutes les sections du cours, pas seulement le début
+- Questions de difficulté variée (définition, application, analyse)
 ${avoidSection}
 COURS :
 ${context}`
@@ -50,7 +60,7 @@ ${context}`
     const res = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 3500,
+      max_tokens: 6000,
       temperature: 0.7,
     })
     const raw = res.choices[0]?.message?.content || ''

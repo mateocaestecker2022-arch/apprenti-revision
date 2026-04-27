@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { DeleteCourseButton } from '@/components/DeleteCourseButton'
+import { CreateFolderButton } from '@/components/CreateFolderButton'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -58,22 +59,27 @@ export default async function DashboardPage() {
         </div>
 
         {/* Dossiers */}
-        {folders.length > 0 && (
-          <div className="mb-8">
-            <h3 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wider">Dossiers</h3>
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wider">Classeurs</h3>
+            <CreateFolderButton />
+          </div>
+          {folders.length === 0 ? (
+            <p className="text-sm text-gray-400">Aucun classeur — crée-en un pour organiser tes cours.</p>
+          ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {folders.map(f => (
                 <a key={f.id} href={`/folders/${f.id}`} className="bg-white border rounded-xl p-4 flex items-center gap-3 hover:border-indigo-300 hover:shadow-sm transition">
-                  <span className="text-2xl">📁</span>
-                  <div>
-                    <p className="font-medium text-gray-800 text-sm">{f.name}</p>
+                  <span className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-800 text-sm truncate">{f.name}</p>
                     <p className="text-xs text-gray-400">{f._count.courses} cours</p>
                   </div>
                 </a>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Tous les cours */}
         <div className="bg-white rounded-xl shadow-sm border">

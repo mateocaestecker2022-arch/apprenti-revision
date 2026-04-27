@@ -20,6 +20,20 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(course)
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
+  const { folderId } = await req.json()
+
+  const course = await prisma.course.updateMany({
+    where: { id: params.id, userId: session.user.id },
+    data: { folderId: folderId || null },
+  })
+
+  return NextResponse.json({ success: true })
+}
+
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth()
   if (!session?.user?.id) {
