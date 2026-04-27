@@ -22,13 +22,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const context = structured?.sections
     ? structured.sections.map(s => {
         const parts = [`## ${s.title}`]
-        if (s.notions?.length) parts.push(s.notions.map(n => `${n.term}: ${n.definition}`).join('\n'))
-        if (s.points?.length) parts.push(s.points.join('\n'))
+        if (s.notions?.length) parts.push(s.notions.slice(0, 3).map(n => `${n.term}: ${n.definition}`).join('\n'))
+        if (s.points?.length) parts.push(s.points.slice(0, 4).join('\n'))
         const sec = s as { retenir?: string }
-        if (sec.retenir) parts.push(`À retenir: ${sec.retenir}`)
+        if (sec.retenir) parts.push(`Retenir: ${sec.retenir}`)
         return parts.join('\n')
-      }).join('\n\n').slice(0, 4000)
-    : course.rawContent.slice(0, 4000)
+      }).join('\n\n').slice(0, 2000)
+    : course.rawContent.slice(0, 2000)
 
   // Récupérer les questions des derniers quiz pour les éviter
   const pastQuizzes = await prisma.quiz.findMany({
@@ -61,7 +61,7 @@ ${context}`
     const res = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 6000,
+      max_tokens: 4000,
       temperature: 0.7,
     })
     const raw = res.choices[0]?.message?.content || ''
