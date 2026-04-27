@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { DeleteCourseButton } from '@/components/DeleteCourseButton'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -148,6 +149,7 @@ export default async function DashboardPage() {
                           </a>
                         </div>
                       )}
+                      <DeleteCourseButton courseId={course.id} />
                       <span className="text-gray-300">→</span>
                     </div>
                   </a>
