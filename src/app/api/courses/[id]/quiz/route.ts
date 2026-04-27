@@ -24,7 +24,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const parts = [`## ${s.title}`]
         if (s.notions?.length) parts.push(s.notions.map(n => `${n.term}: ${n.definition}`).join('\n'))
         if (s.points?.length) parts.push(s.points.join('\n'))
-        if (s.retenir) parts.push(`À retenir: ${s.retenir}`)
+        const sec = s as { retenir?: string }
+        if (sec.retenir) parts.push(`À retenir: ${sec.retenir}`)
         return parts.join('\n')
       }).join('\n\n').slice(0, 4000)
     : course.rawContent.slice(0, 4000)
