@@ -22,11 +22,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     ?.map(s => `${s.title}: ${(s.points || []).slice(0, 2).join(' ')}`)
     .join('\n') || course.rawContent).slice(0, 2500)
 
-  const prompt = `Tu es un professeur. Génère 10 questions de QCM sur ce cours.
-Réponds UNIQUEMENT avec ce JSON valide :
-{"questions":[{"question":"Question ?","options":["A. Option","B. Option","C. Option","D. Option"],"answer":0,"explanation":"Explication courte"}]}
-"answer" est l'index (0-3) de la bonne réponse.
+  // Récupérer les questions des derniers quiz pour les éviter
+  const pastQuizzes = await prisma.quiz.findMany({
+    where: { courseId: params.id },
+    orderBy: { createdAt: 'desc' },
+    take: 3,
+  })
+  const pastQuestions = pastQuizzes
+    .flatMap(q => (q.questions as Array<{ question: string }>))
+    .map(q => q.question)
+    .slice(0, 15)
 
+  const avoidSection = pastQuestions.length > 0
+    ? `\nÉVITE ces questions déjà posées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
+    : ''
+
+  const prompt = `Tu es un professeur. Génère 10 questions de QCM VARIÉES et DIFFÉRENTES sur ce cours.
+Réponds UNIQUEMENT avec ce JSON valide :
+{"questions":[{"question":"Question ?","options":["A. Option","B. Option","C. Option","D. Option"],"answer":0,"explanation":"Explication en 2-3 phrases qui explique pourquoi c'est la bonne réponse et ce qu'il faut retenir."}]}
+"answer" est l'index (0-3) de la bonne réponse. Varie les positions de la bonne réponse (pas toujours la même lettre).
+Les explications doivent être détaillées : explique le concept, donne le contexte, et aide à retenir la notion.
+${avoidSection}
 COURS :
 ${context}`
 
@@ -34,8 +50,8 @@ ${context}`
     const res = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 3000,
-      temperature: 0.4,
+      max_tokens: 3500,
+      temperature: 0.7,
     })
     const raw = res.choices[0]?.message?.content || ''
     const match = raw.match(/\{[\s\S]*\}/)

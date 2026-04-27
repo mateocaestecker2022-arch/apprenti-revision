@@ -184,8 +184,11 @@ export default function QuizPage() {
         </div>
 
         {selected !== null && (
-          <div className="bg-slate-50 rounded-xl p-4 mb-6 text-sm text-gray-600">
-            {q.explanation}
+          <div className={`rounded-xl p-4 mb-6 text-sm ${selected === q.answer ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
+            <p className={`font-semibold mb-1 ${selected === q.answer ? 'text-green-700' : 'text-orange-700'}`}>
+              {selected === q.answer ? '✓ Bonne réponse !' : `✗ Mauvaise réponse — La bonne réponse était : ${q.options[q.answer]}`}
+            </p>
+            <p className="text-gray-700 leading-relaxed">{q.explanation}</p>
           </div>
         )}
 
