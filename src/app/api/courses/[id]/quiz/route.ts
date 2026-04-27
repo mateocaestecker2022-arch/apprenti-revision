@@ -48,7 +48,8 @@ ${context}`
     })
 
     return NextResponse.json({ id: quiz.id, questions })
-  } catch {
+  } catch (err) {
+    console.error('[QUIZ] Erreur génération:', err)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
