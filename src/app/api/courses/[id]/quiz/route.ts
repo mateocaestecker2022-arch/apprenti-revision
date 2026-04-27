@@ -18,9 +18,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     sections?: Array<{ title: string; points?: string[]; notions?: Array<{ term: string; definition: string }> }>
   } | null
 
-  const context = structured?.sections
-    ?.map(s => `${s.title}: ${(s.points || []).join(' ')}`)
-    .join('\n') || course.rawContent.slice(0, 4000)
+  const context = (structured?.sections
+    ?.map(s => `${s.title}: ${(s.points || []).slice(0, 2).join(' ')}`)
+    .join('\n') || course.rawContent).slice(0, 2500)
 
   const prompt = `Tu es un professeur. Génère 10 questions de QCM sur ce cours.
 Réponds UNIQUEMENT avec ce JSON valide :

@@ -97,62 +97,49 @@ export default async function DashboardPage() {
           ) : (
             <ul className="divide-y">
               {courses.map((course) => (
-                <li key={course.id}>
-                  <a
-                    href={`/courses/${course.id}`}
-                    className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-lg">
-                        {course.status === 'processing' ? '⏳' : course.status === 'error' ? '❌' : '📄'}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-800 truncate">{course.title}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {course.folder && (
-                            <span className="text-xs text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
-                              {course.folder.name}
-                            </span>
-                          )}
-                          <span className="text-xs text-gray-400">
-                            {new Date(course.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                <li key={course.id} className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition">
+                  <a href={`/courses/${course.id}`} className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="text-lg">
+                      {course.status === 'processing' ? '⏳' : course.status === 'error' ? '❌' : '📄'}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-800 truncate">{course.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {course.folder && (
+                          <span className="text-xs text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                            {course.folder.name}
                           </span>
-                        </div>
+                        )}
+                        <span className="text-xs text-gray-400">
+                          {new Date(course.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 ml-4">
-                      {course.status === 'processing' && (
-                        <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap">
-                          En traitement
-                        </span>
-                      )}
-                      {course.status === 'error' && (
-                        <span className="text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-                          Erreur
-                        </span>
-                      )}
-                      {course.status === 'ready' && (
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={`/courses/${course.id}/flashcards`}
-                            onClick={e => e.stopPropagation()}
-                            className="text-xs text-gray-500 hover:text-indigo-600 border rounded-lg px-2 py-1 hover:border-indigo-300 transition"
-                          >
-                            🃏
-                          </a>
-                          <a
-                            href={`/courses/${course.id}/quiz`}
-                            onClick={e => e.stopPropagation()}
-                            className="text-xs text-gray-500 hover:text-indigo-600 border rounded-lg px-2 py-1 hover:border-indigo-300 transition"
-                          >
-                            🧠
-                          </a>
-                        </div>
-                      )}
-                      <DeleteCourseButton courseId={course.id} />
-                      <span className="text-gray-300">→</span>
-                    </div>
                   </a>
+                  <div className="flex items-center gap-3 ml-4 shrink-0">
+                    {course.status === 'processing' && (
+                      <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        En traitement
+                      </span>
+                    )}
+                    {course.status === 'error' && (
+                      <span className="text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+                        Erreur
+                      </span>
+                    )}
+                    {course.status === 'ready' && (
+                      <div className="flex items-center gap-2">
+                        <a href={`/courses/${course.id}/flashcards`} className="text-xs text-gray-500 hover:text-indigo-600 border rounded-lg px-2 py-1 hover:border-indigo-300 transition">
+                          🃏
+                        </a>
+                        <a href={`/courses/${course.id}/quiz`} className="text-xs text-gray-500 hover:text-indigo-600 border rounded-lg px-2 py-1 hover:border-indigo-300 transition">
+                          🧠
+                        </a>
+                      </div>
+                    )}
+                    <DeleteCourseButton courseId={course.id} />
+                    <span className="text-gray-300">→</span>
+                  </div>
                 </li>
               ))}
             </ul>
