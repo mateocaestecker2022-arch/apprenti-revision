@@ -27,8 +27,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const sec = s as { retenir?: string }
         if (sec.retenir) parts.push(`Retenir: ${sec.retenir}`)
         return parts.join('\n')
-      }).join('\n\n').slice(0, 2000)
-    : course.rawContent.slice(0, 2000)
+      }).join('\n\n').slice(0, 3500)
+    : course.rawContent.slice(0, 3500)
 
   // Récupérer les questions des derniers quiz pour les éviter
   const pastQuizzes = await prisma.quiz.findMany({
@@ -59,9 +59,9 @@ ${context}`
 
   try {
     const res = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 4000,
+      max_tokens: 5000,
       temperature: 0.7,
     })
     const raw = res.choices[0]?.message?.content || ''
