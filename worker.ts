@@ -127,7 +127,7 @@ Réponds UNIQUEMENT avec le JSON valide.`
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
 
     for (let ci = 0; ci < chunks.length; ci++) {
-      if (ci > 0) await sleep(12000) // 12s entre chunks — compte Groq limité à 6000 TPM
+      if (ci > 0) await sleep(5000) // 5s entre chunks
       const raw = await callGroq(`${chunkSystem}\n\n${chunks[ci]}`)
       const match = raw.match(/\{[\s\S]*\}/)
       if (match) {
