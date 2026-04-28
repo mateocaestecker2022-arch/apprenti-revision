@@ -76,8 +76,8 @@ Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
         { "term": "Terme clé", "definition": "Définition précise et nuancée niveau L1/Master. Cite un article ou auteur UNIQUEMENT s'il est dans le texte source." }
       ],
       "points": [
-        "Analyse (pas description) : expose le mécanisme, puis ses enjeux, tensions ou contradictions. Ex : pas 'la Terreur est un outil' mais 'la Terreur constitue un instrument politique justifié par le salut public, entraînant une suspension de l'État de droit'. Montre les logiques politiques, les rapports de force, les conséquences concrètes.",
-        "Chaque sous-partie = un point distinct. Précision historique et juridique : ne jamais écrire 'suffrage universel' si c'est 'suffrage universel masculin', ne jamais simplifier au détriment de l'exactitude."
+        "STRING UNIQUEMENT — pas d'objet JSON. Analyse en une phrase développée : mécanisme + enjeux + conséquences. Ex : 'La Terreur constitue un instrument politique justifié par le salut public, entraînant une suspension de l'État de droit et une dérive vers un pouvoir d'exception.'",
+        "Autre point analytique sous forme de STRING. Précision historique : 'suffrage universel masculin' pas 'suffrage universel', etc."
       ],
       "retenir": "Formulation synthétique niveau examen L1 : analytique, précise, avec les nuances essentielles."
     }
@@ -86,6 +86,7 @@ Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
 }
 
 RÈGLES ABSOLUES :
+- "points" : TOUJOURS des strings (chaînes de texte), JAMAIS des objets JSON avec des clés comme "point", "enjeux", "conséquences"
 - Analytique : chaque point explique POURQUOI et QUELLES CONSÉQUENCES — pas juste QUOI
 - Précision : ne jamais approximer (ex: 'suffrage universel masculin' pas 'suffrage universel', 'salut public' pas 'morale')
 - Nuance : montrer les contradictions (ex: Révolution cherche démocratie → produit la Terreur)
@@ -115,7 +116,7 @@ NIVEAU EXIGÉ : Licence/Master — analytique, pas descriptif. Expliquer les enj
 
 RÈGLES ABSOLUES :
 - Chaque chapitre/sous-chapitre du texte = une section JSON distincte (ne jamais fusionner)
-- "points" : ANALYSER pas décrire — pour chaque mécanisme, expliquer POURQUOI et QUELLES CONSÉQUENCES. Montrer les logiques politiques ou juridiques, les contradictions (ex: révolution → démocratie mais aussi → Terreur)
+- "points" : TOUJOURS des strings, JAMAIS des objets avec clés "point"/"enjeux"/"conséquences". Analyser pas décrire — expliquer POURQUOI et QUELLES CONSÉQUENCES en une phrase développée
 - Précision : ne jamais approximer ('suffrage universel masculin' pas 'suffrage universel', 'salut public' pas 'morale')
 - "notions" : définitions précises niveau L1/Master. Cite un article ou auteur UNIQUEMENT s'il est dans le texte source
 - "retenir" : synthèse analytique une phrase, niveau examen L1

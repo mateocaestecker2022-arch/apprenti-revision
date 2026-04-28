@@ -253,12 +253,18 @@ export default function CoursePage() {
                       📝 Points Essentiels
                     </p>
                     <ul className="space-y-3">
-                      {section.points.map((point, j) => (
-                        <li key={j} className="flex gap-2 text-sm leading-relaxed">
-                          <span className="text-gray-400 mt-1 shrink-0">•</span>
-                          <span className="text-gray-700">{point}</span>
-                        </li>
-                      ))}
+                      {section.points.map((point, j) => {
+                        // Normalise si le modèle a retourné un objet au lieu d'une string
+                        const text = typeof point === 'string'
+                          ? point
+                          : Object.values(point as Record<string, string>).filter(Boolean).join(' — ')
+                        return (
+                          <li key={j} className="flex gap-2 text-sm leading-relaxed">
+                            <span className="text-gray-400 mt-1 shrink-0">•</span>
+                            <span className="text-gray-700">{text}</span>
+                          </li>
+                        )
+                      })}
                     </ul>
                   </div>
                 )}
