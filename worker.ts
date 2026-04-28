@@ -61,9 +61,9 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   return ''
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert universitaire. Tu dois structurer ce cours en JSON SANS RIEN OMETTRE.
+const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Tu dois structurer ce cours en JSON fidèle au texte original.
 
-MISSION PRINCIPALE : Reproduire INTÉGRALEMENT le contenu du cours — pas le résumer.
+NIVEAU D'ÉCRITURE EXIGÉ : Licence / Master — vocabulaire juridique précis, formulations académiques, style concis et rigoureux. Jamais de style lycée ou STMG.
 
 Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
 {
@@ -71,26 +71,26 @@ Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
   "plan": ["Titre section 1", "Titre section 2"],
   "sections": [
     {
-      "title": "Titre exact de la section/chapitre/article",
+      "title": "Titre exact de la section/chapitre tel qu'il apparaît dans le texte",
       "notions": [
-        { "term": "Terme juridique ou clé", "definition": "Définition complète et précise, avec références légales si présentes (ex: art. 815 C. civ.)" }
+        { "term": "Terme juridique", "definition": "Définition précise niveau L1/Master. Ne cite un article de loi QUE s'il est expressément mentionné dans le texte source." }
       ],
       "points": [
-        "Reproduis ici INTÉGRALEMENT le contenu de cette section : chaque règle, chaque article de loi cité, chaque mécanisme juridique, chaque exemple, chaque distinction (actif/passif, droits réels/personnels, etc.). Ne raccourcis RIEN.",
-        "Si la section contient plusieurs sous-parties, chaque sous-partie devient un point distinct et complet."
+        "Développement fidèle au texte source : expose chaque règle, mécanisme juridique, distinction (ex : actif/passif, droits réels/personnels) tels qu'ils figurent dans le cours. Style académique, pas de vulgarisation.",
+        "Chaque sous-partie du texte original devient un point distinct. Ne fusionne pas deux idées différentes."
       ],
-      "retenir": "Phrase de synthèse courte de la section."
+      "retenir": "Synthèse en une phrase juridiquement précise, niveau examen L1."
     }
   ],
-  "summary": "Résumé du cours en 4-5 phrases."
+  "summary": "Résumé académique du cours en 4-5 phrases, niveau L1/Master."
 }
 
 RÈGLES ABSOLUES :
-- "points" : copie TOUT le contenu de chaque section — articles de loi avec leur numéro, mécanismes juridiques complets, distinctions précises, exemples. JAMAIS de raccourcis.
-- "notions" : tous les termes techniques avec définitions précises et références légales
-- Chaque chapitre, sous-chapitre, article du cours original = une section distincte
-- Pour un cours de droit : TOUS les articles (art. 815, art. 1832, etc.), TOUS les régimes (matrimoniaux, indivision, domaine public/privé), TOUTES les distinctions juridiques
-- Ne jamais fusionner deux sections en une — crée autant de sections que le cours en contient
+- Niveau : Licence/Master uniquement — formulations juridiques précises, pas de simplification excessive
+- Articles de loi : cite UNIQUEMENT ceux qui apparaissent dans le texte source — ne jamais en inventer ou en ajouter
+- Répétitions : chaque notion définie une seule fois — ne pas répéter la même définition dans plusieurs sections
+- Chaque chapitre/sous-chapitre du texte = une section JSON distincte, jamais fusionnée
+- "points" : contenu fidèle au texte, complet, sans raccourcis ni inventions
 - Réponds UNIQUEMENT avec le JSON valide`
 
 async function processCourse(content: string): Promise<object> {
@@ -108,19 +108,20 @@ async function processCourse(content: string): Promise<object> {
   } else {
     const chunks = splitIntoChunks(content)
 
-    const chunkSystem = `Tu es un assistant pédagogique expert universitaire. Transforme cette partie de cours en JSON valide SANS RIEN OMETTRE.
+    const chunkSystem = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Transforme cette partie de cours en JSON valide.
 
-MISSION : Reproduire INTÉGRALEMENT le contenu — pas le résumer. Chaque article de loi, chaque mécanisme, chaque distinction doit être présent mot pour mot dans les "points".
+NIVEAU D'ÉCRITURE : Licence/Master — vocabulaire juridique rigoureux, style académique concis. Jamais de style lycée/STMG.
 
 RÈGLES ABSOLUES :
-- Chaque chapitre, sous-chapitre, article du texte = une section JSON distincte (ne jamais fusionner)
-- "points" : reproduis INTÉGRALEMENT le contenu — articles de loi avec numéros, règles complètes, exemples, distinctions précises. JAMAIS de résumé.
-- "notions" : tous les termes techniques avec définitions complètes et références légales (art. X C. civ., etc.)
-- "retenir" : une phrase synthèse courte
-- N'invente rien, ne résume pas, ne saute rien
+- Chaque chapitre/sous-chapitre du texte = une section JSON distincte (ne jamais fusionner deux idées)
+- "points" : expose fidèlement chaque règle, mécanisme, distinction du texte source. Style académique, complet, sans raccourcis.
+- "notions" : termes juridiques avec définitions précises niveau L1. Cite un article de loi UNIQUEMENT s'il est dans le texte source — jamais l'inventer.
+- "retenir" : une phrase synthèse juridiquement précise, niveau examen L1
+- Chaque notion définie une seule fois — pas de répétitions entre sections
+- N'invente aucun article de loi, aucun mécanisme absent du texte
 
 Format JSON uniquement :
-{"sections":[{"title":"Titre exact du chapitre/article","notions":[{"term":"Terme","definition":"Définition complète avec référence légale si applicable"}],"points":["Contenu intégral de la section reproduit fidèlement, article par article, règle par règle."],"retenir":"Phrase synthèse."}]}
+{"sections":[{"title":"Titre exact du chapitre tel qu'il apparaît dans le texte","notions":[{"term":"Terme","definition":"Définition précise L1/Master, article cité uniquement si présent dans le texte source"}],"points":["Développement fidèle au texte, style académique, complet."],"retenir":"Synthèse juridique précise."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
