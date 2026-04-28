@@ -12,7 +12,7 @@ const redis = new Redis(connection)
 const prisma = new PrismaClient()
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-const CHUNK_SIZE = 12000 // Moins de chunks = moins d'appels API
+const CHUNK_SIZE = 8000 // Réduit pour que chaque chunk soit entièrement traité dans les tokens de sortie
 
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
@@ -41,8 +41,9 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
       const res = await groq.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2048,
+        max_tokens: 6000,
         temperature: 0.3,
+        response_format: { type: 'json_object' },
       })
       return res.choices[0]?.message?.content || ''
     } catch (err: unknown) {
@@ -87,7 +88,8 @@ RÈGLES ABSOLUES :
 - "points" : chaque point est un paragraphe de 3-5 phrases, développé avec exemples
 - "retenir" : une phrase synthèse de la section
 - "plan" : liste simple des titres de section
-- Conserve TOUTES les informations du cours original
+- Conserve TOUTES les informations du cours original — AUCUN chapitre, AUCUN article, AUCUNE section ne doit être omis
+- Pour un cours de droit : inclus TOUS les articles de loi et TOUTES leurs subdivisions
 - Réponds UNIQUEMENT avec le JSON valide`
 
 async function processCourse(content: string): Promise<object> {
@@ -105,10 +107,16 @@ async function processCourse(content: string): Promise<object> {
   } else {
     const chunks = splitIntoChunks(content)
 
-    const chunkSystem = `Tu es un assistant pédagogique expert. Restructure cette partie de cours en JSON valide.
-Chaque section doit avoir : notions clés définies, points essentiels développés (3-5 phrases), et une phrase "à retenir".
+    const chunkSystem = `Tu es un assistant pédagogique expert universitaire. Restructure cette partie de cours en JSON valide.
+
+RÈGLES ABSOLUES :
+- Inclus TOUS les chapitres, TOUS les articles, TOUTES les sections présents dans le texte — n'en oublie AUCUN
+- Ne résume pas, ne saute pas de contenu : chaque élément du texte doit apparaître dans une section
+- Un cours de droit doit conserver TOUS les articles de loi, TOUTES les définitions, TOUTES les subdivisions
+- Chaque section doit avoir des notions clés définies, des points essentiels développés (3-5 phrases), et une phrase "à retenir"
+
 Format JSON uniquement :
-{"sections":[{"title":"Titre","notions":[{"term":"Terme","definition":"Définition complète"}],"points":["Point développé en 3-5 phrases avec exemples."],"retenir":"Phrase synthèse à retenir."}]}
+{"sections":[{"title":"Titre exact du chapitre/article","notions":[{"term":"Terme","definition":"Définition complète et précise"}],"points":["Point développé en 3-5 phrases avec exemples et contexte."],"retenir":"Phrase synthèse à retenir."}]}
 Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
@@ -120,13 +128,18 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après.`
       if (match) {
         try {
           const parsed = JSON.parse(match[0])
-          allSections.push(...(parsed.sections || []))
-        } catch {}
+          const secs = parsed.sections || []
+          console.log(`[Worker] Chunk ${ci + 1}/${chunks.length} traité → ${secs.length} sections`)
+          allSections.push(...secs)
+        } catch (e) {
+          console.error(`[Worker] Chunk ${ci + 1} JSON invalide, contenu ignoré:`, e)
+        }
+      } else {
+        console.error(`[Worker] Chunk ${ci + 1} : aucun JSON trouvé dans la réponse`)
       }
-      console.log(`[Worker] Chunk ${ci + 1}/${chunks.length} traité`)
     }
 
-    const titres = allSections.map(s => s.title).slice(0, 20).join(', ')
+    const titres = allSections.map(s => s.title).join(', ')
     const metaRaw = await callGroq(
       `Tu es un assistant pédagogique. Génère un titre et un résumé pour un cours dont les sections sont : ${titres}
 Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","Section 2"],"summary":"Résumé en 4-5 phrases."}`
