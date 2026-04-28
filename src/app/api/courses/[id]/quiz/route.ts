@@ -23,7 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     ? (() => {
         const sections = structured.sections!
         // Budget par section pour couvrir tout le cours (pas seulement le début)
-        const charsPerSection = Math.max(80, Math.floor(2800 / sections.length))
+        const charsPerSection = Math.max(60, Math.floor(1800 / sections.length))
         return sections.map(s => {
           const sec = s as { retenir?: string }
           const parts = [`## ${s.title}`]
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           return parts.join('\n')
         }).join('\n\n')
       })()
-    : course.rawContent.slice(0, 2800)
+    : course.rawContent.slice(0, 1800)
 
   // Récupérer les questions des derniers quiz pour les éviter
   const pastQuizzes = await prisma.quiz.findMany({
@@ -80,7 +80,7 @@ ${context}`
       const res = await groq.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 3500,
+        max_tokens: 2500,
         temperature: 0.7,
         response_format: { type: 'json_object' },
       })
