@@ -61,9 +61,9 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   return ''
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Tu dois structurer ce cours en JSON fidèle au texte original.
+const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master). Tu dois structurer ce cours en JSON analytique et rigoureux.
 
-NIVEAU D'ÉCRITURE EXIGÉ : Licence / Master — vocabulaire juridique précis, formulations académiques, style concis et rigoureux. Jamais de style lycée ou STMG.
+NIVEAU EXIGÉ : Licence/Master — pas de style lycée/STMG. Chaque point doit être analytique : expliquer les enjeux, les tensions, les contradictions, les rapports de force — pas seulement décrire les faits.
 
 Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
 {
@@ -73,24 +73,25 @@ Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
     {
       "title": "Titre exact de la section/chapitre tel qu'il apparaît dans le texte",
       "notions": [
-        { "term": "Terme juridique", "definition": "Définition précise niveau L1/Master. Ne cite un article de loi QUE s'il est expressément mentionné dans le texte source." }
+        { "term": "Terme clé", "definition": "Définition précise et nuancée niveau L1/Master. Cite un article ou auteur UNIQUEMENT s'il est dans le texte source." }
       ],
       "points": [
-        "Développement fidèle au texte source : expose chaque règle, mécanisme juridique, distinction (ex : actif/passif, droits réels/personnels) tels qu'ils figurent dans le cours. Style académique, pas de vulgarisation.",
-        "Chaque sous-partie du texte original devient un point distinct. Ne fusionne pas deux idées différentes."
+        "Analyse (pas description) : expose le mécanisme, puis ses enjeux, tensions ou contradictions. Ex : pas 'la Terreur est un outil' mais 'la Terreur constitue un instrument politique justifié par le salut public, entraînant une suspension de l'État de droit'. Montre les logiques politiques, les rapports de force, les conséquences concrètes.",
+        "Chaque sous-partie = un point distinct. Précision historique et juridique : ne jamais écrire 'suffrage universel' si c'est 'suffrage universel masculin', ne jamais simplifier au détriment de l'exactitude."
       ],
-      "retenir": "Synthèse en une phrase juridiquement précise, niveau examen L1."
+      "retenir": "Formulation synthétique niveau examen L1 : analytique, précise, avec les nuances essentielles."
     }
   ],
-  "summary": "Résumé académique du cours en 4-5 phrases, niveau L1/Master."
+  "summary": "Résumé analytique en 4-5 phrases : logique d'ensemble, tensions principales, continuités/ruptures entre périodes."
 }
 
 RÈGLES ABSOLUES :
-- Niveau : Licence/Master uniquement — formulations juridiques précises, pas de simplification excessive
-- Articles de loi : cite UNIQUEMENT ceux qui apparaissent dans le texte source — ne jamais en inventer ou en ajouter
-- Répétitions : chaque notion définie une seule fois — ne pas répéter la même définition dans plusieurs sections
-- Chaque chapitre/sous-chapitre du texte = une section JSON distincte, jamais fusionnée
-- "points" : contenu fidèle au texte, complet, sans raccourcis ni inventions
+- Analytique : chaque point explique POURQUOI et QUELLES CONSÉQUENCES — pas juste QUOI
+- Précision : ne jamais approximer (ex: 'suffrage universel masculin' pas 'suffrage universel', 'salut public' pas 'morale')
+- Nuance : montrer les contradictions (ex: Révolution cherche démocratie → produit la Terreur)
+- Articles/auteurs : citer UNIQUEMENT ceux présents dans le texte source — jamais inventer
+- Répétitions : chaque notion définie une seule fois
+- Chaque chapitre/sous-chapitre = une section distincte, jamais fusionnée
 - Réponds UNIQUEMENT avec le JSON valide`
 
 async function processCourse(content: string): Promise<object> {
@@ -108,20 +109,21 @@ async function processCourse(content: string): Promise<object> {
   } else {
     const chunks = splitIntoChunks(content)
 
-    const chunkSystem = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Transforme cette partie de cours en JSON valide.
+    const chunkSystem = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master). Transforme cette partie de cours en JSON analytique et rigoureux.
 
-NIVEAU D'ÉCRITURE : Licence/Master — vocabulaire juridique rigoureux, style académique concis. Jamais de style lycée/STMG.
+NIVEAU EXIGÉ : Licence/Master — analytique, pas descriptif. Expliquer les enjeux, tensions, contradictions, rapports de force — pas seulement lister des faits.
 
 RÈGLES ABSOLUES :
-- Chaque chapitre/sous-chapitre du texte = une section JSON distincte (ne jamais fusionner deux idées)
-- "points" : expose fidèlement chaque règle, mécanisme, distinction du texte source. Style académique, complet, sans raccourcis.
-- "notions" : termes juridiques avec définitions précises niveau L1. Cite un article de loi UNIQUEMENT s'il est dans le texte source — jamais l'inventer.
-- "retenir" : une phrase synthèse juridiquement précise, niveau examen L1
-- Chaque notion définie une seule fois — pas de répétitions entre sections
-- N'invente aucun article de loi, aucun mécanisme absent du texte
+- Chaque chapitre/sous-chapitre du texte = une section JSON distincte (ne jamais fusionner)
+- "points" : ANALYSER pas décrire — pour chaque mécanisme, expliquer POURQUOI et QUELLES CONSÉQUENCES. Montrer les logiques politiques ou juridiques, les contradictions (ex: révolution → démocratie mais aussi → Terreur)
+- Précision : ne jamais approximer ('suffrage universel masculin' pas 'suffrage universel', 'salut public' pas 'morale')
+- "notions" : définitions précises niveau L1/Master. Cite un article ou auteur UNIQUEMENT s'il est dans le texte source
+- "retenir" : synthèse analytique une phrase, niveau examen L1
+- Chaque notion définie une seule fois — pas de répétitions
+- N'invente rien d'absent du texte source
 
 Format JSON uniquement :
-{"sections":[{"title":"Titre exact du chapitre tel qu'il apparaît dans le texte","notions":[{"term":"Terme","definition":"Définition précise L1/Master, article cité uniquement si présent dans le texte source"}],"points":["Développement fidèle au texte, style académique, complet."],"retenir":"Synthèse juridique précise."}]}
+{"sections":[{"title":"Titre exact du chapitre","notions":[{"term":"Terme","definition":"Définition analytique précise L1/Master"}],"points":["Analyse : mécanisme + enjeux + contradictions + conséquences, style académique rigoureux."],"retenir":"Synthèse analytique précise niveau examen."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
