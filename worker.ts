@@ -175,25 +175,28 @@ Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","S
     }
   }
 
-  // Appel d'enrichissement : cas pratiques, articles essentiels, erreurs fréquentes
+  // Appel 1 : enrichissement pédagogique (carte mentale détaillée, erreurs, logique, problèmes)
   try {
     await sleep(5000)
-    const enrichResult = result as { title?: string; sections?: Array<{ title: string; retenir?: string }> }
+    const enrichResult = result as { title?: string; sections?: Array<{ title: string; retenir?: string; points?: string[] }> }
     const synthese = (enrichResult.sections || [])
-      .slice(0, 20)
+      .slice(0, 15)
       .map(s => `- ${s.title}${s.retenir ? ' : ' + s.retenir : ''}`)
       .join('\n')
-    const enrichPrompt = `Tu es un professeur de droit niveau Licence. À partir de ce cours, génère en JSON :
-1. "problemesJuridiques" : 3 questions juridiques classiques avec principe et exception (si applicable)
-2. "articlesEssentiels" : les articles de loi UNIQUEMENT cités dans le cours ci-dessous, avec leur rôle précis
-3. "erreursFrequentes" : 4 erreurs classiques d'étudiants sur ce sujet avec la correction exacte
-4. "logique" : 3 idées clés résumant la logique juridique du cours en une phrase chacune
-5. "schema" : carte mentale du cours avec un nœud central (le sujet du cours) et 3-5 branches principales, chacune ayant 2-3 sous-éléments
 
-Format JSON uniquement :
-{"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"articlesEssentiels":[{"article":"Art. X","description":"Rôle précis"}],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"logique":["Idée 1","Idée 2","Idée 3"],"schema":{"root":"Sujet central","branches":[{"label":"Branche 1","children":["Sous-élément A","Sous-élément B"]},{"label":"Branche 2","children":["Sous-élément C","Sous-élément D"]}]}}
+    const enrichPrompt = `Tu es un professeur de droit niveau Licence/Master. À partir de ce cours, génère en JSON :
+1. "logique" : 3 phrases résumant la logique juridique d'ensemble avec vocabulaire juridique précis
+2. "erreursFrequentes" : 5 erreurs classiques d'étudiants avec correction juridiquement exacte
+3. "problemesJuridiques" : 3 questions d'examen type avec principe juridique et exception si applicable
+4. "schema" : carte mentale DÉTAILLÉE — nœud central + 4-5 branches principales, chaque branche avec 3-4 sous-éléments précis (notions juridiques, pas juste des mots vagues)
 
-COURS (sections) :
+Exemple de schema détaillé attendu :
+{"root":"Le Patrimoine","branches":[{"label":"Définition","children":["Universalité juridique (actif + passif)","Construction doctrinale d'Aubry et Rau","Absence de définition légale dans le Code civil","Lien indissociable avec la personnalité juridique"]},{"label":"Caractères","children":["Unicité : une personne = un seul patrimoine","Indivisibilité : actif et passif liés","Incessibilité : ne peut être cédé entre vifs","Transmissibilité : transmis à la mort aux héritiers"]},{"label":"Rôle juridique","children":["Gage commun des créanciers (art. 2285 C. civ.)","Responsabilité patrimoniale (art. 2284 C. civ.)","Support des droits et obligations","Subrogation réelle : les biens se remplacent"]}]}
+
+Format JSON :
+{"logique":["Phrase 1","Phrase 2","Phrase 3"],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"schema":{"root":"Sujet du cours","branches":[{"label":"Branche","children":["Sous-élément précis","Sous-élément précis","Sous-élément précis"]}]}}
+
+COURS :
 ${synthese}`
 
     const enrichRaw = await callGroq(enrichPrompt)
@@ -201,10 +204,41 @@ ${synthese}`
     if (enrichMatch) {
       const enrichData = JSON.parse(enrichMatch[0])
       result = { ...result, ...enrichData }
-      console.log('[Worker] Enrichissement généré')
+      console.log('[Worker] Enrichissement pédagogique généré')
     }
   } catch (e) {
     console.error('[Worker] Enrichissement échoué (non bloquant):', e)
+  }
+
+  // Appel 2 : recherche approfondie — compléments utiles pour l'examen
+  try {
+    await sleep(5000)
+    const enrichResult2 = result as { title?: string; sections?: Array<{ title: string }> }
+    const titres = (enrichResult2.sections || []).map(s => s.title).join(', ')
+
+    const recherchePrompt = `Tu es un professeur de droit français niveau Licence/Master. Pour le cours sur "${enrichResult2.title || 'ce sujet'}", utilise tes connaissances approfondies en droit français pour générer UNIQUEMENT des compléments utiles à l'examen.
+
+RÈGLE ABSOLUE : n'inclus que ce qui est directement utile pour réussir un examen de droit — pas de culture générale, pas d'histoire, pas de détails inutiles.
+
+Génère en JSON :
+1. "jurisprudenceCles" : 2-3 arrêts ou décisions fondamentaux que tout étudiant doit connaître sur ce sujet (juridiction, date approximative, apport juridique en une phrase). Ne cite que si tu es certain à 100%.
+2. "distinctionsCles" : 3-4 distinctions juridiques fondamentales à maîtriser pour l'examen (ex: "Droit réel vs droit personnel : le droit réel est opposable erga omnes, le droit personnel n'est opposable qu'au débiteur")
+3. "articlesEssentiels" : articles de loi pertinents pour ce cours avec leur apport juridique exact — uniquement si tu es certain de leur contenu
+
+Format JSON :
+{"jurisprudenceCles":[{"juridiction":"Cass. civ. 1re","date":"...","apport":"..."}],"distinctionsCles":[{"distinction":"A vs B","explication":"..."}],"articlesEssentiels":[{"article":"Art. X C. civ.","description":"Apport juridique exact"}]}
+
+Sections du cours : ${titres}`
+
+    const rechercheRaw = await callGroq(recherchePrompt)
+    const rechercheMatch = rechercheRaw.match(/\{[\s\S]*\}/)
+    if (rechercheMatch) {
+      const rechercheData = JSON.parse(rechercheMatch[0])
+      result = { ...result, ...rechercheData }
+      console.log('[Worker] Recherche approfondie générée')
+    }
+  } catch (e) {
+    console.error('[Worker] Recherche approfondie échouée (non bloquant):', e)
   }
 
   await redis.setex(cacheKey, 86400, JSON.stringify(result))

@@ -11,6 +11,8 @@ interface ArticleEssentiel { article: string; description: string }
 interface ErreurFrequente { erreur: string; correction: string }
 interface SchemaBranch { label: string; children: string[] }
 interface Schema { root: string; branches: SchemaBranch[] }
+interface Jurisprudence { juridiction: string; date: string; apport: string }
+interface Distinction { distinction: string; explication: string }
 interface StructuredContent {
   title: string
   plan: string[]
@@ -21,6 +23,8 @@ interface StructuredContent {
   erreursFrequentes?: ErreurFrequente[]
   logique?: string[]
   schema?: Schema
+  jurisprudenceCles?: Jurisprudence[]
+  distinctionsCles?: Distinction[]
 }
 interface Folder { id: string; name: string; color: string }
 interface Course {
@@ -303,26 +307,27 @@ export default function CoursePage() {
             {/* Schéma / Carte mentale */}
             {s.schema && s.schema.branches?.length > 0 && (
               <div className="border rounded-xl p-5 mb-8">
-                <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mb-5">🗺️ Carte mentale</p>
+                <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mb-6">🗺️ Carte mentale</p>
                 <div className="flex flex-col items-center">
                   {/* Nœud central */}
-                  <div className="bg-indigo-600 text-white font-bold text-sm px-5 py-2.5 rounded-full mb-4">
+                  <div className="bg-indigo-600 text-white font-bold text-sm px-6 py-3 rounded-2xl mb-2 text-center shadow">
                     {s.schema.root}
                   </div>
-                  {/* Ligne verticale */}
-                  <div className="w-px h-5 bg-gray-300 mb-1"/>
+                  <div className="w-px h-6 bg-indigo-300"/>
                   {/* Branches */}
-                  <div className="flex flex-wrap justify-center gap-4 w-full">
+                  <div className="flex flex-wrap justify-center gap-6 w-full mt-2">
                     {s.schema.branches.map((branch, bi) => (
-                      <div key={bi} className="flex flex-col items-center min-w-[140px] max-w-[180px]">
-                        {/* Branche */}
-                        <div className="bg-indigo-100 text-indigo-800 font-semibold text-xs px-3 py-1.5 rounded-lg text-center mb-2">
+                      <div key={bi} className="flex flex-col items-center w-44">
+                        {/* Connecteur */}
+                        <div className="w-px h-4 bg-indigo-200 mb-1"/>
+                        {/* Label branche */}
+                        <div className="bg-indigo-100 text-indigo-800 font-bold text-xs px-3 py-2 rounded-xl text-center mb-2 w-full border border-indigo-200">
                           {branch.label}
                         </div>
-                        {/* Sous-éléments */}
-                        <div className="flex flex-col gap-1 w-full">
+                        {/* Sous-éléments détaillés */}
+                        <div className="flex flex-col gap-1.5 w-full">
                           {branch.children?.map((child, ci) => (
-                            <div key={ci} className="bg-slate-50 border text-gray-600 text-xs px-2 py-1 rounded text-center">
+                            <div key={ci} className="bg-slate-50 border border-slate-200 text-gray-700 text-xs px-3 py-1.5 rounded-lg leading-snug">
                               {child}
                             </div>
                           ))}
@@ -385,6 +390,39 @@ export default function CoursePage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Distinctions clés */}
+            {s.distinctionsCles && s.distinctionsCles.length > 0 && (
+              <div className="border border-blue-100 rounded-xl p-5 mb-8">
+                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">⚡ Distinctions fondamentales à maîtriser</p>
+                <div className="space-y-3">
+                  {s.distinctionsCles.map((d, i) => (
+                    <div key={i} className="bg-blue-50 rounded-lg p-3 text-sm">
+                      <p className="font-bold text-blue-800 mb-1">{d.distinction}</p>
+                      <p className="text-gray-700">{d.explication}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Jurisprudence clés */}
+            {s.jurisprudenceCles && s.jurisprudenceCles.length > 0 && (
+              <div className="border border-purple-100 rounded-xl p-5 mb-8">
+                <p className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-3">⚖️ Jurisprudence à connaître</p>
+                <div className="space-y-3">
+                  {s.jurisprudenceCles.map((j, i) => (
+                    <div key={i} className="flex gap-3 text-sm">
+                      <div className="shrink-0">
+                        <span className="bg-purple-100 text-purple-700 font-semibold px-2 py-0.5 rounded text-xs">{j.juridiction}</span>
+                        {j.date && <span className="text-gray-400 text-xs ml-1">{j.date}</span>}
+                      </div>
+                      <p className="text-gray-700">{j.apport}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </>
