@@ -78,9 +78,9 @@ ${context}`
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const res = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 5000,
+        max_tokens: 4000,
         temperature: 0.7,
         response_format: { type: 'json_object' },
       })
