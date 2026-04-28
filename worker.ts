@@ -73,7 +73,7 @@ Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
     {
       "title": "Titre exact de la section tel qu'il apparaît dans le texte",
       "notions": [
-        { "term": "Terme juridique", "definition": "Définition courte, précise, juridiquement correcte. Ex : 'Universalité juridique comprenant l'ensemble des droits et obligations (actif + passif) d'une personne (Aubry et Rau).' — Ne cite un article QUE s'il figure expressément dans le texte source." }
+        { "term": "Terme juridique", "definition": "Définition juridiquement exacte et complète. EXEMPLES de bonnes définitions : 'Indivision : situation juridique dans laquelle plusieurs personnes (indivisaires) sont titulaires de droits de même nature sur un même bien sans que leurs parts soient matériellement divisées — peut résulter d'une succession, d'un achat commun ou d'un divorce (art. 815 C. civ. si mentionné dans le texte).' / 'Patrimoine : universalité juridique comprenant l'ensemble des droits et obligations (actif + passif) d'une personne — construction doctrinale d'Aubry et Rau, sans définition dans le Code civil.' INTERDIT : définitions incomplètes, affirmations fausses (ex: 'doit être transmis par succession'), articles non présents dans le texte source." }
       ],
       "points": [
         "STRING uniquement (jamais un objet JSON). Expose le mécanisme juridique avec sa logique et ses conséquences. Ex : 'L'article 2284 C. civ. fonde la responsabilité patrimoniale : le débiteur répond de ses obligations sur l'ensemble de ses biens présents et futurs, constituant ainsi le gage commun des créanciers.' — ne cite cet article que s'il est dans le texte source.",
@@ -116,7 +116,7 @@ NIVEAU EXIGÉ : Licence/Master — raisonnement de juriste, vocabulaire précis,
 RÈGLES ABSOLUES :
 - Chaque chapitre/sous-chapitre = une section JSON distincte (ne jamais fusionner)
 - "points" : TOUJOURS des strings — JAMAIS des objets JSON. Expose le mécanisme juridique avec sa logique et ses conséquences concrètes, en une phrase développée et précise
-- "notions" : définitions courtes et juridiquement exactes. Ex : 'Universalité juridique (actif + passif) rattachée à la personne — théorie doctrinale d'Aubry et Rau, sans définition dans le Code civil'. Cite un article UNIQUEMENT s'il figure dans le texte source
+- "notions" : définitions complètes et juridiquement exactes. Ex correct : 'Indivision : situation juridique dans laquelle plusieurs personnes (indivisaires) sont titulaires de droits de même nature sur un même bien sans que leurs parts soient matériellement divisées — peut résulter d'une succession, d'un achat commun ou d'un divorce.' Ex incorrect à ne JAMAIS faire : 'Indivision = lorsque plusieurs personnes sont propriétaires d'un même bien il doit être transmis par succession' (incomplet + affirmation fausse). Cite un article UNIQUEMENT s'il figure dans le texte source.
 - Articles de loi : NE JAMAIS inventer ni ajouter un article absent du texte source
 - Définitions : jamais vagues — précises, utilisables en examen
 - "retenir" : une phrase synthèse juridiquement exacte, niveau partiel L1
