@@ -15,6 +15,10 @@ export default function FlashcardsPage() {
   const [unknown, setUnknown] = useState<number[]>([])
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [reviewMode, setReviewMode] = useState(false)
+  const [reviewCards, setReviewCards] = useState<Card[]>([])
+  const [reviewKnown, setReviewKnown] = useState<number[]>([])
+  const [reviewDone, setReviewDone] = useState(false)
 
   async function generateCards() {
     setLoading(true)
@@ -38,10 +42,54 @@ export default function FlashcardsPage() {
       setKnown([])
       setUnknown([])
       setDone(false)
+      setReviewMode(false)
+      setReviewCards([])
+      setReviewKnown([])
+      setReviewDone(false)
     } catch {
       setError('Erreur réseau, vérifie ta connexion.')
     }
     setLoading(false)
+  }
+
+  function startReview() {
+    const toReview = unknown.map(i => cards[i])
+    setReviewCards(toReview)
+    setReviewKnown([])
+    setReviewDone(false)
+    setCurrent(0)
+    setFlipped(false)
+    setReviewMode(true)
+    setDone(false)
+  }
+
+  function handleReviewKnown() {
+    const next = [...reviewKnown, current]
+    setReviewKnown(next)
+    if (current + 1 >= reviewCards.length) {
+      setReviewDone(true)
+    } else {
+      setCurrent(current + 1)
+      setFlipped(false)
+    }
+  }
+
+  function handleReviewUnknown() {
+    if (current + 1 >= reviewCards.length) {
+      // Repart du début avec les cartes encore ratées
+      const stillUnknown = reviewCards.filter((_, i) => !reviewKnown.includes(i) && i !== current)
+      if (stillUnknown.length === 0) {
+        setReviewDone(true)
+      } else {
+        setReviewCards(stillUnknown)
+        setReviewKnown([])
+        setCurrent(0)
+        setFlipped(false)
+      }
+    } else {
+      setCurrent(current + 1)
+      setFlipped(false)
+    }
   }
 
   function handleKnown() {
@@ -63,6 +111,26 @@ export default function FlashcardsPage() {
     }
   }
 
+  // Fin de révision des cartes à revoir
+  if (reviewMode && reviewDone) {
+    return (
+      <div className="min-h-screen bg-white">
+        <nav className="border-b px-6 py-3 flex items-center gap-4">
+          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
+        </nav>
+        <main className="max-w-lg mx-auto px-6 py-20 text-center">
+          <p className="text-5xl mb-4">🏆</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Bravo, tu as tout revu !</h2>
+          <p className="text-gray-500 mb-8">Tu maîtrises toutes les cartes à revoir.</p>
+          <button onClick={generateCards} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition">
+            Nouvelle session complète
+          </button>
+        </main>
+      </div>
+    )
+  }
+
+  // Résultats de la session principale
   if (done) {
     return (
       <div className="min-h-screen bg-white">
@@ -83,17 +151,25 @@ export default function FlashcardsPage() {
             </div>
           </div>
           {unknown.length > 0 && (
-            <div className="mb-6 text-left">
-              <p className="font-semibold text-gray-700 mb-3 text-sm">À revoir :</p>
-              <div className="space-y-2">
-                {unknown.map(i => (
-                  <div key={i} className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-gray-700">
-                    <p className="font-medium">{cards[i].question}</p>
-                    <p className="text-gray-500 mt-1">{cards[i].answer}</p>
-                  </div>
-                ))}
+            <>
+              <button
+                onClick={startReview}
+                className="w-full bg-orange-500 text-white py-3 rounded-xl font-medium hover:bg-orange-600 transition mb-3"
+              >
+                🔁 Réviser les {unknown.length} cartes à revoir
+              </button>
+              <div className="mb-6 text-left">
+                <p className="font-semibold text-gray-700 mb-3 text-sm mt-4">Cartes à revoir :</p>
+                <div className="space-y-2">
+                  {unknown.map(i => (
+                    <div key={i} className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-gray-700">
+                      <p className="font-medium">{cards[i].question}</p>
+                      <p className="text-gray-500 mt-1">{cards[i].answer}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </>
           )}
           <button onClick={generateCards} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition">
             Nouvelle session
@@ -139,18 +215,29 @@ export default function FlashcardsPage() {
     )
   }
 
-  const card = cards[current]
+  const activeCards = reviewMode ? reviewCards : cards
+  const card = activeCards[current]
 
   return (
     <div className="min-h-screen bg-white">
       <nav className="border-b px-6 py-3 flex items-center gap-4">
         <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
-        <h1 className="font-bold text-gray-900">Flashcards</h1>
-        <span className="ml-auto text-sm text-gray-400">{current + 1} / {cards.length}</span>
+        <h1 className="font-bold text-gray-900">
+          {reviewMode ? '🔁 Révision des cartes à revoir' : 'Flashcards'}
+        </h1>
+        <span className="ml-auto text-sm text-gray-400">{current + 1} / {activeCards.length}</span>
       </nav>
       <main className="max-w-lg mx-auto px-6 py-10">
+        {reviewMode && (
+          <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-2 mb-6 text-sm text-orange-700 text-center">
+            Mode révision — répète jusqu&apos;à maîtriser toutes les cartes
+          </div>
+        )}
         <div className="w-full bg-gray-100 rounded-full h-2 mb-8">
-          <div className="bg-indigo-600 h-2 rounded-full transition-all" style={{ width: `${((current + 1) / cards.length) * 100}%` }}/>
+          <div
+            className={`h-2 rounded-full transition-all ${reviewMode ? 'bg-orange-500' : 'bg-indigo-600'}`}
+            style={{ width: `${((current + 1) / activeCards.length) * 100}%` }}
+          />
         </div>
 
         {/* Carte */}
@@ -175,13 +262,13 @@ export default function FlashcardsPage() {
         {flipped ? (
           <div className="flex gap-3">
             <button
-              onClick={handleUnknown}
+              onClick={reviewMode ? handleReviewUnknown : handleUnknown}
               className="flex-1 border-2 border-red-300 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition"
             >
               ✗ À revoir
             </button>
             <button
-              onClick={handleKnown}
+              onClick={reviewMode ? handleReviewKnown : handleKnown}
               className="flex-1 border-2 border-green-400 text-green-700 py-3 rounded-xl font-medium hover:bg-green-50 transition"
             >
               ✓ Je sais
