@@ -52,8 +52,19 @@ export default function CoursePage() {
 
   function fetchCourse() {
     fetch(`/api/courses/${id}`)
-      .then((r) => { if (!r.ok) throw new Error('not found'); return r.json() })
-      .then((data: Course) => {
+      .then((r) => {
+        if (r.status === 404) {
+          // Cours introuvable — arrête le polling et redirige
+          if (pollRef.current) clearInterval(pollRef.current)
+          if (timerRef.current) clearInterval(timerRef.current)
+          setLoading(false)
+          return null
+        }
+        if (!r.ok) throw new Error('error')
+        return r.json()
+      })
+      .then((data: Course | null) => {
+        if (!data) return
         setCourse(data)
         setLoading(false)
         if (data.status === 'ready' || data.status === 'error') {
