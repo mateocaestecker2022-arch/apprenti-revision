@@ -61,37 +61,44 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   return ''
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Tu structures ce cours en JSON rigoureux et fiable.
+const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Tu restructures ce cours en JSON selon un ordre logique par notions.
 
 NIVEAU EXIGÉ : Licence/Master — vocabulaire juridique précis, raisonnement de juriste, jamais de style lycée.
 
-Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
+ORDRE LOGIQUE OBLIGATOIRE des sections (respecte cet ordre) :
+1. Définition(s) centrale(s) de la matière
+2. Principes fondamentaux
+3. Contenu / composantes (ex: actif/passif, droits réels/personnels)
+4. Titulaires / sujets concernés
+5. Rôle juridique et effets
+6. Aménagements et exceptions
+7. Limites et protections
+
+Retourne UNIQUEMENT ce JSON :
 {
   "title": "Titre du cours",
   "plan": ["Titre section 1", "Titre section 2"],
   "sections": [
     {
-      "title": "Titre exact de la section tel qu'il apparaît dans le texte",
+      "title": "Titre de la notion (ex: 'La notion de patrimoine', 'Les caractères du patrimoine')",
       "notions": [
-        { "term": "Terme juridique", "definition": "Définition juridiquement exacte et complète. EXEMPLES de bonnes définitions : 'Indivision : situation juridique dans laquelle plusieurs personnes (indivisaires) sont titulaires de droits de même nature sur un même bien sans que leurs parts soient matériellement divisées — peut résulter d'une succession, d'un achat commun ou d'un divorce (art. 815 C. civ. si mentionné dans le texte).' / 'Patrimoine : universalité juridique comprenant l'ensemble des droits et obligations (actif + passif) d'une personne — construction doctrinale d'Aubry et Rau, sans définition dans le Code civil.' INTERDIT : définitions incomplètes, affirmations fausses (ex: 'doit être transmis par succession'), articles non présents dans le texte source." }
+        { "term": "Terme juridique", "definition": "Définition complète et exacte. EXEMPLES CORRECTS : 'Patrimoine : universalité juridique comprenant l'ensemble des droits et obligations (actif + passif) d'une personne — construction doctrinale d'Aubry et Rau, sans définition légale dans le Code civil.' / 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) sont titulaires de droits de même nature sur un même bien sans division matérielle — peut résulter d'une succession, d'un achat commun ou d'un divorce.' INTERDIT : définitions incomplètes, affirmations fausses, articles non présents dans le texte." }
       ],
       "points": [
-        "STRING uniquement (jamais un objet JSON). Expose le mécanisme juridique avec sa logique et ses conséquences. Ex : 'L'article 2284 C. civ. fonde la responsabilité patrimoniale : le débiteur répond de ses obligations sur l'ensemble de ses biens présents et futurs, constituant ainsi le gage commun des créanciers.' — ne cite cet article que s'il est dans le texte source.",
-        "Autre point sous forme de STRING. Précis, sans approximation : 'suffrage universel masculin' pas 'suffrage universel', 'construction doctrinale' pas 'règle du Code civil' si ce n'est pas dans la loi."
+        "STRING uniquement — jamais un objet JSON. Développe le mécanisme juridique avec sa logique et ses conséquences."
       ],
       "retenir": "Synthèse en une phrase juridiquement exacte, utilisable en examen."
     }
   ],
-  "summary": "Résumé en 4-5 phrases : logique juridique d'ensemble, principes fondamentaux, exceptions et enjeux."
+  "summary": "Résumé en 4-5 phrases : logique juridique d'ensemble, principes, exceptions, enjeux."
 }
 
 RÈGLES ABSOLUES :
-- "points" : TOUJOURS des strings — JAMAIS des objets JSON avec clés "point"/"enjeux"/"conséquences"
-- Articles de loi : citer UNIQUEMENT ceux présents dans le texte source — NE JAMAIS en inventer ni en ajouter
-- Définitions : courtes, précises, juridiquement exactes — pas de formulations vagues ou approximatives
-- Ne pas mélanger les matières : si le texte source mélange histoire et droit, séparer clairement les sections
-- Chaque notion définie une seule fois — pas de répétitions entre sections
-- Chaque chapitre/sous-chapitre = une section distincte, jamais fusionnée
+- Ordre : structure TOUJOURS par notions dans l'ordre logique ci-dessus — pas dans l'ordre du document source
+- Articles de loi : INTERDICTION ABSOLUE d'inventer ou d'ajouter un article absent du texte source. Si un article n'est pas écrit mot pour mot dans le texte, ne le cite PAS.
+- "points" : TOUJOURS des strings, JAMAIS des objets JSON
+- Définitions : complètes, exactes, sans affirmations fausses
+- Chaque notion définie une seule fois
 - Réponds UNIQUEMENT avec le JSON valide`
 
 async function processCourse(content: string): Promise<object> {
@@ -109,21 +116,21 @@ async function processCourse(content: string): Promise<object> {
   } else {
     const chunks = splitIntoChunks(content)
 
-    const chunkSystem = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Transforme cette partie de cours en JSON rigoureux et fiable.
+    const chunkSystem = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Transforme cette partie de cours en JSON rigoureux.
 
-NIVEAU EXIGÉ : Licence/Master — raisonnement de juriste, vocabulaire précis, jamais de style lycée.
+NIVEAU EXIGÉ : Licence/Master — raisonnement de juriste, vocabulaire précis.
 
 RÈGLES ABSOLUES :
-- Chaque chapitre/sous-chapitre = une section JSON distincte (ne jamais fusionner)
-- "points" : TOUJOURS des strings — JAMAIS des objets JSON. Expose le mécanisme juridique avec sa logique et ses conséquences concrètes, en une phrase développée et précise
-- "notions" : définitions complètes et juridiquement exactes. Ex correct : 'Indivision : situation juridique dans laquelle plusieurs personnes (indivisaires) sont titulaires de droits de même nature sur un même bien sans que leurs parts soient matériellement divisées — peut résulter d'une succession, d'un achat commun ou d'un divorce.' Ex incorrect à ne JAMAIS faire : 'Indivision = lorsque plusieurs personnes sont propriétaires d'un même bien il doit être transmis par succession' (incomplet + affirmation fausse). Cite un article UNIQUEMENT s'il figure dans le texte source.
-- Articles de loi : NE JAMAIS inventer ni ajouter un article absent du texte source
-- Définitions : jamais vagues — précises, utilisables en examen
-- "retenir" : une phrase synthèse juridiquement exacte, niveau partiel L1
-- Chaque notion définie une seule fois, pas de répétitions entre sections
+- Structure les sections par NOTION dans l'ordre logique : définition → principes → contenu → titulaires → effets → exceptions → limites
+- "points" : TOUJOURS des strings — JAMAIS des objets JSON
+- "notions" : définitions complètes et exactes. INTERDIT : 'Indivision = transmis par succession' (faux). CORRECT : 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) ont des droits de même nature sur un bien sans division matérielle — résulte d'une succession, achat commun ou divorce.'
+- Articles de loi : INTERDICTION ABSOLUE d'inventer. Cite un article UNIQUEMENT s'il est écrit mot pour mot dans le texte ci-dessous. Sinon, ne le cite PAS.
+- Définitions : complètes, sans affirmations fausses, utilisables en examen
+- "retenir" : synthèse juridiquement exacte en une phrase
+- Chaque notion définie une seule fois
 
 Format JSON uniquement :
-{"sections":[{"title":"Titre exact du chapitre","notions":[{"term":"Terme","definition":"Définition courte et juridiquement exacte"}],"points":["Mécanisme juridique + logique + conséquences concrètes, en string."],"retenir":"Synthèse précise niveau examen L1."}]}
+{"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"Définition complète et exacte, sans articles inventés"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
