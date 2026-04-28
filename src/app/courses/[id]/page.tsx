@@ -6,11 +6,18 @@ import { AssignFolderButton } from '@/components/AssignFolderButton'
 
 interface Notion { term: string; definition: string }
 interface Section { title: string; notions: Notion[]; points: string[]; retenir?: string }
+interface ProblemeJuridique { question: string; principe: string; exception?: string }
+interface ArticleEssentiel { article: string; description: string }
+interface ErreurFrequente { erreur: string; correction: string }
 interface StructuredContent {
   title: string
   plan: string[]
   sections: Section[]
   summary: string
+  problemesJuridiques?: ProblemeJuridique[]
+  articlesEssentiels?: ArticleEssentiel[]
+  erreursFrequentes?: ErreurFrequente[]
+  logique?: string[]
 }
 interface Folder { id: string; name: string; color: string }
 interface Course {
@@ -215,6 +222,18 @@ export default function CoursePage() {
               </div>
             )}
 
+            {/* Logique du cours */}
+            {s.logique && s.logique.length > 0 && (
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 mb-8">
+                <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-3">🧠 Logique du cours</p>
+                <ol className="space-y-1.5 list-decimal list-inside">
+                  {s.logique.map((idea, i) => (
+                    <li key={i} className="text-gray-700 text-sm">{idea}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
             {/* Sections */}
             {s.sections && s.sections.map((section, i) => (
               <div key={i} id={`section-${i}`} className="mb-10">
@@ -278,6 +297,59 @@ export default function CoursePage() {
                 )}
               </div>
             ))}
+            {/* Articles essentiels */}
+            {s.articlesEssentiels && s.articlesEssentiels.length > 0 && (
+              <div className="border rounded-xl p-5 mb-8">
+                <p className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-3">📚 Articles essentiels</p>
+                <ul className="space-y-2">
+                  {s.articlesEssentiels.map((a, i) => (
+                    <li key={i} className="flex gap-3 text-sm">
+                      <span className="font-semibold text-purple-700 shrink-0">{a.article}</span>
+                      <span className="text-gray-700">{a.description}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Problèmes juridiques types */}
+            {s.problemesJuridiques && s.problemesJuridiques.length > 0 && (
+              <div className="border rounded-xl p-5 mb-8">
+                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">⚖️ Problèmes juridiques types</p>
+                <ul className="space-y-4">
+                  {s.problemesJuridiques.map((p, i) => (
+                    <li key={i} className="text-sm">
+                      <p className="font-semibold text-gray-900 mb-1">{p.question}</p>
+                      <p className="text-gray-700">➡️ Principe : {p.principe}</p>
+                      {p.exception && <p className="text-gray-500 mt-0.5">⚠️ Exception : {p.exception}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Erreurs fréquentes */}
+            {s.erreursFrequentes && s.erreursFrequentes.length > 0 && (
+              <div className="border border-red-100 rounded-xl p-5 mb-8">
+                <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-3">⚠️ Erreurs fréquentes à éviter</p>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-500 border-b">
+                      <th className="pb-2 font-medium w-1/2">Erreur</th>
+                      <th className="pb-2 font-medium w-1/2">Correction</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {s.erreursFrequentes.map((e, i) => (
+                      <tr key={i} className="border-b last:border-0">
+                        <td className="py-2 pr-4 text-red-600">❌ {e.erreur}</td>
+                        <td className="py-2 text-green-700">✅ {e.correction}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </>
         )}
       </main>

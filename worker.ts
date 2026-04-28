@@ -165,6 +165,37 @@ Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","S
     }
   }
 
+  // Appel d'enrichissement : cas pratiques, articles essentiels, erreurs fréquentes
+  try {
+    await sleep(5000)
+    const enrichResult = result as { title?: string; sections?: Array<{ title: string; retenir?: string }> }
+    const synthese = (enrichResult.sections || [])
+      .slice(0, 20)
+      .map(s => `- ${s.title}${s.retenir ? ' : ' + s.retenir : ''}`)
+      .join('\n')
+    const enrichPrompt = `Tu es un professeur de droit niveau Licence. À partir de ce cours, génère en JSON :
+1. "problemesJuridiques" : 3 questions juridiques classiques avec principe et exception (si applicable)
+2. "articlesEssentiels" : les articles de loi UNIQUEMENT cités dans le cours ci-dessous, avec leur rôle précis
+3. "erreursFrequentes" : 4 erreurs classiques d'étudiants sur ce sujet avec la correction exacte
+4. "logique" : 3 idées clés résumant la logique juridique du cours en une phrase chacune
+
+Format JSON uniquement :
+{"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"articlesEssentiels":[{"article":"Art. X","description":"Rôle précis"}],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"logique":["Idée 1","Idée 2","Idée 3"]}
+
+COURS (sections) :
+${synthese}`
+
+    const enrichRaw = await callGroq(enrichPrompt)
+    const enrichMatch = enrichRaw.match(/\{[\s\S]*\}/)
+    if (enrichMatch) {
+      const enrichData = JSON.parse(enrichMatch[0])
+      result = { ...result, ...enrichData }
+      console.log('[Worker] Enrichissement généré')
+    }
+  } catch (e) {
+    console.error('[Worker] Enrichissement échoué (non bloquant):', e)
+  }
+
   await redis.setex(cacheKey, 86400, JSON.stringify(result))
   return result
 }
