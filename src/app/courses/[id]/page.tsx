@@ -54,10 +54,10 @@ export default function CoursePage() {
     fetch(`/api/courses/${id}`)
       .then((r) => {
         if (r.status === 404) {
-          // Cours introuvable — arrête le polling et redirige
           if (pollRef.current) clearInterval(pollRef.current)
           if (timerRef.current) clearInterval(timerRef.current)
           setLoading(false)
+          setCourse(null)
           return null
         }
         if (!r.ok) throw new Error('error')
@@ -105,7 +105,13 @@ export default function CoursePage() {
 
   if (!course) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <p className="text-gray-500">Cours introuvable</p>
+      <div className="text-center">
+        <p className="text-gray-700 font-semibold mb-2">Cours introuvable</p>
+        <p className="text-gray-400 text-sm mb-4">Ce cours a été supprimé ou n&apos;existe pas.</p>
+        <a href="/dashboard" className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-indigo-700 transition">
+          ← Retour au dashboard
+        </a>
+      </div>
     </div>
   )
 
