@@ -12,7 +12,7 @@ const redis = new Redis(connection)
 const prisma = new PrismaClient()
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-const CHUNK_SIZE = 3500 // Ajusté pour rester sous la limite 6000 tokens/requête Groq (input + output)
+const CHUNK_SIZE = 2500 // Réduit pour compenser les prompts plus longs (vocabulaire juridique)
 
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
@@ -65,7 +65,7 @@ const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (
 
 NIVEAU EXIGÉ : Licence/Master — vocabulaire juridique précis, raisonnement de juriste, jamais de style lycée.
 
-VOCABULAIRE : utilise les termes juridiques précis — titulaire, débiteur, créancier, universalité, opposabilité, erga omnes, sûreté, subrogation, nullité, intuitu personae. Jamais le langage courant.
+VOCABULAIRE JURIDIQUE OBLIGATOIRE : titulaire, débiteur, créancier, universalité juridique, opposabilité, erga omnes, intuitu personae, sûreté réelle/personnelle, gage commun, subrogation réelle, nullité relative/absolue, patrimoine d'affectation. Jamais le langage courant (ex: "appartient à" → "est dévolu à", "annulé" → "frappé de nullité").
 
 ORDRE LOGIQUE OBLIGATOIRE des sections (respecte cet ordre) :
 1. Définition(s) centrale(s) de la matière
@@ -127,7 +127,7 @@ RÈGLES ABSOLUES :
 - "points" : TOUJOURS des strings — JAMAIS des objets JSON
 - "notions" : définitions complètes et exactes. INTERDIT : 'Indivision = transmis par succession' (faux). CORRECT : 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) ont des droits de même nature sur un bien sans division matérielle — résulte d'une succession, achat commun ou divorce.'
 - Articles de loi : utilise tes connaissances en droit français pour citer les articles RÉELS. Ne cite un article QUE si tu es certain à 100% de son contenu. Si doute → ne cite pas. Articles sûrs en droit civil : art. 2284 (responsabilité), art. 2285 (gage créanciers), art. 815 (indivision), art. 16 / 16-1 (dignité/corps), art. 515-14 (animaux), art. 1400 (communauté légale).
-- Vocabulaire : termes juridiques obligatoires — titulaire, débiteur, créancier, universalité, opposabilité, erga omnes, sûreté, subrogation, nullité. Jamais le langage courant.
+- Vocabulaire : titulaire, débiteur, créancier, universalité, opposabilité, erga omnes, sûreté, subrogation, nullité — jamais le langage courant.
 - Définitions : complètes, sans affirmations fausses, utilisables en examen
 - "retenir" : synthèse juridiquement exacte en une phrase
 - Chaque notion définie une seule fois
