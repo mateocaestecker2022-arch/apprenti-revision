@@ -14,17 +14,33 @@ export default function FlashcardsPage() {
   const [known, setKnown] = useState<number[]>([])
   const [unknown, setUnknown] = useState<number[]>([])
   const [done, setDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function generateCards() {
     setLoading(true)
-    const res = await fetch(`/api/courses/${id}/flashcards`, { method: 'POST' })
-    const data = await res.json()
-    setCards(data.cards || [])
-    setCurrent(0)
-    setFlipped(false)
-    setKnown([])
-    setUnknown([])
-    setDone(false)
+    setError(null)
+    try {
+      const res = await fetch(`/api/courses/${id}/flashcards`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        setError(data.error || 'Erreur lors de la génération des flashcards')
+        setLoading(false)
+        return
+      }
+      if (!data.cards || data.cards.length === 0) {
+        setError('Aucune carte générée, réessaie.')
+        setLoading(false)
+        return
+      }
+      setCards(data.cards)
+      setCurrent(0)
+      setFlipped(false)
+      setKnown([])
+      setUnknown([])
+      setDone(false)
+    } catch {
+      setError('Erreur réseau, vérifie ta connexion.')
+    }
     setLoading(false)
   }
 
@@ -98,6 +114,11 @@ export default function FlashcardsPage() {
           <p className="text-6xl mb-4">🃏</p>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Flashcards</h2>
           <p className="text-gray-500 mb-8">L&apos;IA va créer des cartes de révision basées sur les notions clés du cours.</p>
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+              {error}
+            </div>
+          )}
           <button
             onClick={generateCards}
             disabled={loading}
@@ -111,7 +132,7 @@ export default function FlashcardsPage() {
                 </svg>
                 Génération...
               </>
-            ) : 'Générer les flashcards'}
+            ) : error ? 'Réessayer' : 'Générer les flashcards'}
           </button>
         </main>
       </div>

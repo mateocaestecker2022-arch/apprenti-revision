@@ -34,33 +34,43 @@ Réponds UNIQUEMENT avec ce JSON valide :
 COURS :
 ${context}`
 
-  try {
-    const res = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 2000,
-      temperature: 0.4,
-    })
-    const raw = res.choices[0]?.message?.content || ''
-    const match = raw.match(/\{[\s\S]*\}/)
-    const generatedCards = match ? (JSON.parse(match[0]).cards || []) : []
+  const maxRetries = 3
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await groq.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000,
+        temperature: 0.4,
+        response_format: { type: 'json_object' },
+      })
+      const raw = res.choices[0]?.message?.content || ''
+      const generatedCards: Array<{ question: string; answer: string }> = JSON.parse(raw).cards || []
 
-    const allCards = [...notionCards, ...generatedCards]
+      const allCards = [...notionCards, ...generatedCards]
 
-    // Supprimer les anciennes flashcards et recréer
-    await prisma.flashcard.deleteMany({ where: { courseId: params.id } })
-    await prisma.flashcard.createMany({
-      data: allCards.map((c: { question: string; answer: string }) => ({
-        courseId: params.id,
-        question: c.question,
-        answer: c.answer,
-      })),
-    })
+      await prisma.flashcard.deleteMany({ where: { courseId: params.id } })
+      await prisma.flashcard.createMany({
+        data: allCards.map((c) => ({
+          courseId: params.id,
+          question: c.question,
+          answer: c.answer,
+        })),
+      })
 
-    return NextResponse.json({ cards: allCards })
-  } catch {
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+      return NextResponse.json({ cards: allCards })
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status
+      if (status === 429 && attempt < maxRetries) {
+        console.warn(`[FLASHCARDS] Rate limit, retry ${attempt}/${maxRetries}...`)
+        await new Promise(r => setTimeout(r, 10000 * attempt))
+        continue
+      }
+      console.error(`[FLASHCARDS] Erreur (tentative ${attempt}):`, err)
+      return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    }
   }
+  return NextResponse.json({ error: 'Erreur serveur après plusieurs tentatives' }, { status: 500 })
 }
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
