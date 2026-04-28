@@ -12,7 +12,7 @@ const redis = new Redis(connection)
 const prisma = new PrismaClient()
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-const CHUNK_SIZE = 8000 // Réduit pour que chaque chunk soit entièrement traité dans les tokens de sortie
+const CHUNK_SIZE = 3500 // Ajusté pour rester sous la limite 6000 tokens/requête Groq (input + output)
 
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
@@ -39,9 +39,9 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const res = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 6000,
+        max_tokens: 4500,
         temperature: 0.2,
         response_format: { type: 'json_object' },
       })
@@ -126,7 +126,7 @@ Réponds UNIQUEMENT avec le JSON valide.`
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
 
     for (let ci = 0; ci < chunks.length; ci++) {
-      if (ci > 0) await sleep(5000) // 5s entre chunks pour éviter rate limit
+      if (ci > 0) await sleep(12000) // 12s entre chunks — compte Groq limité à 6000 TPM
       const raw = await callGroq(`${chunkSystem}\n\n${chunks[ci]}`)
       const match = raw.match(/\{[\s\S]*\}/)
       if (match) {
