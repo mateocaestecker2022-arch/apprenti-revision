@@ -57,28 +57,40 @@ ${avoidSection}
 COURS :
 ${context}`
 
-  try {
-    const res = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 5000,
-      temperature: 0.7,
-    })
-    const raw = res.choices[0]?.message?.content || ''
-    const match = raw.match(/\{[\s\S]*\}/)
-    if (!match) return NextResponse.json({ error: 'Erreur génération' }, { status: 500 })
+  const maxRetries = 3
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 5000,
+        temperature: 0.7,
+        response_format: { type: 'json_object' },
+      })
+      const raw = res.choices[0]?.message?.content || ''
+      const { questions } = JSON.parse(raw)
 
-    const { questions } = JSON.parse(match[0])
+      if (!questions || questions.length === 0) {
+        return NextResponse.json({ error: 'Erreur génération' }, { status: 500 })
+      }
 
-    const quiz = await prisma.quiz.create({
-      data: { courseId: params.id, questions },
-    })
+      const quiz = await prisma.quiz.create({
+        data: { courseId: params.id, questions },
+      })
 
-    return NextResponse.json({ id: quiz.id, questions })
-  } catch (err) {
-    console.error('[QUIZ] Erreur génération:', err)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+      return NextResponse.json({ id: quiz.id, questions })
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status
+      if (status === 429 && attempt < maxRetries) {
+        console.warn(`[QUIZ] Rate limit, retry ${attempt}/${maxRetries}...`)
+        await new Promise(r => setTimeout(r, 15000 * attempt))
+        continue
+      }
+      console.error(`[QUIZ] Erreur (tentative ${attempt}):`, err)
+      return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    }
   }
+  return NextResponse.json({ error: 'Erreur serveur après plusieurs tentatives' }, { status: 500 })
 }
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
