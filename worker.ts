@@ -95,7 +95,7 @@ Retourne UNIQUEMENT ce JSON :
 
 RÈGLES ABSOLUES :
 - Ordre : structure TOUJOURS par notions dans l'ordre logique ci-dessus — pas dans l'ordre du document source
-- Articles de loi : INTERDICTION ABSOLUE d'inventer ou d'ajouter un article absent du texte source. Si un article n'est pas écrit mot pour mot dans le texte, ne le cite PAS.
+- Articles de loi : utilise tes connaissances en droit français pour citer les articles RÉELS et VÉRIFIÉS. Ne cite un article QUE si tu es certain à 100% de son contenu et de sa correspondance avec la notion. Si tu as le moindre doute, ne le cite pas. Exemples d'articles sûrs : art. 2284 C. civ. (responsabilité patrimoniale), art. 2285 C. civ. (gage des créanciers), art. 815 C. civ. (indivision), art. 16 C. civ. (dignité humaine), art. 16-1 C. civ. (corps humain hors commerce), art. 515-14 C. civ. (animaux), art. 1400 C. civ. (communauté légale).
 - "points" : TOUJOURS des strings, JAMAIS des objets JSON
 - Définitions : complètes, exactes, sans affirmations fausses
 - Chaque notion définie une seule fois
@@ -124,7 +124,7 @@ RÈGLES ABSOLUES :
 - Structure les sections par NOTION dans l'ordre logique : définition → principes → contenu → titulaires → effets → exceptions → limites
 - "points" : TOUJOURS des strings — JAMAIS des objets JSON
 - "notions" : définitions complètes et exactes. INTERDIT : 'Indivision = transmis par succession' (faux). CORRECT : 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) ont des droits de même nature sur un bien sans division matérielle — résulte d'une succession, achat commun ou divorce.'
-- Articles de loi : INTERDICTION ABSOLUE d'inventer. Cite un article UNIQUEMENT s'il est écrit mot pour mot dans le texte ci-dessous. Sinon, ne le cite PAS.
+- Articles de loi : utilise tes connaissances en droit français pour citer les articles RÉELS. Ne cite un article QUE si tu es certain à 100% de son contenu. Si doute → ne cite pas. Articles sûrs en droit civil : art. 2284 (responsabilité), art. 2285 (gage créanciers), art. 815 (indivision), art. 16 / 16-1 (dignité/corps), art. 515-14 (animaux), art. 1400 (communauté légale).
 - Définitions : complètes, sans affirmations fausses, utilisables en examen
 - "retenir" : synthèse juridiquement exacte en une phrase
 - Chaque notion définie une seule fois
