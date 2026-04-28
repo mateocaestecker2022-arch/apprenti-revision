@@ -9,6 +9,8 @@ interface Section { title: string; notions: Notion[]; points: string[]; retenir?
 interface ProblemeJuridique { question: string; principe: string; exception?: string }
 interface ArticleEssentiel { article: string; description: string }
 interface ErreurFrequente { erreur: string; correction: string }
+interface SchemaBranch { label: string; children: string[] }
+interface Schema { root: string; branches: SchemaBranch[] }
 interface StructuredContent {
   title: string
   plan: string[]
@@ -18,6 +20,7 @@ interface StructuredContent {
   articlesEssentiels?: ArticleEssentiel[]
   erreursFrequentes?: ErreurFrequente[]
   logique?: string[]
+  schema?: Schema
 }
 interface Folder { id: string; name: string; color: string }
 interface Course {
@@ -297,6 +300,40 @@ export default function CoursePage() {
                 )}
               </div>
             ))}
+            {/* Schéma / Carte mentale */}
+            {s.schema && s.schema.branches?.length > 0 && (
+              <div className="border rounded-xl p-5 mb-8">
+                <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mb-5">🗺️ Carte mentale</p>
+                <div className="flex flex-col items-center">
+                  {/* Nœud central */}
+                  <div className="bg-indigo-600 text-white font-bold text-sm px-5 py-2.5 rounded-full mb-4">
+                    {s.schema.root}
+                  </div>
+                  {/* Ligne verticale */}
+                  <div className="w-px h-5 bg-gray-300 mb-1"/>
+                  {/* Branches */}
+                  <div className="flex flex-wrap justify-center gap-4 w-full">
+                    {s.schema.branches.map((branch, bi) => (
+                      <div key={bi} className="flex flex-col items-center min-w-[140px] max-w-[180px]">
+                        {/* Branche */}
+                        <div className="bg-indigo-100 text-indigo-800 font-semibold text-xs px-3 py-1.5 rounded-lg text-center mb-2">
+                          {branch.label}
+                        </div>
+                        {/* Sous-éléments */}
+                        <div className="flex flex-col gap-1 w-full">
+                          {branch.children?.map((child, ci) => (
+                            <div key={ci} className="bg-slate-50 border text-gray-600 text-xs px-2 py-1 rounded text-center">
+                              {child}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Articles essentiels */}
             {s.articlesEssentiels && s.articlesEssentiels.length > 0 && (
               <div className="border rounded-xl p-5 mb-8">

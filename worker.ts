@@ -178,9 +178,10 @@ Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","S
 2. "articlesEssentiels" : les articles de loi UNIQUEMENT cités dans le cours ci-dessous, avec leur rôle précis
 3. "erreursFrequentes" : 4 erreurs classiques d'étudiants sur ce sujet avec la correction exacte
 4. "logique" : 3 idées clés résumant la logique juridique du cours en une phrase chacune
+5. "schema" : carte mentale du cours avec un nœud central (le sujet du cours) et 3-5 branches principales, chacune ayant 2-3 sous-éléments
 
 Format JSON uniquement :
-{"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"articlesEssentiels":[{"article":"Art. X","description":"Rôle précis"}],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"logique":["Idée 1","Idée 2","Idée 3"]}
+{"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"articlesEssentiels":[{"article":"Art. X","description":"Rôle précis"}],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"logique":["Idée 1","Idée 2","Idée 3"],"schema":{"root":"Sujet central","branches":[{"label":"Branche 1","children":["Sous-élément A","Sous-élément B"]},{"label":"Branche 2","children":["Sous-élément C","Sous-élément D"]}]}}
 
 COURS (sections) :
 ${synthese}`
