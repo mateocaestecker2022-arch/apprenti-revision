@@ -39,10 +39,10 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const res = await groq.chat.completions.create({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 6000,
-        temperature: 0.3,
+        temperature: 0.2,
         response_format: { type: 'json_object' },
       })
       return res.choices[0]?.message?.content || ''
@@ -61,7 +61,9 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   return ''
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert universitaire. Restructure ce cours dans ce format JSON exact.
+const SYSTEM_PROMPT = `Tu es un assistant pédagogique expert universitaire. Tu dois structurer ce cours en JSON SANS RIEN OMETTRE.
+
+MISSION PRINCIPALE : Reproduire INTÉGRALEMENT le contenu du cours — pas le résumer.
 
 Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
 {
@@ -69,27 +71,26 @@ Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
   "plan": ["Titre section 1", "Titre section 2"],
   "sections": [
     {
-      "title": "Titre de la section",
+      "title": "Titre exact de la section/chapitre/article",
       "notions": [
-        { "term": "Terme clé", "definition": "Définition complète et précise avec contexte d'utilisation" }
+        { "term": "Terme juridique ou clé", "definition": "Définition complète et précise, avec références légales si présentes (ex: art. 815 C. civ.)" }
       ],
       "points": [
-        "Point essentiel développé en 3-5 phrases avec explications, exemples concrets et contexte.",
-        "Deuxième point essentiel très développé avec causes, conséquences et mécanismes expliqués."
+        "Reproduis ici INTÉGRALEMENT le contenu de cette section : chaque règle, chaque article de loi cité, chaque mécanisme juridique, chaque exemple, chaque distinction (actif/passif, droits réels/personnels, etc.). Ne raccourcis RIEN.",
+        "Si la section contient plusieurs sous-parties, chaque sous-partie devient un point distinct et complet."
       ],
-      "retenir": "Phrase de synthèse courte résumant l'essentiel à retenir de cette section."
+      "retenir": "Phrase de synthèse courte de la section."
     }
   ],
-  "summary": "Résumé complet du cours en 4-5 phrases couvrant tous les points essentiels"
+  "summary": "Résumé du cours en 4-5 phrases."
 }
 
 RÈGLES ABSOLUES :
-- "notions" : termes importants avec définitions précises et complètes
-- "points" : chaque point est un paragraphe de 3-5 phrases, développé avec exemples
-- "retenir" : une phrase synthèse de la section
-- "plan" : liste simple des titres de section
-- Conserve TOUTES les informations du cours original — AUCUN chapitre, AUCUN article, AUCUNE section ne doit être omis
-- Pour un cours de droit : inclus TOUS les articles de loi et TOUTES leurs subdivisions
+- "points" : copie TOUT le contenu de chaque section — articles de loi avec leur numéro, mécanismes juridiques complets, distinctions précises, exemples. JAMAIS de raccourcis.
+- "notions" : tous les termes techniques avec définitions précises et références légales
+- Chaque chapitre, sous-chapitre, article du cours original = une section distincte
+- Pour un cours de droit : TOUS les articles (art. 815, art. 1832, etc.), TOUS les régimes (matrimoniaux, indivision, domaine public/privé), TOUTES les distinctions juridiques
+- Ne jamais fusionner deux sections en une — crée autant de sections que le cours en contient
 - Réponds UNIQUEMENT avec le JSON valide`
 
 async function processCourse(content: string): Promise<object> {
@@ -107,17 +108,20 @@ async function processCourse(content: string): Promise<object> {
   } else {
     const chunks = splitIntoChunks(content)
 
-    const chunkSystem = `Tu es un assistant pédagogique expert universitaire. Restructure cette partie de cours en JSON valide.
+    const chunkSystem = `Tu es un assistant pédagogique expert universitaire. Transforme cette partie de cours en JSON valide SANS RIEN OMETTRE.
+
+MISSION : Reproduire INTÉGRALEMENT le contenu — pas le résumer. Chaque article de loi, chaque mécanisme, chaque distinction doit être présent mot pour mot dans les "points".
 
 RÈGLES ABSOLUES :
-- Inclus TOUS les chapitres, TOUS les articles, TOUTES les sections présents dans le texte — n'en oublie AUCUN
-- Ne résume pas, ne saute pas de contenu : chaque élément du texte doit apparaître dans une section
-- Un cours de droit doit conserver TOUS les articles de loi, TOUTES les définitions, TOUTES les subdivisions
-- Chaque section doit avoir des notions clés définies, des points essentiels développés (3-5 phrases), et une phrase "à retenir"
+- Chaque chapitre, sous-chapitre, article du texte = une section JSON distincte (ne jamais fusionner)
+- "points" : reproduis INTÉGRALEMENT le contenu — articles de loi avec numéros, règles complètes, exemples, distinctions précises. JAMAIS de résumé.
+- "notions" : tous les termes techniques avec définitions complètes et références légales (art. X C. civ., etc.)
+- "retenir" : une phrase synthèse courte
+- N'invente rien, ne résume pas, ne saute rien
 
 Format JSON uniquement :
-{"sections":[{"title":"Titre exact du chapitre/article","notions":[{"term":"Terme","definition":"Définition complète et précise"}],"points":["Point développé en 3-5 phrases avec exemples et contexte."],"retenir":"Phrase synthèse à retenir."}]}
-Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après.`
+{"sections":[{"title":"Titre exact du chapitre/article","notions":[{"term":"Terme","definition":"Définition complète avec référence légale si applicable"}],"points":["Contenu intégral de la section reproduit fidèlement, article par article, règle par règle."],"retenir":"Phrase synthèse."}]}
+Réponds UNIQUEMENT avec le JSON valide.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
 
