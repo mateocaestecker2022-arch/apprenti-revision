@@ -61,9 +61,9 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   return ''
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master). Tu dois structurer ce cours en JSON analytique et rigoureux.
+const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Tu structures ce cours en JSON rigoureux et fiable.
 
-NIVEAU EXIGÉ : Licence/Master — pas de style lycée/STMG. Chaque point doit être analytique : expliquer les enjeux, les tensions, les contradictions, les rapports de force — pas seulement décrire les faits.
+NIVEAU EXIGÉ : Licence/Master — vocabulaire juridique précis, raisonnement de juriste, jamais de style lycée.
 
 Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
 {
@@ -71,27 +71,26 @@ Retourne UNIQUEMENT ce JSON (sans texte avant ou après) :
   "plan": ["Titre section 1", "Titre section 2"],
   "sections": [
     {
-      "title": "Titre exact de la section/chapitre tel qu'il apparaît dans le texte",
+      "title": "Titre exact de la section tel qu'il apparaît dans le texte",
       "notions": [
-        { "term": "Terme clé", "definition": "Définition précise et nuancée niveau L1/Master. Cite un article ou auteur UNIQUEMENT s'il est dans le texte source." }
+        { "term": "Terme juridique", "definition": "Définition courte, précise, juridiquement correcte. Ex : 'Universalité juridique comprenant l'ensemble des droits et obligations (actif + passif) d'une personne (Aubry et Rau).' — Ne cite un article QUE s'il figure expressément dans le texte source." }
       ],
       "points": [
-        "STRING UNIQUEMENT — pas d'objet JSON. Analyse en une phrase développée : mécanisme + enjeux + conséquences. Ex : 'La Terreur constitue un instrument politique justifié par le salut public, entraînant une suspension de l'État de droit et une dérive vers un pouvoir d'exception.'",
-        "Autre point analytique sous forme de STRING. Précision historique : 'suffrage universel masculin' pas 'suffrage universel', etc."
+        "STRING uniquement (jamais un objet JSON). Expose le mécanisme juridique avec sa logique et ses conséquences. Ex : 'L'article 2284 C. civ. fonde la responsabilité patrimoniale : le débiteur répond de ses obligations sur l'ensemble de ses biens présents et futurs, constituant ainsi le gage commun des créanciers.' — ne cite cet article que s'il est dans le texte source.",
+        "Autre point sous forme de STRING. Précis, sans approximation : 'suffrage universel masculin' pas 'suffrage universel', 'construction doctrinale' pas 'règle du Code civil' si ce n'est pas dans la loi."
       ],
-      "retenir": "Formulation synthétique niveau examen L1 : analytique, précise, avec les nuances essentielles."
+      "retenir": "Synthèse en une phrase juridiquement exacte, utilisable en examen."
     }
   ],
-  "summary": "Résumé analytique en 4-5 phrases : logique d'ensemble, tensions principales, continuités/ruptures entre périodes."
+  "summary": "Résumé en 4-5 phrases : logique juridique d'ensemble, principes fondamentaux, exceptions et enjeux."
 }
 
 RÈGLES ABSOLUES :
-- "points" : TOUJOURS des strings (chaînes de texte), JAMAIS des objets JSON avec des clés comme "point", "enjeux", "conséquences"
-- Analytique : chaque point explique POURQUOI et QUELLES CONSÉQUENCES — pas juste QUOI
-- Précision : ne jamais approximer (ex: 'suffrage universel masculin' pas 'suffrage universel', 'salut public' pas 'morale')
-- Nuance : montrer les contradictions (ex: Révolution cherche démocratie → produit la Terreur)
-- Articles/auteurs : citer UNIQUEMENT ceux présents dans le texte source — jamais inventer
-- Répétitions : chaque notion définie une seule fois
+- "points" : TOUJOURS des strings — JAMAIS des objets JSON avec clés "point"/"enjeux"/"conséquences"
+- Articles de loi : citer UNIQUEMENT ceux présents dans le texte source — NE JAMAIS en inventer ni en ajouter
+- Définitions : courtes, précises, juridiquement exactes — pas de formulations vagues ou approximatives
+- Ne pas mélanger les matières : si le texte source mélange histoire et droit, séparer clairement les sections
+- Chaque notion définie une seule fois — pas de répétitions entre sections
 - Chaque chapitre/sous-chapitre = une section distincte, jamais fusionnée
 - Réponds UNIQUEMENT avec le JSON valide`
 
@@ -110,21 +109,21 @@ async function processCourse(content: string): Promise<object> {
   } else {
     const chunks = splitIntoChunks(content)
 
-    const chunkSystem = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master). Transforme cette partie de cours en JSON analytique et rigoureux.
+    const chunkSystem = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Transforme cette partie de cours en JSON rigoureux et fiable.
 
-NIVEAU EXIGÉ : Licence/Master — analytique, pas descriptif. Expliquer les enjeux, tensions, contradictions, rapports de force — pas seulement lister des faits.
+NIVEAU EXIGÉ : Licence/Master — raisonnement de juriste, vocabulaire précis, jamais de style lycée.
 
 RÈGLES ABSOLUES :
-- Chaque chapitre/sous-chapitre du texte = une section JSON distincte (ne jamais fusionner)
-- "points" : TOUJOURS des strings, JAMAIS des objets avec clés "point"/"enjeux"/"conséquences". Analyser pas décrire — expliquer POURQUOI et QUELLES CONSÉQUENCES en une phrase développée
-- Précision : ne jamais approximer ('suffrage universel masculin' pas 'suffrage universel', 'salut public' pas 'morale')
-- "notions" : définitions précises niveau L1/Master. Cite un article ou auteur UNIQUEMENT s'il est dans le texte source
-- "retenir" : synthèse analytique une phrase, niveau examen L1
-- Chaque notion définie une seule fois — pas de répétitions
-- N'invente rien d'absent du texte source
+- Chaque chapitre/sous-chapitre = une section JSON distincte (ne jamais fusionner)
+- "points" : TOUJOURS des strings — JAMAIS des objets JSON. Expose le mécanisme juridique avec sa logique et ses conséquences concrètes, en une phrase développée et précise
+- "notions" : définitions courtes et juridiquement exactes. Ex : 'Universalité juridique (actif + passif) rattachée à la personne — théorie doctrinale d'Aubry et Rau, sans définition dans le Code civil'. Cite un article UNIQUEMENT s'il figure dans le texte source
+- Articles de loi : NE JAMAIS inventer ni ajouter un article absent du texte source
+- Définitions : jamais vagues — précises, utilisables en examen
+- "retenir" : une phrase synthèse juridiquement exacte, niveau partiel L1
+- Chaque notion définie une seule fois, pas de répétitions entre sections
 
 Format JSON uniquement :
-{"sections":[{"title":"Titre exact du chapitre","notions":[{"term":"Terme","definition":"Définition analytique précise L1/Master"}],"points":["Analyse : mécanisme + enjeux + contradictions + conséquences, style académique rigoureux."],"retenir":"Synthèse analytique précise niveau examen."}]}
+{"sections":[{"title":"Titre exact du chapitre","notions":[{"term":"Terme","definition":"Définition courte et juridiquement exacte"}],"points":["Mécanisme juridique + logique + conséquences concrètes, en string."],"retenir":"Synthèse précise niveau examen L1."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
