@@ -18,17 +18,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     sections?: Array<{ title: string; points?: string[]; notions?: Array<{ term: string; definition: string }> }>
   } | null
 
-  // Construire un contexte complet depuis le contenu structuré
+  // Construire un contexte qui couvre TOUTES les sections proportionnellement
   const context = structured?.sections
-    ? structured.sections.map(s => {
-        const parts = [`## ${s.title}`]
-        if (s.notions?.length) parts.push(s.notions.slice(0, 3).map(n => `${n.term}: ${n.definition}`).join('\n'))
-        if (s.points?.length) parts.push(s.points.slice(0, 4).join('\n'))
-        const sec = s as { retenir?: string }
-        if (sec.retenir) parts.push(`Retenir: ${sec.retenir}`)
-        return parts.join('\n')
-      }).join('\n\n').slice(0, 3500)
-    : course.rawContent.slice(0, 3500)
+    ? (() => {
+        const sections = structured.sections!
+        // Budget par section pour couvrir tout le cours (pas seulement le début)
+        const charsPerSection = Math.max(120, Math.floor(4500 / sections.length))
+        return sections.map(s => {
+          const sec = s as { retenir?: string }
+          const parts = [`## ${s.title}`]
+          if (s.notions?.length) {
+            // 1 notion par section (la plus importante)
+            const n = s.notions[0]
+            parts.push(`${n.term}: ${n.definition}`.slice(0, 120))
+          }
+          if (s.points?.length) {
+            // 1-2 points selon le budget
+            const budget = charsPerSection - parts.join('\n').length - 20
+            parts.push(s.points.slice(0, 2).join(' ').slice(0, Math.max(80, budget)))
+          }
+          if (sec.retenir) parts.push(`À retenir: ${sec.retenir}`.slice(0, 100))
+          return parts.join('\n')
+        }).join('\n\n')
+      })()
+    : course.rawContent.slice(0, 4500)
 
   // Récupérer les questions des derniers quiz pour les éviter
   const pastQuizzes = await prisma.quiz.findMany({
@@ -45,16 +58,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     ? `\nÉVITE ces questions déjà posées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
     : ''
 
-  const prompt = `Tu es un professeur expert. Génère 20 questions de QCM VARIÉES couvrant l'ensemble du cours.
-Réponds UNIQUEMENT avec ce JSON valide (sans texte avant ou après) :
-{"questions":[{"question":"Question ?","options":["Option A","Option B","Option C","Option D"],"answer":0,"explanation":"Explication en 2-3 phrases : pourquoi c'est la bonne réponse, le concept clé, et ce qu'il faut retenir."}]}
-Règles :
-- "answer" est l'index (0-3) de la bonne réponse
-- Varie les positions de la bonne réponse (pas toujours 0 ou 2)
-- Couvre toutes les sections du cours, pas seulement le début
-- Questions de difficulté variée (définition, application, analyse)
+  const sectionTitles = structured?.sections?.map(s => s.title).join(', ') || ''
+  const prompt = `Tu es un professeur expert. Génère 20 questions QCM couvrant TOUTES les sections du cours de manière équilibrée.
+
+RÈGLES ABSOLUES :
+- Couvre CHAQUE section du cours — pas seulement le début. Le cours contient ces sections : ${sectionTitles}
+- Maximum 2 questions par section — répartis sur tout le cours
+- Difficulté variée : définitions (30%), mécanismes/applications (40%), analyse/nuances (30%)
+- Pas de répétition : chaque question porte sur un aspect différent
+- "answer" = index 0-3 de la bonne réponse, distribué aléatoirement (pas toujours 0)
 ${avoidSection}
-COURS :
+Réponds UNIQUEMENT avec ce JSON valide :
+{"questions":[{"question":"Question précise ?","options":["Option A","Option B","Option C","Option D"],"answer":0,"explanation":"Explication en 2-3 phrases : bonne réponse + concept clé + ce qu'il faut retenir."}]}
+
+COURS (toutes sections) :
 ${context}`
 
   const maxRetries = 3
