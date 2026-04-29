@@ -19,59 +19,46 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   } | null
 
   // Construire un contexte qui couvre TOUTES les sections proportionnellement
+  // Budget réduit à 1000 chars pour rester sous la limite de 6000 tokens Groq
   const context = structured?.sections
     ? (() => {
         const sections = structured.sections!
-        // Budget par section pour couvrir tout le cours (pas seulement le début)
-        const charsPerSection = Math.max(60, Math.floor(1800 / sections.length))
+        const charsPerSection = Math.max(50, Math.floor(1000 / sections.length))
         return sections.map(s => {
           const sec = s as { retenir?: string }
           const parts = [`## ${s.title}`]
           if (s.notions?.length) {
-            // 1 notion par section (la plus importante)
             const n = s.notions[0]
-            parts.push(`${n.term}: ${n.definition}`.slice(0, 120))
+            parts.push(`${n.term}: ${n.definition}`.slice(0, 80))
           }
-          if (s.points?.length) {
-            // 1-2 points selon le budget
-            const budget = charsPerSection - parts.join('\n').length - 20
-            parts.push(s.points.slice(0, 2).join(' ').slice(0, Math.max(80, budget)))
-          }
-          if (sec.retenir) parts.push(`À retenir: ${sec.retenir}`.slice(0, 100))
+          if (sec.retenir) parts.push(sec.retenir.slice(0, 80))
+          else if (s.points?.length) parts.push(s.points[0].slice(0, 80))
           return parts.join('\n')
-        }).join('\n\n')
+        }).join('\n\n').slice(0, 1000)
       })()
-    : course.rawContent.slice(0, 1800)
+    : course.rawContent.slice(0, 1000)
 
-  // Récupérer les questions des derniers quiz pour les éviter
+  // Récupérer les questions du dernier quiz uniquement (pas les 3)
   const pastQuizzes = await prisma.quiz.findMany({
     where: { courseId: params.id },
     orderBy: { createdAt: 'desc' },
-    take: 3,
+    take: 1,
   })
   const pastQuestions = pastQuizzes
     .flatMap(q => (q.questions as Array<{ question: string }>))
-    .map(q => q.question)
-    .slice(0, 20)
+    .map(q => q.question.slice(0, 60))
+    .slice(0, 8)
 
   const avoidSection = pastQuestions.length > 0
-    ? `\nÉVITE ces questions déjà posées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
+    ? `\nÉvite ces questions déjà posées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
     : ''
 
-  const sectionTitles = structured?.sections?.map(s => s.title).join(', ') || ''
-  const prompt = `Tu es un professeur expert. Génère 20 questions QCM couvrant TOUTES les sections du cours de manière équilibrée.
-
-RÈGLES ABSOLUES :
-- Couvre CHAQUE section du cours — pas seulement le début. Le cours contient ces sections : ${sectionTitles}
-- Maximum 2 questions par section — répartis sur tout le cours
-- Difficulté variée : définitions (30%), mécanismes/applications (40%), analyse/nuances (30%)
-- Pas de répétition : chaque question porte sur un aspect différent
-- "answer" = index 0-3 de la bonne réponse, distribué aléatoirement (pas toujours 0)
+  const prompt = `Génère 20 QCM de droit couvrant équitablement toutes les sections. Max 2 questions par section. Difficulté variée. "answer" = index 0-3, varie-le.
 ${avoidSection}
-Réponds UNIQUEMENT avec ce JSON valide :
-{"questions":[{"question":"Question précise ?","options":["Option A","Option B","Option C","Option D"],"answer":0,"explanation":"Explication en 2-3 phrases : bonne réponse + concept clé + ce qu'il faut retenir."}]}
+JSON uniquement :
+{"questions":[{"question":"?","options":["A","B","C","D"],"answer":0,"explanation":"Explication courte."}]}
 
-COURS (toutes sections) :
+COURS :
 ${context}`
 
   const maxRetries = 3
@@ -80,7 +67,7 @@ ${context}`
       const res = await groq.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2500,
+        max_tokens: 2000,
         temperature: 0.7,
         response_format: { type: 'json_object' },
       })
