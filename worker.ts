@@ -14,6 +14,26 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 const CHUNK_SIZE = 2500 // Réduit pour compenser les prompts plus longs (vocabulaire juridique)
 
+// Whitelist stricte des articles vérifiés — aucun autre ne peut être affiché
+const ARTICLES_WHITELIST = [
+  { article: 'Art. 2284 C. civ.', description: 'Responsabilité patrimoniale : toute personne est tenue de ses obligations sur l\'ensemble de ses biens présents et à venir.' },
+  { article: 'Art. 2285 C. civ.', description: 'Gage commun des créanciers : les biens du débiteur sont le gage commun de ses créanciers ; le prix s\'en distribue entre eux par contribution.' },
+  { article: 'Art. 815 C. civ.', description: 'Indivision : nul ne peut être contraint à demeurer dans l\'indivision ; le partage peut toujours être provoqué.' },
+  { article: 'Art. 16 C. civ.', description: 'Primauté de la personne humaine et sauvegarde de la dignité de la personne contre toute atteinte.' },
+  { article: 'Art. 16-1 C. civ.', description: 'Inviolabilité et non-patrimonialité du corps humain : chacun a droit au respect de son corps, qui est inviolable et hors commerce.' },
+  { article: 'Art. 515-14 C. civ.', description: 'Les animaux sont des êtres vivants doués de sensibilité ; sous réserve des lois qui les protègent, les animaux sont soumis au régime des biens.' },
+  { article: 'Art. 1400 C. civ.', description: 'Communauté légale : la communauté se compose activement des acquêts faits par les époux ensemble ou séparément durant le mariage.' },
+]
+
+const WHITELIST_ARTICLE_NUMBERS = new Set(['2284', '2285', '815', '16', '16-1', '515-14', '1400'])
+
+function filterArticles(articles: Array<{ article: string; description: string }>): Array<{ article: string; description: string }> {
+  return articles.filter(a => {
+    const match = a.article.match(/(\d+(?:-\d+)?)/)
+    return match && WHITELIST_ARTICLE_NUMBERS.has(match[1])
+  })
+}
+
 function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex')
 }
@@ -97,7 +117,7 @@ Retourne UNIQUEMENT ce JSON :
 
 RÈGLES ABSOLUES :
 - Ordre : structure TOUJOURS par notions dans l'ordre logique ci-dessus — pas dans l'ordre du document source
-- Articles de loi : utilise tes connaissances en droit français pour citer les articles RÉELS et VÉRIFIÉS. Ne cite un article QUE si tu es certain à 100% de son contenu et de sa correspondance avec la notion. Si tu as le moindre doute, ne le cite pas. Exemples d'articles sûrs : art. 2284 C. civ. (responsabilité patrimoniale), art. 2285 C. civ. (gage des créanciers), art. 815 C. civ. (indivision), art. 16 C. civ. (dignité humaine), art. 16-1 C. civ. (corps humain hors commerce), art. 515-14 C. civ. (animaux), art. 1400 C. civ. (communauté légale).
+- Articles de loi : NE CITE AUCUN article dans les sections. Les articles sont traités séparément dans une section dédiée. INTERDIT de mentionner des numéros d'articles dans les points, notions ou définitions.
 - "points" : TOUJOURS des strings, JAMAIS des objets JSON
 - Définitions : complètes, exactes, sans affirmations fausses
 - Chaque notion définie une seule fois
@@ -126,7 +146,7 @@ RÈGLES ABSOLUES :
 - Structure les sections par NOTION dans l'ordre logique : définition → principes → contenu → titulaires → effets → exceptions → limites
 - "points" : TOUJOURS des strings — JAMAIS des objets JSON
 - "notions" : définitions complètes et exactes. INTERDIT : 'Indivision = transmis par succession' (faux). CORRECT : 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) ont des droits de même nature sur un bien sans division matérielle — résulte d'une succession, achat commun ou divorce.'
-- Articles de loi : utilise tes connaissances en droit français pour citer les articles RÉELS. Ne cite un article QUE si tu es certain à 100% de son contenu. Si doute → ne cite pas. Articles sûrs en droit civil : art. 2284 (responsabilité), art. 2285 (gage créanciers), art. 815 (indivision), art. 16 / 16-1 (dignité/corps), art. 515-14 (animaux), art. 1400 (communauté légale).
+- Articles de loi : NE CITE AUCUN article dans les sections. INTERDIT de mentionner des numéros d'articles dans les points, notions ou définitions.
 - Vocabulaire : titulaire, débiteur, créancier, universalité, opposabilité, erga omnes, sûreté, subrogation, nullité — jamais le langage courant.
 - Définitions : complètes, sans affirmations fausses, utilisables en examen
 - "retenir" : synthèse juridiquement exacte en une phrase
@@ -216,14 +236,19 @@ ${synthese}`
     const enrichResult2 = result as { title?: string; sections?: Array<{ title: string }> }
     const titres = (enrichResult2.sections || []).map(s => s.title).join(', ')
 
-    const recherchePrompt = `Tu es un professeur de droit français niveau Licence/Master. Pour le cours sur "${enrichResult2.title || 'ce sujet'}", utilise tes connaissances approfondies en droit français pour générer UNIQUEMENT des compléments utiles à l'examen.
+    const whitelistStr = ARTICLES_WHITELIST.map(a => `- ${a.article} : ${a.description}`).join('\n')
+
+    const recherchePrompt = `Tu es un professeur de droit français niveau Licence/Master. Pour le cours sur "${enrichResult2.title || 'ce sujet'}", génère UNIQUEMENT des compléments utiles à l'examen.
 
 RÈGLE ABSOLUE : n'inclus que ce qui est directement utile pour réussir un examen de droit — pas de culture générale, pas d'histoire, pas de détails inutiles.
 
 Génère en JSON :
 1. "jurisprudenceCles" : 2-3 arrêts ou décisions fondamentaux que tout étudiant doit connaître sur ce sujet (juridiction, date approximative, apport juridique en une phrase). Ne cite que si tu es certain à 100%.
 2. "distinctionsCles" : 3-4 distinctions juridiques fondamentales à maîtriser pour l'examen (ex: "Droit réel vs droit personnel : le droit réel est opposable erga omnes, le droit personnel n'est opposable qu'au débiteur")
-3. "articlesEssentiels" : articles de loi pertinents pour ce cours avec leur apport juridique exact — uniquement si tu es certain de leur contenu
+3. "articlesEssentiels" : sélectionne UNIQUEMENT parmi la liste ci-dessous les articles pertinents pour ce cours. INTERDIT d'inventer ou d'ajouter tout autre article. Si aucun n'est pertinent, retourne un tableau vide [].
+
+LISTE AUTORISÉE D'ARTICLES (choisis parmi ceux-ci uniquement) :
+${whitelistStr}
 
 Format JSON :
 {"jurisprudenceCles":[{"juridiction":"Cass. civ. 1re","date":"...","apport":"..."}],"distinctionsCles":[{"distinction":"A vs B","explication":"..."}],"articlesEssentiels":[{"article":"Art. X C. civ.","description":"Apport juridique exact"}]}
@@ -234,6 +259,15 @@ Sections du cours : ${titres}`
     const rechercheMatch = rechercheRaw.match(/\{[\s\S]*\}/)
     if (rechercheMatch) {
       const rechercheData = JSON.parse(rechercheMatch[0])
+      // Filtre de sécurité : ne garder que les articles de la whitelist
+      if (Array.isArray(rechercheData.articlesEssentiels)) {
+        const before = rechercheData.articlesEssentiels.length
+        rechercheData.articlesEssentiels = filterArticles(rechercheData.articlesEssentiels)
+        const after = rechercheData.articlesEssentiels.length
+        if (before !== after) {
+          console.log(`[Worker] Articles filtrés : ${before - after} article(s) hors whitelist supprimé(s)`)
+        }
+      }
       result = { ...result, ...rechercheData }
       console.log('[Worker] Recherche approfondie générée')
     }
