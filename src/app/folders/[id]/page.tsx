@@ -36,9 +36,16 @@ export default async function FolderPage({ params }: { params: { id: string } })
       <main className="max-w-5xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">{folder.courses.length} cours</h2>
-          <a href="/courses/new" className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-indigo-700 transition text-sm">
-            + Nouveau cours
-          </a>
+          <div className="flex items-center gap-2">
+            {folder.courses.some(c => c.status === 'ready') && (
+              <a href={`/folders/${folder.id}/exercises`} className="border border-indigo-300 text-indigo-600 px-4 py-2 rounded-xl font-medium hover:bg-indigo-50 transition text-sm">
+                ✍️ Exercices
+              </a>
+            )}
+            <a href="/courses/new" className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-indigo-700 transition text-sm">
+              + Nouveau cours
+            </a>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border">
