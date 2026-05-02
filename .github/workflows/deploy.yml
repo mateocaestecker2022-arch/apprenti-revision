@@ -46,8 +46,8 @@ jobs:
             # Vérifier que server.js existe avant de recharger
             test -f .next/standalone/server.js || (echo "Build incomplet, server.js manquant" && exit 1)
 
-            # Redémarrer l'app Next.js
-            pm2 reload apprenti-revision || pm2 start node --name "apprenti-revision" -- .next/standalone/server.js
+            # Redémarrer l'app Next.js (restart forcé pour vider le cache mémoire)
+            pm2 restart apprenti-revision || pm2 start node --name "apprenti-revision" -- .next/standalone/server.js
 
             # Redémarrer le worker BullMQ
             pm2 reload course-worker || pm2 start npm --name "course-worker" -- run worker:start
