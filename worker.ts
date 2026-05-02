@@ -59,7 +59,7 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const res = await groq.chat.completions.create({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 4500,
         temperature: 0.2,
@@ -104,7 +104,7 @@ Retourne UNIQUEMENT ce JSON :
     {
       "title": "Titre de la notion (ex: 'La notion de patrimoine', 'Les caractères du patrimoine')",
       "notions": [
-        { "term": "Terme juridique", "definition": "Définition complète et exacte. EXEMPLES CORRECTS : 'Patrimoine : universalité juridique comprenant l'ensemble des droits et obligations (actif + passif) d'une personne — construction doctrinale d'Aubry et Rau, sans définition légale dans le Code civil.' / 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) sont titulaires de droits de même nature sur un même bien sans division matérielle — peut résulter d'une succession, d'un achat commun ou d'un divorce.' INTERDIT : définitions incomplètes, affirmations fausses, articles non présents dans le texte." }
+        { "term": "Terme juridique", "definition": "Définition EXTRAITE du texte fourni ou strictement conforme au droit français. RÈGLE ABSOLUE : si tu n'es pas certain à 100% de la définition, ne l'inclus pas. EXEMPLES CORRECTS : 'Patrimoine : universalité juridique comprenant l'ensemble des droits et obligations (actif + passif) d'une personne — construction doctrinale d'Aubry et Rau, sans définition légale dans le Code civil.' / 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) sont titulaires de droits de même nature sur un même bien sans division matérielle — peut résulter d'une succession, d'un achat commun ou d'un divorce.' INTERDIT ABSOLU : inventer une définition, mélanger deux notions, définition approximative ou incomplète." }
       ],
       "points": [
         "STRING uniquement — jamais un objet JSON. Développe le mécanisme juridique avec sa logique et ses conséquences."
@@ -145,7 +145,7 @@ NIVEAU EXIGÉ : Licence/Master — raisonnement de juriste, vocabulaire précis.
 RÈGLES ABSOLUES :
 - Structure les sections par NOTION dans l'ordre logique : définition → principes → contenu → titulaires → effets → exceptions → limites
 - "points" : TOUJOURS des strings — JAMAIS des objets JSON
-- "notions" : définitions complètes et exactes. INTERDIT : 'Indivision = transmis par succession' (faux). CORRECT : 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) ont des droits de même nature sur un bien sans division matérielle — résulte d'une succession, achat commun ou divorce.'
+- "notions" : définitions EXTRAITES du texte fourni ou strictement conformes au droit français. RÈGLE ABSOLUE : si tu n'es pas certain à 100%, n'inclus pas la notion. INTERDIT ABSOLU : inventer ou approximer une définition — ex: 'Indivision = transmis par succession' (FAUX, ne jamais écrire ça). CORRECT : 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) ont des droits de même nature sur un bien sans division matérielle — résulte d'une succession, achat commun ou divorce.'
 - Articles de loi : NE CITE AUCUN article dans les sections. INTERDIT de mentionner des numéros d'articles dans les points, notions ou définitions.
 - Vocabulaire : titulaire, débiteur, créancier, universalité, opposabilité, erga omnes, sûreté, subrogation, nullité — jamais le langage courant.
 - Définitions : complètes, sans affirmations fausses, utilisables en examen
