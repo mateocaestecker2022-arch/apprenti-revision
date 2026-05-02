@@ -37,6 +37,9 @@ export default async function DashboardPage() {
           <span className="text-sm font-medium text-gray-600 hidden sm:block">
             👋 {firstName}
           </span>
+          <a href="/account/password" className="text-xs text-gray-400 hover:text-indigo-600 transition border border-gray-200 px-3 py-1.5 rounded-lg hover:border-indigo-200">
+            Mot de passe
+          </a>
           <a href="/api/auth/signout" className="text-xs text-gray-400 hover:text-red-500 transition border border-gray-200 px-3 py-1.5 rounded-lg hover:border-red-200">
             Déconnexion
           </a>
