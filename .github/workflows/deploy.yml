@@ -38,8 +38,9 @@ jobs:
             rm -rf .next
             NODE_OPTIONS='--max-old-space-size=3072' NEXT_TELEMETRY_DISABLED=1 npm run build
 
-            # Copier les fichiers statiques pour le mode standalone
+            # Copier les fichiers pour le mode standalone
             cp -r .next/static .next/standalone/.next/
+            cp -r .next/server .next/standalone/.next/
             cp -r public .next/standalone/ 2>/dev/null || true
 
             # Vérifier que server.js existe avant de recharger
