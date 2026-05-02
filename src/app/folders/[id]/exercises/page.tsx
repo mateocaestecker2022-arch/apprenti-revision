@@ -9,6 +9,11 @@ interface Exercise {
   answer: string
 }
 
+interface CheckResult {
+  score: 'correct' | 'partiel' | 'incorrect'
+  feedback: string
+}
+
 const TYPE_LABEL: Record<Exercise['type'], string> = {
   cas_pratique: '⚖️ Cas pratique',
   consultation: '🧑‍💼 Consultation',
@@ -21,14 +26,24 @@ const TYPE_COLOR: Record<Exercise['type'], string> = {
   qualification: 'bg-emerald-50 text-emerald-700 border-emerald-200',
 }
 
+const SCORE_STYLE = {
+  correct: { bg: 'bg-green-50 border-green-200', icon: '✅', label: 'Bonne réponse !', text: 'text-green-700' },
+  partiel: { bg: 'bg-orange-50 border-orange-200', icon: '🟡', label: 'Réponse partielle', text: 'text-orange-700' },
+  incorrect: { bg: 'bg-red-50 border-red-200', icon: '❌', label: 'Réponse incorrecte', text: 'text-red-700' },
+}
+
 export default function FolderExercisesPage() {
   const { id } = useParams()
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [current, setCurrent] = useState(0)
-  const [revealed, setRevealed] = useState(false)
+  const [userAnswer, setUserAnswer] = useState('')
+  const [checking, setChecking] = useState(false)
+  const [result, setResult] = useState<CheckResult | null>(null)
+  const [showAnswer, setShowAnswer] = useState(false)
   const [done, setDone] = useState(false)
+  const [scores, setScores] = useState<CheckResult['score'][]>([])
 
   async function generate() {
     setLoading(true)
@@ -43,29 +58,51 @@ export default function FolderExercisesPage() {
       }
       setExercises(data.exercises)
       setCurrent(0)
-      setRevealed(false)
+      setUserAnswer('')
+      setResult(null)
+      setShowAnswer(false)
       setDone(false)
+      setScores([])
     } catch {
       setError('Erreur réseau, vérifie ta connexion.')
     }
     setLoading(false)
   }
 
+  async function checkAnswer() {
+    if (!userAnswer.trim()) return
+    setChecking(true)
+    try {
+      const ex = exercises[current]
+      const res = await fetch(`/api/folders/${id}/exercises/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: ex.question, expectedAnswer: ex.answer, userAnswer }),
+      })
+      const data = await res.json()
+      setResult(data)
+    } catch {
+      setResult({ score: 'incorrect', feedback: 'Erreur lors de la correction.' })
+    }
+    setChecking(false)
+  }
+
   function next() {
+    const newScores = [...scores, result?.score ?? 'incorrect']
     if (current + 1 >= exercises.length) {
+      setScores(newScores)
       setDone(true)
     } else {
+      setScores(newScores)
       setCurrent(current + 1)
-      setRevealed(false)
+      setUserAnswer('')
+      setResult(null)
+      setShowAnswer(false)
     }
   }
 
-  function prev() {
-    if (current > 0) {
-      setCurrent(current - 1)
-      setRevealed(false)
-    }
-  }
+  const correctCount = scores.filter(s => s === 'correct').length
+  const partielCount = scores.filter(s => s === 'partiel').length
 
   // Écran de fin
   if (done) {
@@ -74,13 +111,27 @@ export default function FolderExercisesPage() {
         <nav className="bg-white border-b px-6 py-3 flex items-center gap-4">
           <a href={`/folders/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au dossier</a>
         </nav>
-        <main className="max-w-2xl mx-auto px-6 py-20 text-center">
+        <main className="max-w-2xl mx-auto px-6 py-16 text-center">
           <p className="text-6xl mb-4">🎓</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Session terminée !</h2>
-          <p className="text-gray-500 mb-8">Tu as parcouru les {exercises.length} exercices.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Session terminée !</h2>
+          <p className="text-gray-500 mb-6">{exercises.length} exercices complétés</p>
+          <div className="flex justify-center gap-6 mb-8">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-green-600">{correctCount}</p>
+              <p className="text-sm text-gray-500">Correct</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-orange-500">{partielCount}</p>
+              <p className="text-sm text-gray-500">Partiel</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-red-500">{exercises.length - correctCount - partielCount}</p>
+              <p className="text-sm text-gray-500">Incorrect</p>
+            </div>
+          </div>
           <div className="flex gap-3 justify-center">
             <button
-              onClick={() => { setCurrent(0); setRevealed(false); setDone(false) }}
+              onClick={() => { setCurrent(0); setUserAnswer(''); setResult(null); setShowAnswer(false); setDone(false); setScores([]) }}
               className="border border-indigo-300 text-indigo-600 px-6 py-3 rounded-xl font-medium hover:bg-indigo-50 transition"
             >
               Recommencer
@@ -108,9 +159,9 @@ export default function FolderExercisesPage() {
         </nav>
         <main className="max-w-2xl mx-auto px-6 py-20 text-center">
           <p className="text-6xl mb-4">✍️</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Exercices personnalisés</h2>
-          <p className="text-gray-500 mb-2">L&apos;IA génère des exercices basés sur les cours de ce dossier.</p>
-          <p className="text-gray-400 text-sm mb-8">Définitions, vrai/faux et cas pratiques — tout ce que tu dois savoir par cœur.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Exercices juridiques</h2>
+          <p className="text-gray-500 mb-2">Cas pratiques, consultations et qualifications juridiques.</p>
+          <p className="text-gray-400 text-sm mb-8">Tu rédiges ta réponse, l&apos;IA te corrige.</p>
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
               {error}
@@ -137,6 +188,7 @@ export default function FolderExercisesPage() {
   }
 
   const ex = exercises[current]
+  const scoreStyle = result ? SCORE_STYLE[result.score] : null
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -148,70 +200,92 @@ export default function FolderExercisesPage() {
         <span className="text-sm text-gray-400">{current + 1} / {exercises.length}</span>
       </nav>
 
-      <main className="max-w-2xl mx-auto px-6 py-10">
+      <main className="max-w-2xl mx-auto px-6 py-8">
         {/* Barre de progression */}
-        <div className="w-full bg-gray-100 rounded-full h-2 mb-8">
+        <div className="w-full bg-gray-100 rounded-full h-2 mb-6">
           <div
             className="bg-indigo-600 h-2 rounded-full transition-all"
             style={{ width: `${((current + 1) / exercises.length) * 100}%` }}
           />
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border p-6 mb-6">
-          {/* Badge type */}
+        {/* Question */}
+        <div className="bg-white rounded-2xl shadow-sm border p-6 mb-4">
           <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full border mb-4 ${TYPE_COLOR[ex.type]}`}>
             {TYPE_LABEL[ex.type]}
           </span>
-
-          {/* Question */}
-          <p className="text-lg font-semibold text-gray-900 leading-relaxed mb-6">
+          <p className="text-base font-semibold text-gray-900 leading-relaxed">
             {ex.question}
           </p>
+        </div>
 
-          {/* Réponse cachée / révélée */}
-          {!revealed ? (
+        {/* Zone de réponse */}
+        <div className="bg-white rounded-2xl shadow-sm border p-6 mb-4">
+          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            Ta réponse
+          </label>
+          <textarea
+            value={userAnswer}
+            onChange={e => setUserAnswer(e.target.value)}
+            disabled={!!result}
+            placeholder="Rédige ta réponse juridique ici..."
+            rows={6}
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:bg-gray-50 disabled:text-gray-500"
+          />
+          {!result && (
             <button
-              onClick={() => setRevealed(true)}
-              className="w-full border-2 border-dashed border-gray-200 rounded-xl py-4 text-gray-400 hover:border-indigo-300 hover:text-indigo-500 transition text-sm font-medium"
+              onClick={checkAnswer}
+              disabled={!userAnswer.trim() || checking}
+              className="mt-3 w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-30 transition flex items-center justify-center gap-2"
             >
-              Voir la réponse
+              {checking ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                  </svg>
+                  Correction en cours...
+                </>
+              ) : 'Vérifier ma réponse'}
             </button>
-          ) : (
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Réponse</p>
-              <p className="text-gray-800 leading-relaxed text-sm whitespace-pre-wrap">{ex.answer}</p>
-            </div>
           )}
         </div>
 
-        {/* Navigation */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={prev}
-            disabled={current === 0}
-            className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50 disabled:opacity-30 transition"
-          >
-            ← Précédent
-          </button>
+        {/* Feedback IA */}
+        {result && scoreStyle && (
+          <div className={`rounded-2xl border p-5 mb-4 ${scoreStyle.bg}`}>
+            <p className={`font-bold mb-2 ${scoreStyle.text}`}>
+              {scoreStyle.icon} {scoreStyle.label}
+            </p>
+            <p className={`text-sm leading-relaxed ${scoreStyle.text}`}>{result.feedback}</p>
+
+            {/* Réponse modèle */}
+            <div className="mt-4">
+              <button
+                onClick={() => setShowAnswer(!showAnswer)}
+                className={`text-xs font-semibold underline ${scoreStyle.text}`}
+              >
+                {showAnswer ? 'Masquer la correction' : 'Voir la correction complète'}
+              </button>
+              {showAnswer && (
+                <div className="mt-3 bg-white bg-opacity-70 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Correction</p>
+                  <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{ex.answer}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Bouton suivant */}
+        {result && (
           <button
             onClick={next}
-            disabled={!revealed}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-30 transition"
+            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition"
           >
-            {current + 1 >= exercises.length ? 'Terminer' : 'Suivant →'}
+            {current + 1 >= exercises.length ? 'Voir les résultats' : 'Exercice suivant →'}
           </button>
-        </div>
-
-        {/* Générer de nouveaux */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={generate}
-            disabled={loading}
-            className="text-sm text-gray-400 hover:text-indigo-600 transition underline"
-          >
-            {loading ? 'Génération...' : 'Générer de nouveaux exercices'}
-          </button>
-        </div>
+        )}
       </main>
     </div>
   )
