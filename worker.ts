@@ -104,7 +104,7 @@ Retourne UNIQUEMENT ce JSON :
     {
       "title": "Titre de la notion (ex: 'La notion de patrimoine', 'Les caractères du patrimoine')",
       "notions": [
-        { "term": "Terme juridique", "definition": "Définition EXTRAITE du texte fourni ou strictement conforme au droit français. RÈGLE ABSOLUE : si tu n'es pas certain à 100% de la définition, ne l'inclus pas. EXEMPLES CORRECTS : 'Patrimoine : universalité juridique comprenant l'ensemble des droits et obligations (actif + passif) d'une personne — construction doctrinale d'Aubry et Rau, sans définition légale dans le Code civil.' / 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) sont titulaires de droits de même nature sur un même bien sans division matérielle — peut résulter d'une succession, d'un achat commun ou d'un divorce.' INTERDIT ABSOLU : inventer une définition, mélanger deux notions, définition approximative ou incomplète." }
+        { "term": "Terme juridique", "definition": "STRUCTURE OBLIGATOIRE : [nature juridique] — [mécanisme/contenu] — [effet ou conséquence juridique]. Exemple : 'Patrimoine : universalité juridique (nature) comprenant l'ensemble des droits et obligations d'une personne, actif et passif indissociables (mécanisme) — sert de gage commun aux créanciers et lie la personne à ses obligations (effet).' / 'Subrogation réelle : mécanisme (nature) par lequel un bien nouveau prend la place d'un bien ancien dans un patrimoine en conservant son régime juridique (mécanisme) — ex: l'indemnité d'assurance se substitue au bien détruit (effet).' / 'Indivision : situation (nature) dans laquelle plusieurs indivisaires sont titulaires de droits de même nature sur un bien sans division matérielle (mécanisme) — résulte d'une succession, achat commun ou divorce (origine).'" }
       ],
       "points": [
         "STRING uniquement — jamais un objet JSON. Développe le mécanisme juridique avec sa logique et ses conséquences."
@@ -117,11 +117,16 @@ Retourne UNIQUEMENT ce JSON :
 
 RÈGLES ABSOLUES :
 - Ordre : structure TOUJOURS par notions dans l'ordre logique ci-dessus — pas dans l'ordre du document source
-- Articles de loi : NE CITE AUCUN article dans les sections. Les articles sont traités séparément dans une section dédiée. INTERDIT de mentionner des numéros d'articles dans les points, notions ou définitions.
+- Articles de loi : NE CITE AUCUN article dans les sections. INTERDIT de mentionner des numéros d'articles dans les points, notions ou définitions.
 - "points" : TOUJOURS des strings, JAMAIS des objets JSON
-- Définitions : complètes, exactes, sans affirmations fausses
 - Chaque notion définie une seule fois
-- Réponds UNIQUEMENT avec le JSON valide`
+- Réponds UNIQUEMENT avec le JSON valide
+
+RÈGLES ABSOLUES SUR LES DÉFINITIONS :
+- Structure OBLIGATOIRE : [nature juridique] — [mécanisme/contenu] — [effet/conséquence]
+- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS — vaut mieux moins de notions que des définitions fausses
+- INTERDIT ABSOLU : définition circulaire (ex: "Sûreté réelle : garantie réelle" — FAUX, trop vague), définition incomplète (ex: "Subrogation : remplacement" — FAUX), mélanger deux notions distinctes
+- La définition doit permettre à un étudiant de reconnaître et distinguer la notion à l'examen sans ambiguïté`
 
 async function processCourse(content: string): Promise<object> {
   const cacheKey = `ollama:${hashContent(SYSTEM_PROMPT + content)}`
@@ -142,18 +147,25 @@ async function processCourse(content: string): Promise<object> {
 
 NIVEAU EXIGÉ : Licence/Master — raisonnement de juriste, vocabulaire précis.
 
-RÈGLES ABSOLUES :
+RÈGLES ABSOLUES SUR LES DÉFINITIONS :
+- Structure OBLIGATOIRE pour chaque définition : [nature juridique] — [mécanisme/contenu] — [effet/conséquence]
+- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS — vaut mieux moins de notions que des définitions fausses
+- INTERDIT ABSOLU : définition circulaire (ex: "Sûreté réelle : garantie réelle" — FAUX), définition d'un seul mot (ex: "Subrogation : remplacement" — FAUX), mélanger deux notions
+- EXEMPLES CORRECTS :
+  * "Patrimoine : universalité juridique (nature) comprenant l'ensemble des droits et obligations d'une personne, actif et passif indissociables (mécanisme) — sert de gage commun aux créanciers (effet)."
+  * "Subrogation réelle : mécanisme (nature) par lequel un bien nouveau prend la place d'un bien ancien dans un patrimoine en conservant son régime juridique (mécanisme) — ex: l'indemnité d'assurance se substitue au bien détruit (effet)."
+  * "Indivision : situation (nature) dans laquelle plusieurs indivisaires sont titulaires de droits de même nature sur un bien sans division matérielle (mécanisme) — résulte d'une succession, achat commun ou divorce."
+
+AUTRES RÈGLES ABSOLUES :
 - Structure les sections par NOTION dans l'ordre logique : définition → principes → contenu → titulaires → effets → exceptions → limites
 - "points" : TOUJOURS des strings — JAMAIS des objets JSON
-- "notions" : définitions EXTRAITES du texte fourni ou strictement conformes au droit français. RÈGLE ABSOLUE : si tu n'es pas certain à 100%, n'inclus pas la notion. INTERDIT ABSOLU : inventer ou approximer une définition — ex: 'Indivision = transmis par succession' (FAUX, ne jamais écrire ça). CORRECT : 'Indivision : situation dans laquelle plusieurs personnes (indivisaires) ont des droits de même nature sur un bien sans division matérielle — résulte d'une succession, achat commun ou divorce.'
-- Articles de loi : NE CITE AUCUN article dans les sections. INTERDIT de mentionner des numéros d'articles dans les points, notions ou définitions.
+- Articles de loi : NE CITE AUCUN article. INTERDIT de mentionner des numéros d'articles dans les points, notions ou définitions.
 - Vocabulaire : titulaire, débiteur, créancier, universalité, opposabilité, erga omnes, sûreté, subrogation, nullité — jamais le langage courant.
-- Définitions : complètes, sans affirmations fausses, utilisables en examen
 - "retenir" : synthèse juridiquement exacte en une phrase
 - Chaque notion définie une seule fois
 
 Format JSON uniquement :
-{"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"Définition complète et exacte, sans articles inventés"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
+{"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"[nature juridique] — [mécanisme/contenu] — [effet/conséquence]"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
