@@ -49,15 +49,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return `=== ${course.title} ===\n${sectionsText || course.rawContent.slice(0, charsPerCourse)}`
   }).join('\n\n').slice(0, 1500)
 
-  const prompt = `Tu es un professeur de droit. Génère 15 exercices de révision basés UNIQUEMENT sur le contenu fourni ci-dessous. L'étudiant ne peut pas faire de recherche — il doit connaître les réponses par cœur.
+  const prompt = `Tu es un professeur de droit niveau Licence/Master. Génère 15 exercices juridiques basés UNIQUEMENT sur le contenu ci-dessous. Style examen de droit français.
 
 3 types d'exercices (5 de chaque) :
-- "definition" : "Définissez précisément : [terme]" — la réponse est la définition exacte du cours
-- "vrai_faux" : une affirmation vraie ou fausse — la réponse commence par "VRAI" ou "FAUX" puis explique pourquoi
-- "application" : un micro cas pratique avec une question juridique — la réponse applique les notions du cours
+
+- "cas_pratique" : une situation de fait réaliste (3-4 lignes) avec une question juridique précise. La réponse suit le syllogisme juridique : règle de droit applicable → qualification des faits → solution. Ex: "M. Dupont achète un véhicule présenté comme neuf mais livré avec 30 000 km. Quel(s) recours peut-il exercer et sur quel fondement ?"
+
+- "consultation" : un client expose son problème concret, tu dois le conseiller juridiquement. La réponse identifie le problème, cite le mécanisme juridique applicable et conclut. Ex: "Votre cliente Marie vous consulte : son voisin a planté des arbres à 30 cm de la limite séparative. Que lui conseillez-vous ?"
+
+- "qualification" : une situation de fait + demander de qualifier juridiquement et d'appliquer le régime. La réponse qualifie, puis expose les effets juridiques et les droits/obligations des parties.
+
+Règles absolues :
+- Situations réalistes et variées, jamais abstraites
+- Réponses complètes avec le raisonnement juridique (pas juste la conclusion)
+- Basé UNIQUEMENT sur les notions présentes dans les cours fournis
 
 JSON uniquement :
-{"exercises":[{"type":"definition","question":"...","answer":"..."}]}
+{"exercises":[{"type":"cas_pratique","question":"...","answer":"..."}]}
 
 COURS :
 ${context}`

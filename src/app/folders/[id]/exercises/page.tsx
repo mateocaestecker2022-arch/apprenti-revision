@@ -4,21 +4,21 @@ import { useState } from 'react'
 import { useParams } from 'next/navigation'
 
 interface Exercise {
-  type: 'definition' | 'vrai_faux' | 'application'
+  type: 'cas_pratique' | 'consultation' | 'qualification'
   question: string
   answer: string
 }
 
 const TYPE_LABEL: Record<Exercise['type'], string> = {
-  definition: '📖 Définition',
-  vrai_faux: '⚖️ Vrai / Faux',
-  application: '🔍 Application',
+  cas_pratique: '⚖️ Cas pratique',
+  consultation: '🧑‍💼 Consultation',
+  qualification: '🔍 Qualification juridique',
 }
 
 const TYPE_COLOR: Record<Exercise['type'], string> = {
-  definition: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  vrai_faux: 'bg-amber-50 text-amber-700 border-amber-200',
-  application: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  cas_pratique: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  consultation: 'bg-amber-50 text-amber-700 border-amber-200',
+  qualification: 'bg-emerald-50 text-emerald-700 border-emerald-200',
 }
 
 export default function FolderExercisesPage() {
