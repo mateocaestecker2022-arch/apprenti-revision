@@ -63,7 +63,14 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <div>
+              <p className="text-red-500 text-sm">{error}</p>
+              <Link href="/forgot-password" className="text-xs text-indigo-500 hover:underline mt-1 block">
+                Mot de passe oublié ?
+              </Link>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -74,12 +81,19 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Pas encore de compte ?{' '}
-          <Link href="/register" className="text-indigo-600 font-medium hover:underline">
-            S&apos;inscrire
-          </Link>
-        </p>
+        <div className="text-center mt-6 space-y-2">
+          <p className="text-sm text-gray-500">
+            <Link href="/forgot-password" className="text-indigo-600 hover:underline">
+              Mot de passe oublié ?
+            </Link>
+          </p>
+          <p className="text-sm text-gray-500">
+            Pas encore de compte ?{' '}
+            <Link href="/register" className="text-indigo-600 font-medium hover:underline">
+              S&apos;inscrire
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )
