@@ -23,20 +23,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const context = structured?.sections
     ? (() => {
         const sections = structured.sections!
-        const charsPerSection = Math.max(50, Math.floor(1000 / sections.length))
+        const charsPerSection = Math.max(80, Math.floor(2000 / sections.length))
         return sections.map(s => {
           const sec = s as { retenir?: string }
           const parts = [`## ${s.title}`]
+          // Inclure toutes les notions (définitions)
           if (s.notions?.length) {
-            const n = s.notions[0]
-            parts.push(`${n.term}: ${n.definition}`.slice(0, 80))
+            s.notions.slice(0, 4).forEach(n => {
+              parts.push(`${n.term}: ${n.definition}`.slice(0, 120))
+            })
           }
           if (sec.retenir) parts.push(sec.retenir.slice(0, 80))
           else if (s.points?.length) parts.push(s.points[0].slice(0, 80))
           return parts.join('\n')
-        }).join('\n\n').slice(0, 1000)
+        }).join('\n\n').slice(0, 2000)
       })()
-    : course.rawContent.slice(0, 1000)
+    : course.rawContent.slice(0, 2000)
 
   // Récupérer les questions du dernier quiz uniquement (pas les 3)
   const pastQuizzes = await prisma.quiz.findMany({
@@ -53,7 +55,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     ? `\nÉvite ces questions déjà posées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
     : ''
 
-  const prompt = `Génère 20 QCM de droit couvrant équitablement toutes les sections. Max 2 questions par section. Difficulté variée. "answer" = index 0-3, varie-le.
+  const prompt = `Génère 20 QCM de droit niveau Licence/Master couvrant équitablement toutes les sections. Max 2 questions par section.
+Mélange obligatoire : au moins 7 questions sur des DÉFINITIONS ("Qu'est-ce que...", "Définissez..."), au moins 6 questions d'APPLICATION, au moins 4 d'ANALYSE.
+"answer" = index 0-3, varie-le.
 ${avoidSection}
 JSON uniquement :
 {"questions":[{"question":"?","options":["A","B","C","D"],"answer":0,"explanation":"Explication courte."}]}
