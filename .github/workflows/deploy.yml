@@ -34,9 +34,9 @@ jobs:
             # Appliquer le schéma Prisma (non-interactif)
             npx prisma db push --accept-data-loss
 
-            # Build via chemin direct pour éviter les problèmes de PATH dans GitHub Actions
+            # Build
             rm -rf .next
-            NODE_OPTIONS='--max-old-space-size=3072' NEXT_TELEMETRY_DISABLED=1 ./node_modules/.bin/next build
+            NODE_OPTIONS='--max-old-space-size=3072' NEXT_TELEMETRY_DISABLED=1 npx --yes next build
 
             # Copier les fichiers pour le mode standalone
             cp -r .next/static .next/standalone/.next/
