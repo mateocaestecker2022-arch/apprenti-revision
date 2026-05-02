@@ -40,19 +40,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       })()
     : course.rawContent.slice(0, 2000)
 
-  // Récupérer les questions du dernier quiz uniquement (pas les 3)
+  // Récupérer les 3 derniers quiz pour éviter les répétitions
   const pastQuizzes = await prisma.quiz.findMany({
     where: { courseId: params.id },
     orderBy: { createdAt: 'desc' },
-    take: 1,
+    take: 3,
   })
   const pastQuestions = pastQuizzes
     .flatMap(q => (q.questions as Array<{ question: string }>))
-    .map(q => q.question.slice(0, 60))
-    .slice(0, 8)
+    .map(q => q.question.slice(0, 80))
+    .slice(0, 20)
 
   const avoidSection = pastQuestions.length > 0
-    ? `\nÉvite ces questions déjà posées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
+    ? `\nINTERDIT ABSOLU — ces questions ont déjà été posées, ne les reprends PAS même reformulées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
     : ''
 
   const prompt = `Génère 20 QCM de droit niveau Licence/Master couvrant équitablement toutes les sections. Max 2 questions par section.
