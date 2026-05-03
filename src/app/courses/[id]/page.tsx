@@ -119,22 +119,22 @@ export default function CoursePage() {
   )
 
   if (course.status === 'processing') return (
-    <div className="min-h-screen bg-white">
-      <nav className="border-b px-6 py-4 flex items-center gap-4">
-        <a href="/dashboard" className="text-gray-500 hover:text-gray-700 text-sm">← Dashboard</a>
+    <div className="min-h-screen bg-white dark:bg-gray-950">
+      <nav className="border-b dark:border-gray-800 px-6 py-4 flex items-center gap-4">
+        <a href="/dashboard" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm">← Dashboard</a>
       </nav>
       <main className="max-w-2xl mx-auto px-6 py-20 text-center">
-        <div className="border rounded-2xl p-12">
+        <div className="border dark:border-gray-800 rounded-2xl p-12 bg-white dark:bg-gray-900">
           <div className="flex justify-center mb-6">
             <svg className="animate-spin h-12 w-12 text-indigo-600" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">L&apos;IA restructure ton cours</h2>
-          <p className="text-gray-500 text-sm mb-1">Traitement en arrière-plan, cette page se met à jour automatiquement.</p>
-          <p className="text-gray-400 text-sm mb-6">Temps écoulé : <span className="font-mono text-indigo-600">{formatElapsed(elapsed)}</span></p>
-          <p className="text-indigo-600 text-xs bg-indigo-50 rounded-lg p-3">Tu peux fermer cette page — le traitement continue en arrière-plan.</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">L&apos;IA restructure ton cours</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Traitement en arrière-plan, cette page se met à jour automatiquement.</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mb-6">Temps écoulé : <span className="font-mono text-indigo-600">{formatElapsed(elapsed)}</span></p>
+          <p className="text-indigo-600 dark:text-indigo-400 text-xs bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3">Tu peux fermer cette page — le traitement continue en arrière-plan.</p>
         </div>
       </main>
     </div>
