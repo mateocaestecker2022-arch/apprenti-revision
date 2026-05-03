@@ -13,6 +13,7 @@ interface SchemaBranch { label: string; children: string[] }
 interface Schema { root: string; branches: SchemaBranch[] }
 interface Jurisprudence { juridiction: string; date: string; apport: string }
 interface Distinction { distinction: string; explication: string }
+interface ReferenceCle { reference: string; description: string }
 interface StructuredContent {
   title: string
   plan: string[]
@@ -25,6 +26,7 @@ interface StructuredContent {
   schema?: Schema
   jurisprudenceCles?: Jurisprudence[]
   distinctionsCles?: Distinction[]
+  referencesCles?: ReferenceCle[]
 }
 interface Folder { id: string; name: string; color: string }
 interface Course {
@@ -33,6 +35,7 @@ interface Course {
   rawContent: string
   structuredContent: StructuredContent
   status: string
+  subject?: string
   updatedAt: string
   folderId?: string | null
   folder?: { id: string; name: string; color: string }
@@ -371,10 +374,27 @@ export default function CoursePage() {
               </div>
             )}
 
-            {/* Problèmes juridiques types */}
+            {/* Références clés (matières hors droit) */}
+            {s.referencesCles && s.referencesCles.length > 0 && (
+              <div className="border rounded-xl p-5 mb-8">
+                <p className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-3">📚 Références essentielles</p>
+                <ul className="space-y-2">
+                  {s.referencesCles.map((r, i) => (
+                    <li key={i} className="flex gap-3 text-sm">
+                      <span className="font-semibold text-purple-700 shrink-0">{r.reference}</span>
+                      <span className="text-gray-700">{r.description}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Problèmes types */}
             {s.problemesJuridiques && s.problemesJuridiques.length > 0 && (
               <div className="border rounded-xl p-5 mb-8">
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">⚖️ Problèmes juridiques types</p>
+                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">
+                  {course.subject === 'Droit' ? '⚖️ Problèmes juridiques types' : '💡 Problèmes types à l\'examen'}
+                </p>
                 <ul className="space-y-4">
                   {s.problemesJuridiques.map((p, i) => (
                     <li key={i} className="text-sm">

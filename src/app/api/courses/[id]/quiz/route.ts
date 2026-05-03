@@ -14,6 +14,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   })
   if (!course) return NextResponse.json({ error: 'Cours introuvable' }, { status: 404 })
 
+  const subject = (course as { subject?: string }).subject || 'Général'
+
   const structured = course.structuredContent as {
     sections?: Array<{ title: string; points?: string[]; notions?: Array<{ term: string; definition: string }> }>
   } | null
@@ -55,7 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     ? `\nINTERDIT ABSOLU — ces questions ont déjà été posées, ne les reprends PAS même reformulées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
     : ''
 
-  const prompt = `Génère 20 QCM de droit niveau Licence/Master couvrant équitablement toutes les sections. Max 2 questions par section.
+  const prompt = `Génère 20 QCM niveau Licence/Master en ${subject} couvrant équitablement toutes les sections. Max 2 questions par section.
 Mélange obligatoire : au moins 7 questions sur des DÉFINITIONS ("Qu'est-ce que...", "Définissez..."), au moins 6 questions d'APPLICATION, au moins 4 d'ANALYSE.
 "answer" = index 0-3, varie-le.
 ${avoidSection}

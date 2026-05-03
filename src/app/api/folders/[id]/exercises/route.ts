@@ -24,6 +24,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: 'Aucun cours prêt dans ce dossier' }, { status: 400 })
   }
 
+  const subject = (folder.courses[0] as { subject?: string }).subject || 'Général'
+
   // Construire le contexte — max 1500 chars répartis sur les cours
   const charsPerCourse = Math.max(60, Math.floor(1500 / folder.courses.length))
   const context = folder.courses.map((course) => {
@@ -49,7 +51,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return `=== ${course.title} ===\n${sectionsText || course.rawContent.slice(0, charsPerCourse)}`
   }).join('\n\n').slice(0, 1500)
 
-  const prompt = `Tu es un professeur de droit niveau Licence/Master. Génère 15 exercices juridiques basés UNIQUEMENT sur le contenu ci-dessous. Style examen de droit français.
+  const isLegal = subject === 'Droit'
+
+  const prompt = isLegal
+    ? `Tu es un professeur de droit niveau Licence/Master. Génère 15 exercices juridiques basés UNIQUEMENT sur le contenu ci-dessous. Style examen de droit français.
 
 3 types d'exercices (5 de chaque) :
 
@@ -66,6 +71,26 @@ Règles absolues :
 
 JSON uniquement :
 {"exercises":[{"type":"cas_pratique","question":"...","answer":"..."}]}
+
+COURS :
+${context}`
+    : `Tu es un professeur de ${subject} niveau Licence/Master. Génère 15 exercices basés UNIQUEMENT sur le contenu ci-dessous.
+
+3 types d'exercices (5 de chaque) :
+
+- "analyse" : un texte, un énoncé ou un phénomène à analyser avec une question précise. La réponse identifie les concepts mobilisés et les articule logiquement.
+
+- "application" : une situation ou un problème concret à résoudre en appliquant les notions du cours. La réponse applique le cadre théorique et conclut.
+
+- "synthese" : une question de réflexion nécessitant de mobiliser et de mettre en relation plusieurs notions du cours.
+
+Règles absolues :
+- Situations concrètes et variées
+- Réponses complètes avec le raisonnement (pas juste la conclusion)
+- Basé UNIQUEMENT sur les notions présentes dans les cours fournis
+
+JSON uniquement :
+{"exercises":[{"type":"analyse","question":"...","answer":"..."}]}
 
 COURS :
 ${context}`

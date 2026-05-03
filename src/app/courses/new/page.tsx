@@ -3,9 +3,22 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
+const SUBJECTS = [
+  { value: 'Droit', label: '⚖️ Droit' },
+  { value: 'Médecine', label: '🏥 Médecine' },
+  { value: 'Informatique', label: '💻 Informatique' },
+  { value: 'Histoire', label: '📜 Histoire' },
+  { value: 'Économie', label: '📊 Économie' },
+  { value: 'Sciences', label: '🔬 Sciences' },
+  { value: 'Philosophie', label: '💭 Philosophie' },
+  { value: 'Mathématiques', label: '📐 Maths' },
+  { value: 'Général', label: '📚 Autre' },
+]
+
 export default function NewCoursePage() {
   const router = useRouter()
   const [content, setContent] = useState('')
+  const [subject, setSubject] = useState('Général')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -62,7 +75,7 @@ export default function NewCoursePage() {
     const res = await fetch('/api/courses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, subject }),
     })
 
     if (!res.ok) {
@@ -89,6 +102,27 @@ export default function NewCoursePage() {
           <p className="text-gray-600 mb-6">
             Importe un fichier ou colle ton cours ci-dessous. L&apos;IA va le restructurer avec un plan, des définitions et un développement détaillé.
           </p>
+
+          {/* Sélecteur de matière */}
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-gray-700 mb-3">Matière</p>
+            <div className="flex flex-wrap gap-2">
+              {SUBJECTS.map(s => (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => setSubject(s.value)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
+                    subject === s.value
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Zone d'upload fichier */}
           <div

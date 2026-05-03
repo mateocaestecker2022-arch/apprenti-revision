@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
-  const { content, folderId } = await req.json()
+  const { content, folderId, subject = 'Général' } = await req.json()
 
   if (!content || content.trim().length < 10) {
     return NextResponse.json({ error: 'Contenu trop court' }, { status: 400 })
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
         status: 'processing',
         userId: session.user.id,
         folderId: folderId || null,
+        subject,
       },
     })
 
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
     await courseQueue.add('process-course', {
       courseId: course.id,
       content,
+      subject,
     })
 
     return NextResponse.json({ id: course.id, status: 'processing' })

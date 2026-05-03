@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useParams } from 'next/navigation'
 
 interface Exercise {
-  type: 'cas_pratique' | 'consultation' | 'qualification'
+  type: 'cas_pratique' | 'consultation' | 'qualification' | 'analyse' | 'application' | 'synthese'
   question: string
   answer: string
 }
@@ -18,12 +18,18 @@ const TYPE_LABEL: Record<Exercise['type'], string> = {
   cas_pratique: '⚖️ Cas pratique',
   consultation: '🧑‍💼 Consultation',
   qualification: '🔍 Qualification juridique',
+  analyse: '🔬 Analyse',
+  application: '⚙️ Application',
+  synthese: '💡 Synthèse',
 }
 
 const TYPE_COLOR: Record<Exercise['type'], string> = {
   cas_pratique: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   consultation: 'bg-amber-50 text-amber-700 border-amber-200',
   qualification: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  analyse: 'bg-blue-50 text-blue-700 border-blue-200',
+  application: 'bg-violet-50 text-violet-700 border-violet-200',
+  synthese: 'bg-teal-50 text-teal-700 border-teal-200',
 }
 
 const SCORE_STYLE = {
@@ -159,8 +165,8 @@ export default function FolderExercisesPage() {
         </nav>
         <main className="max-w-2xl mx-auto px-6 py-20 text-center">
           <p className="text-6xl mb-4">✍️</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Exercices juridiques</h2>
-          <p className="text-gray-500 mb-2">Cas pratiques, consultations et qualifications juridiques.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Exercices pratiques</h2>
+          <p className="text-gray-500 mb-2">Exercices générés depuis les cours du dossier.</p>
           <p className="text-gray-400 text-sm mb-8">Tu rédiges ta réponse, l&apos;IA te corrige.</p>
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">

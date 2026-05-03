@@ -14,13 +14,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
   }
 
-  const prompt = `Tu es un correcteur de droit niveau Licence/Master. Évalue la réponse de l'étudiant.
+  const prompt = `Tu es un correcteur pédagogique niveau Licence/Master. Évalue la réponse de l'étudiant.
 
 Question : ${question.slice(0, 300)}
 Réponse attendue : ${expectedAnswer.slice(0, 400)}
 Réponse de l'étudiant : ${userAnswer.slice(0, 400)}
 
-Évalue si l'étudiant a bien identifié les éléments juridiques essentiels. Sois pédagogue.
+Évalue si l'étudiant a bien identifié les éléments essentiels. Sois pédagogue.
 
 JSON uniquement :
 {"score":"correct"|"partiel"|"incorrect","feedback":"Feedback en 2-3 phrases max."}`

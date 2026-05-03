@@ -12,9 +12,9 @@ const redis = new Redis(connection)
 const prisma = new PrismaClient()
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-const CHUNK_SIZE = 2500 // Réduit pour compenser les prompts plus longs (vocabulaire juridique)
+const CHUNK_SIZE = 2500
 
-// Whitelist stricte des articles vérifiés — aucun autre ne peut être affiché
+// Whitelist stricte des articles vérifiés — uniquement pour les cours de droit
 const ARTICLES_WHITELIST = [
   { article: 'Art. 2284 C. civ.', description: 'Responsabilité patrimoniale : toute personne est tenue de ses obligations sur l\'ensemble de ses biens présents et à venir.' },
   { article: 'Art. 2285 C. civ.', description: 'Gage commun des créanciers : les biens du débiteur sont le gage commun de ses créanciers ; le prix s\'en distribue entre eux par contribution.' },
@@ -81,7 +81,13 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
   return ''
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Tu restructures ce cours en JSON selon un ordre logique par notions.
+function isLegalSubject(subject: string): boolean {
+  return subject === 'Droit'
+}
+
+// ─── Prompts droit (inchangés) ───────────────────────────────────────────────
+
+const LEGAL_SYSTEM_PROMPT = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Tu restructures ce cours en JSON selon un ordre logique par notions.
 
 NIVEAU EXIGÉ : Licence/Master — vocabulaire juridique précis, raisonnement de juriste, jamais de style lycée.
 
@@ -128,22 +134,7 @@ RÈGLES ABSOLUES SUR LES DÉFINITIONS :
 - INTERDIT ABSOLU : définition circulaire (ex: "Sûreté réelle : garantie réelle" — FAUX, trop vague), définition incomplète (ex: "Subrogation : remplacement" — FAUX), mélanger deux notions distinctes
 - La définition doit permettre à un étudiant de reconnaître et distinguer la notion à l'examen sans ambiguïté`
 
-async function processCourse(content: string): Promise<object> {
-  const cacheKey = `ollama:${hashContent(SYSTEM_PROMPT + content)}`
-  const cached = await redis.get(cacheKey)
-  if (cached) return JSON.parse(cached)
-
-  let result: object
-
-  if (content.length <= CHUNK_SIZE) {
-    const raw = await callGroq(`${SYSTEM_PROMPT}\n\n${content}`)
-    const match = raw.match(/\{[\s\S]*\}/)
-    if (!match) throw new Error('No JSON in response')
-    result = JSON.parse(match[0])
-  } else {
-    const chunks = splitIntoChunks(content)
-
-    const chunkSystem = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Transforme cette partie de cours en JSON rigoureux.
+const LEGAL_CHUNK_SYSTEM = `Tu es un assistant pédagogique de niveau universitaire (Licence/Master droit). Transforme cette partie de cours en JSON rigoureux.
 
 NIVEAU EXIGÉ : Licence/Master — raisonnement de juriste, vocabulaire précis.
 
@@ -168,10 +159,160 @@ Format JSON uniquement :
 {"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"[nature juridique] — [mécanisme/contenu] — [effet/conséquence]"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 
+// ─── Prompts génériques (autres matières) ────────────────────────────────────
+
+function getGenericSystemPrompt(subject: string): string {
+  return `Tu es un assistant pédagogique de niveau universitaire (Licence/Master — ${subject}). Tu restructures ce cours en JSON selon un ordre logique par notions.
+
+NIVEAU EXIGÉ : Licence/Master — vocabulaire disciplinaire précis, raisonnement rigoureux, jamais de style lycée.
+
+ORDRE LOGIQUE des sections :
+1. Définition(s) centrale(s)
+2. Principes fondamentaux
+3. Contenu / composantes
+4. Acteurs / sujets
+5. Rôle et effets
+6. Exceptions / cas particuliers
+7. Limites
+
+Retourne UNIQUEMENT ce JSON :
+{
+  "title": "Titre du cours",
+  "plan": ["Section 1", "Section 2"],
+  "sections": [
+    {
+      "title": "Titre de la notion",
+      "notions": [
+        { "term": "Terme clé", "definition": "STRUCTURE : [catégorie/nature] — [mécanisme/contenu] — [application/effet]." }
+      ],
+      "points": ["STRING uniquement — développe le mécanisme avec sa logique et ses conséquences."],
+      "retenir": "Synthèse en une phrase exacte, utilisable en examen."
+    }
+  ],
+  "summary": "Résumé en 4-5 phrases : logique d'ensemble, principes clés, nuances importantes."
+}
+
+RÈGLES ABSOLUES :
+- Structure TOUJOURS par notions dans l'ordre logique — pas dans l'ordre du document source
+- "points" : TOUJOURS des strings, JAMAIS des objets JSON
+- Chaque notion définie une seule fois
+- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS
+- Réponds UNIQUEMENT avec le JSON valide
+
+RÈGLES SUR LES DÉFINITIONS :
+- Structure OBLIGATOIRE : [catégorie/nature] — [mécanisme/contenu] — [application/effet]
+- INTERDIT : définition circulaire, définition d'un seul mot, mélanger deux notions
+- La définition doit permettre à un étudiant de reconnaître et distinguer la notion à l'examen`
+}
+
+function getGenericChunkSystem(subject: string): string {
+  return `Tu es un assistant pédagogique de niveau universitaire (Licence/Master — ${subject}). Transforme cette partie de cours en JSON rigoureux.
+
+RÈGLES ABSOLUES SUR LES DÉFINITIONS :
+- Structure OBLIGATOIRE : [catégorie/nature] — [mécanisme/contenu] — [application/effet]
+- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS
+- INTERDIT : définition circulaire, définition d'un seul mot, mélanger deux notions
+
+AUTRES RÈGLES :
+- Structure les sections par NOTION dans l'ordre logique : définition → principes → contenu → acteurs → effets → exceptions → limites
+- "points" : TOUJOURS des strings, JAMAIS des objets JSON
+- "retenir" : synthèse exacte en une phrase
+- Chaque notion définie une seule fois
+
+Format JSON uniquement :
+{"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"[catégorie] — [mécanisme] — [effet]"}],"points":["Mécanisme + logique en string."],"retenir":"Synthèse exacte."}]}
+Réponds UNIQUEMENT avec le JSON valide.`
+}
+
+function getEnrichPrompt(subject: string, synthese: string): string {
+  if (isLegalSubject(subject)) {
+    return `Tu es un professeur de droit niveau Licence/Master. À partir de ce cours, génère en JSON :
+1. "logique" : 3 phrases résumant la logique juridique d'ensemble avec vocabulaire juridique précis
+2. "erreursFrequentes" : 5 erreurs classiques d'étudiants avec correction juridiquement exacte
+3. "problemesJuridiques" : 3 questions d'examen type avec principe juridique et exception si applicable
+4. "schema" : carte mentale DÉTAILLÉE — nœud central + 4-5 branches principales, chaque branche avec 3-4 sous-éléments précis (notions juridiques, pas juste des mots vagues)
+
+Exemple de schema détaillé attendu :
+{"root":"Le Patrimoine","branches":[{"label":"Définition","children":["Universalité juridique (actif + passif)","Construction doctrinale d'Aubry et Rau","Absence de définition légale dans le Code civil","Lien indissociable avec la personnalité juridique"]},{"label":"Caractères","children":["Unicité : une personne = un seul patrimoine","Indivisibilité : actif et passif liés","Incessibilité : ne peut être cédé entre vifs","Transmissibilité : transmis à la mort aux héritiers"]},{"label":"Rôle juridique","children":["Gage commun des créanciers (art. 2285 C. civ.)","Responsabilité patrimoniale (art. 2284 C. civ.)","Support des droits et obligations","Subrogation réelle : les biens se remplacent"]}]}
+
+Format JSON :
+{"logique":["Phrase 1","Phrase 2","Phrase 3"],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"schema":{"root":"Sujet du cours","branches":[{"label":"Branche","children":["Sous-élément précis","Sous-élément précis","Sous-élément précis"]}]}}
+
+COURS :
+${synthese}`
+  }
+
+  return `Tu es un professeur de ${subject} niveau Licence/Master. À partir de ce cours, génère en JSON :
+1. "logique" : 3 idées clés résumant la logique d'ensemble du cours avec vocabulaire disciplinaire précis
+2. "erreursFrequentes" : 5 erreurs classiques d'étudiants avec correction exacte
+3. "problemesJuridiques" : 3 questions d'examen type avec la notion/principe clé à mobiliser et les nuances si applicable
+4. "schema" : carte mentale DÉTAILLÉE — nœud central + 4-5 branches principales, chaque branche avec 3-4 sous-éléments précis
+
+Format JSON :
+{"logique":["Idée 1","Idée 2","Idée 3"],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"schema":{"root":"Sujet du cours","branches":[{"label":"Branche","children":["Sous-élément précis","Sous-élément précis"]}]}}
+
+COURS :
+${synthese}`
+}
+
+function getRecherchePrompt(subject: string, title: string, titres: string): string {
+  if (isLegalSubject(subject)) {
+    const whitelistStr = ARTICLES_WHITELIST.map(a => `- ${a.article} : ${a.description}`).join('\n')
+    return `Tu es un professeur de droit français niveau Licence/Master. Pour le cours sur "${title}", génère UNIQUEMENT des compléments utiles à l'examen.
+
+RÈGLE ABSOLUE : n'inclus que ce qui est directement utile pour réussir un examen de droit — pas de culture générale, pas d'histoire, pas de détails inutiles.
+
+Génère en JSON :
+1. "jurisprudenceCles" : 2-3 arrêts ou décisions fondamentaux que tout étudiant doit connaître sur ce sujet (juridiction, date approximative, apport juridique en une phrase). Ne cite que si tu es certain à 100%.
+2. "distinctionsCles" : 3-4 distinctions juridiques fondamentales à maîtriser pour l'examen (ex: "Droit réel vs droit personnel : le droit réel est opposable erga omnes, le droit personnel n'est opposable qu'au débiteur")
+3. "articlesEssentiels" : sélectionne UNIQUEMENT parmi la liste ci-dessous les articles pertinents pour ce cours. INTERDIT d'inventer ou d'ajouter tout autre article. Si aucun n'est pertinent, retourne un tableau vide [].
+
+LISTE AUTORISÉE D'ARTICLES (choisis parmi ceux-ci uniquement) :
+${whitelistStr}
+
+Format JSON :
+{"jurisprudenceCles":[{"juridiction":"Cass. civ. 1re","date":"...","apport":"..."}],"distinctionsCles":[{"distinction":"A vs B","explication":"..."}],"articlesEssentiels":[{"article":"Art. X C. civ.","description":"Apport juridique exact"}]}
+
+Sections du cours : ${titres}`
+  }
+
+  return `Tu es un professeur de ${subject} niveau Licence/Master. Pour le cours sur "${title}", génère des compléments utiles à l'examen.
+
+RÈGLE : n'inclus que ce qui est directement utile pour réussir l'examen — pas de détails anecdotiques.
+
+Génère en JSON :
+1. "referencesCles" : 2-3 auteurs, théories, formules ou textes fondamentaux que tout étudiant doit connaître sur ce sujet. Ne cite que si tu es certain à 100%.
+2. "distinctionsCles" : 3-4 distinctions conceptuelles fondamentales à maîtriser pour l'examen
+
+Format JSON :
+{"referencesCles":[{"reference":"Auteur / Théorie / Formule","description":"Apport ou définition essentielle en une phrase"}],"distinctionsCles":[{"distinction":"Concept A vs Concept B","explication":"..."}]}
+
+Sections du cours : ${titres}`
+}
+
+// ─── Traitement principal ─────────────────────────────────────────────────────
+
+async function processCourse(content: string, subject: string = 'Général'): Promise<object> {
+  const cacheKey = `course:${subject}:${hashContent(content)}`
+  const cached = await redis.get(cacheKey)
+  if (cached) return JSON.parse(cached)
+
+  let result: object
+
+  const systemPrompt = isLegalSubject(subject) ? LEGAL_SYSTEM_PROMPT : getGenericSystemPrompt(subject)
+  const chunkSystem = isLegalSubject(subject) ? LEGAL_CHUNK_SYSTEM : getGenericChunkSystem(subject)
+
+  if (content.length <= CHUNK_SIZE) {
+    const raw = await callGroq(`${systemPrompt}\n\n${content}`)
+    const match = raw.match(/\{[\s\S]*\}/)
+    if (!match) throw new Error('No JSON in response')
+    result = JSON.parse(match[0])
+  } else {
+    const chunks = splitIntoChunks(content)
     const allSections: Array<{title: string, notions: Array<{term: string, definition: string}>, points: string[]}> = []
 
     for (let ci = 0; ci < chunks.length; ci++) {
-      if (ci > 0) await sleep(5000) // 5s entre chunks
+      if (ci > 0) await sleep(5000)
       const raw = await callGroq(`${chunkSystem}\n\n${chunks[ci]}`)
       const match = raw.match(/\{[\s\S]*\}/)
       if (match) {
@@ -207,7 +348,7 @@ Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","S
     }
   }
 
-  // Appel 1 : enrichissement pédagogique (carte mentale détaillée, erreurs, logique, problèmes)
+  // Appel 1 : enrichissement pédagogique (carte mentale, erreurs, logique, problèmes)
   try {
     await sleep(5000)
     const enrichResult = result as { title?: string; sections?: Array<{ title: string; retenir?: string; points?: string[] }> }
@@ -216,21 +357,7 @@ Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","S
       .map(s => `- ${s.title}${s.retenir ? ' : ' + s.retenir : ''}`)
       .join('\n')
 
-    const enrichPrompt = `Tu es un professeur de droit niveau Licence/Master. À partir de ce cours, génère en JSON :
-1. "logique" : 3 phrases résumant la logique juridique d'ensemble avec vocabulaire juridique précis
-2. "erreursFrequentes" : 5 erreurs classiques d'étudiants avec correction juridiquement exacte
-3. "problemesJuridiques" : 3 questions d'examen type avec principe juridique et exception si applicable
-4. "schema" : carte mentale DÉTAILLÉE — nœud central + 4-5 branches principales, chaque branche avec 3-4 sous-éléments précis (notions juridiques, pas juste des mots vagues)
-
-Exemple de schema détaillé attendu :
-{"root":"Le Patrimoine","branches":[{"label":"Définition","children":["Universalité juridique (actif + passif)","Construction doctrinale d'Aubry et Rau","Absence de définition légale dans le Code civil","Lien indissociable avec la personnalité juridique"]},{"label":"Caractères","children":["Unicité : une personne = un seul patrimoine","Indivisibilité : actif et passif liés","Incessibilité : ne peut être cédé entre vifs","Transmissibilité : transmis à la mort aux héritiers"]},{"label":"Rôle juridique","children":["Gage commun des créanciers (art. 2285 C. civ.)","Responsabilité patrimoniale (art. 2284 C. civ.)","Support des droits et obligations","Subrogation réelle : les biens se remplacent"]}]}
-
-Format JSON :
-{"logique":["Phrase 1","Phrase 2","Phrase 3"],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"schema":{"root":"Sujet du cours","branches":[{"label":"Branche","children":["Sous-élément précis","Sous-élément précis","Sous-élément précis"]}]}}
-
-COURS :
-${synthese}`
-
+    const enrichPrompt = getEnrichPrompt(subject, synthese)
     const enrichRaw = await callGroq(enrichPrompt)
     const enrichMatch = enrichRaw.match(/\{[\s\S]*\}/)
     if (enrichMatch) {
@@ -242,37 +369,19 @@ ${synthese}`
     console.error('[Worker] Enrichissement échoué (non bloquant):', e)
   }
 
-  // Appel 2 : recherche approfondie — compléments utiles pour l'examen
+  // Appel 2 : compléments utiles à l'examen
   try {
     await sleep(5000)
     const enrichResult2 = result as { title?: string; sections?: Array<{ title: string }> }
     const titres = (enrichResult2.sections || []).map(s => s.title).join(', ')
 
-    const whitelistStr = ARTICLES_WHITELIST.map(a => `- ${a.article} : ${a.description}`).join('\n')
-
-    const recherchePrompt = `Tu es un professeur de droit français niveau Licence/Master. Pour le cours sur "${enrichResult2.title || 'ce sujet'}", génère UNIQUEMENT des compléments utiles à l'examen.
-
-RÈGLE ABSOLUE : n'inclus que ce qui est directement utile pour réussir un examen de droit — pas de culture générale, pas d'histoire, pas de détails inutiles.
-
-Génère en JSON :
-1. "jurisprudenceCles" : 2-3 arrêts ou décisions fondamentaux que tout étudiant doit connaître sur ce sujet (juridiction, date approximative, apport juridique en une phrase). Ne cite que si tu es certain à 100%.
-2. "distinctionsCles" : 3-4 distinctions juridiques fondamentales à maîtriser pour l'examen (ex: "Droit réel vs droit personnel : le droit réel est opposable erga omnes, le droit personnel n'est opposable qu'au débiteur")
-3. "articlesEssentiels" : sélectionne UNIQUEMENT parmi la liste ci-dessous les articles pertinents pour ce cours. INTERDIT d'inventer ou d'ajouter tout autre article. Si aucun n'est pertinent, retourne un tableau vide [].
-
-LISTE AUTORISÉE D'ARTICLES (choisis parmi ceux-ci uniquement) :
-${whitelistStr}
-
-Format JSON :
-{"jurisprudenceCles":[{"juridiction":"Cass. civ. 1re","date":"...","apport":"..."}],"distinctionsCles":[{"distinction":"A vs B","explication":"..."}],"articlesEssentiels":[{"article":"Art. X C. civ.","description":"Apport juridique exact"}]}
-
-Sections du cours : ${titres}`
-
+    const recherchePrompt = getRecherchePrompt(subject, enrichResult2.title || 'ce sujet', titres)
     const rechercheRaw = await callGroq(recherchePrompt)
     const rechercheMatch = rechercheRaw.match(/\{[\s\S]*\}/)
     if (rechercheMatch) {
       const rechercheData = JSON.parse(rechercheMatch[0])
-      // Filtre de sécurité : ne garder que les articles de la whitelist
-      if (Array.isArray(rechercheData.articlesEssentiels)) {
+      // Filtre articles uniquement pour le droit
+      if (isLegalSubject(subject) && Array.isArray(rechercheData.articlesEssentiels)) {
         const before = rechercheData.articlesEssentiels.length
         rechercheData.articlesEssentiels = filterArticles(rechercheData.articlesEssentiels)
         const after = rechercheData.articlesEssentiels.length
@@ -281,10 +390,10 @@ Sections du cours : ${titres}`
         }
       }
       result = { ...result, ...rechercheData }
-      console.log('[Worker] Recherche approfondie générée')
+      console.log('[Worker] Compléments examen générés')
     }
   } catch (e) {
-    console.error('[Worker] Recherche approfondie échouée (non bloquant):', e)
+    console.error('[Worker] Compléments échoués (non bloquant):', e)
   }
 
   await redis.setex(cacheKey, 86400, JSON.stringify(result))
@@ -294,11 +403,11 @@ Sections du cours : ${titres}`
 const worker = new Worker(
   'course-processing',
   async (job) => {
-    const { courseId, content } = job.data as { courseId: string; content: string }
-    console.log(`[Worker] Processing course ${courseId}...`)
+    const { courseId, content, subject = 'Général' } = job.data as { courseId: string; content: string; subject?: string }
+    console.log(`[Worker] Processing course ${courseId} (${subject})...`)
 
     try {
-      const structured = await processCourse(content) as {
+      const structured = await processCourse(content, subject) as {
         title?: string
         keywords?: unknown[]
         [key: string]: unknown
