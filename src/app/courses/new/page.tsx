@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 const SUBJECTS = [
@@ -18,12 +18,18 @@ const SUBJECTS = [
 export default function NewCoursePage() {
   const router = useRouter()
   const [content, setContent] = useState('')
-  const [subject, setSubject] = useState('Général')
+  const [subject, setSubject] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [fileName, setFileName] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch('/api/me').then(r => r.json()).then(data => {
+      if (data.filiere) setSubject(data.filiere)
+    }).catch(() => setSubject('Général'))
+  }, [])
 
   function estimateTime(text: string): string {
     const chunks = Math.ceil(text.length / 2500)

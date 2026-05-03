@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
-  const { name, email, password } = await req.json()
+  const { name, email, password, filiere = 'Général' } = await req.json()
 
   if (!email || !password) {
     return NextResponse.json({ error: 'Email et mot de passe requis' }, { status: 400 })
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const hashed = await bcrypt.hash(password, 12)
 
   const user = await prisma.user.create({
-    data: { name, email, password: hashed },
+    data: { name, email, password: hashed, filiere },
   })
 
   return NextResponse.json({ id: user.id, email: user.email }, { status: 201 })

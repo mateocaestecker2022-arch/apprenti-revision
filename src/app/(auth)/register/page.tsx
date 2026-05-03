@@ -4,23 +4,40 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+const FILIERES = [
+  { value: 'Droit', label: '⚖️ Droit' },
+  { value: 'Médecine', label: '🏥 Médecine' },
+  { value: 'Informatique', label: '💻 Informatique' },
+  { value: 'Histoire', label: '📜 Histoire' },
+  { value: 'Économie', label: '📊 Économie' },
+  { value: 'Sciences', label: '🔬 Sciences' },
+  { value: 'Philosophie', label: '💭 Philosophie' },
+  { value: 'Mathématiques', label: '📐 Maths' },
+  { value: 'Général', label: '📚 Autre' },
+]
+
 export default function RegisterPage() {
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [filiere, setFiliere] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!filiere) {
+      setError('Choisis ta filière pour continuer')
+      return
+    }
     setLoading(true)
     setError('')
 
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, filiere }),
     })
 
     if (!res.ok) {
@@ -34,10 +51,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Créer un compte</h1>
-        <p className="text-gray-500 mb-6">Commencez à réviser intelligemment</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 px-4 py-8">
+      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Créer un compte</h1>
+        <p className="text-gray-500 text-sm mb-6">Commencez à réviser intelligemment</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -71,18 +88,41 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Sélecteur de filière */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ta filière <span className="text-red-500">*</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {FILIERES.map(f => (
+                <button
+                  key={f.value}
+                  type="button"
+                  onClick={() => setFiliere(f.value)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
+                    filiere === f.value
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition"
+            className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition"
           >
             {loading ? 'Création...' : 'Créer mon compte'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-gray-500 mt-5">
           Déjà un compte ?{' '}
           <Link href="/login" className="text-indigo-600 font-medium hover:underline">
             Se connecter

@@ -9,11 +9,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
-  const { content, folderId, subject = 'Général' } = await req.json()
+  const { content, folderId, subject } = await req.json()
 
   if (!content || content.trim().length < 10) {
     return NextResponse.json({ error: 'Contenu trop court' }, { status: 400 })
   }
+
+  // Si aucun subject fourni, utilise la filière de l'utilisateur
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { filiere: true } })
+  const resolvedSubject = subject || user?.filiere || 'Général'
 
   try {
     // Créer le cours immédiatement avec status "processing"
@@ -26,7 +30,7 @@ export async function POST(req: NextRequest) {
         status: 'processing',
         userId: session.user.id,
         folderId: folderId || null,
-        subject,
+        subject: resolvedSubject,
       },
     })
 
@@ -34,7 +38,7 @@ export async function POST(req: NextRequest) {
     await courseQueue.add('process-course', {
       courseId: course.id,
       content,
-      subject,
+      subject: resolvedSubject,
     })
 
     return NextResponse.json({ id: course.id, status: 'processing' })
