@@ -37,7 +37,7 @@ export default async function Home() {
 
         <div className="max-w-4xl mx-auto text-center relative">
           <span className="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
-            ✨ Propulsé par l&apos;IA Groq
+            ✨ Propulsé par l&apos;IA
           </span>
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white leading-tight mb-6">
             Révise plus vite,<br />
@@ -194,7 +194,7 @@ export default async function Home() {
 
       {/* FOOTER */}
       <footer className="bg-gray-900 text-gray-400 py-8 px-6 text-center text-sm">
-        <p>© 2026 Apprenti Révision — Conçu pour les étudiants en droit</p>
+        <p>© 2026 Apprenti Révision — Conçu pour les étudiants</p>
       </footer>
 
     </div>
