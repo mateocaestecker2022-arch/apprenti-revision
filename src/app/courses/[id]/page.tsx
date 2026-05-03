@@ -159,11 +159,11 @@ export default function CoursePage() {
   const s = course.structuredContent || { title: '', plan: [], sections: [], summary: '' }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Navbar */}
-      <nav className="border-b px-6 py-3 flex items-center justify-between sticky top-0 bg-white z-10">
+      <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-900 z-10">
         <div className="flex items-center gap-3">
-          <a href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+          <a href="/dashboard" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Dashboard</a>
           {course.folder && (
             <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">{course.folder.name}</span>
           )}
@@ -218,20 +218,20 @@ export default function CoursePage() {
         ) : (
           <>
             {/* Titre */}
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">{course.title}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{course.title}</h1>
 
             {/* Résumé */}
             {s.summary && (
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-6">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-xl p-5 mb-6">
                 <p className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-2">Résumé</p>
-                <p className="text-gray-700 text-sm leading-relaxed">{s.summary}</p>
+                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{s.summary}</p>
               </div>
             )}
 
             {/* Plan du cours */}
             {s.plan && s.plan.length > 0 && (
-              <div className="border rounded-xl p-5 mb-8">
-                <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <div className="border dark:border-gray-800 rounded-xl p-5 mb-8">
+                <h2 className="font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                   <span>📋</span> Plan du Cours
                 </h2>
                 <ol className="space-y-1.5 list-decimal list-inside">
@@ -251,7 +251,7 @@ export default function CoursePage() {
 
             {/* Logique du cours */}
             {s.logique && s.logique.length > 0 && (
-              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 mb-8">
+              <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 rounded-xl p-5 mb-8">
                 <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-3">🧠 Logique du cours</p>
                 <ol className="space-y-1.5 list-decimal list-inside">
                   {s.logique.map((idea, i) => (
@@ -265,8 +265,8 @@ export default function CoursePage() {
             {s.sections && s.sections.map((section, i) => (
               <div key={i} id={`section-${i}`} className="mb-10">
                 {/* Titre de section */}
-                <div className="bg-slate-50 border-l-4 border-indigo-500 rounded-r-xl px-5 py-3 mb-5">
-                  <h2 className="font-bold text-gray-900 text-base flex items-center gap-2">
+                <div className="bg-slate-50 dark:bg-gray-800 border-l-4 border-indigo-500 rounded-r-xl px-5 py-3 mb-5">
+                  <h2 className="font-bold text-gray-900 dark:text-white text-base flex items-center gap-2">
                     <span>📖</span> {i + 1}. {section.title}
                   </h2>
                 </div>
@@ -282,9 +282,9 @@ export default function CoursePage() {
                         <li key={j} className="flex gap-2 text-sm leading-relaxed">
                           <span className="text-gray-400 mt-1">•</span>
                           <span>
-                            <span className="font-semibold text-gray-900">{n.term}</span>
-                            <span className="text-gray-500"> : </span>
-                            <span className="text-gray-700">{n.definition}</span>
+                            <span className="font-semibold text-gray-900 dark:text-white">{n.term}</span>
+                            <span className="text-gray-500 dark:text-gray-500"> : </span>
+                            <span className="text-gray-700 dark:text-gray-300">{n.definition}</span>
                           </span>
                         </li>
                       ))}
@@ -307,7 +307,7 @@ export default function CoursePage() {
                         return (
                           <li key={j} className="flex gap-2 text-sm leading-relaxed">
                             <span className="text-gray-400 mt-1 shrink-0">•</span>
-                            <span className="text-gray-700">{text}</span>
+                            <span className="text-gray-700 dark:text-gray-300">{text}</span>
                           </li>
                         )
                       })}
@@ -317,16 +317,16 @@ export default function CoursePage() {
 
                 {/* À retenir */}
                 {section.retenir && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-xl px-4 py-3">
                     <p className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-1">⚡ À retenir</p>
-                    <p className="text-gray-700 text-sm leading-relaxed">{section.retenir}</p>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{section.retenir}</p>
                   </div>
                 )}
               </div>
             ))}
             {/* Schéma / Carte mentale */}
             {s.schema && s.schema.branches?.length > 0 && (
-              <div className="border rounded-xl p-5 mb-8">
+              <div className="border dark:border-gray-800 rounded-xl p-5 mb-8">
                 <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mb-6">🗺️ Carte mentale</p>
                 <div className="flex flex-col items-center">
                   {/* Nœud central */}
@@ -341,13 +341,12 @@ export default function CoursePage() {
                         {/* Connecteur */}
                         <div className="w-px h-4 bg-indigo-200 mb-1"/>
                         {/* Label branche */}
-                        <div className="bg-indigo-100 text-indigo-800 font-bold text-xs px-3 py-2 rounded-xl text-center mb-2 w-full border border-indigo-200">
+                        <div className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 font-bold text-xs px-3 py-2 rounded-xl text-center mb-2 w-full border border-indigo-200 dark:border-indigo-700">
                           {branch.label}
                         </div>
-                        {/* Sous-éléments détaillés */}
                         <div className="flex flex-col gap-1.5 w-full">
                           {branch.children?.map((child, ci) => (
-                            <div key={ci} className="bg-slate-50 border border-slate-200 text-gray-700 text-xs px-3 py-1.5 rounded-lg leading-snug">
+                            <div key={ci} className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs px-3 py-1.5 rounded-lg leading-snug">
                               {child}
                             </div>
                           ))}
@@ -409,7 +408,7 @@ export default function CoursePage() {
 
             {/* Erreurs fréquentes */}
             {s.erreursFrequentes && s.erreursFrequentes.length > 0 && (
-              <div className="border border-red-100 rounded-xl p-5 mb-8">
+              <div className="border border-red-100 dark:border-red-900/30 rounded-xl p-5 mb-8">
                 <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-3">⚠️ Erreurs fréquentes à éviter</p>
                 <table className="w-full text-sm">
                   <thead>
@@ -421,8 +420,8 @@ export default function CoursePage() {
                   <tbody>
                     {s.erreursFrequentes.map((e, i) => (
                       <tr key={i} className="border-b last:border-0">
-                        <td className="py-2 pr-4 text-red-600">❌ {e.erreur}</td>
-                        <td className="py-2 text-green-700">✅ {e.correction}</td>
+                        <td className="py-2 pr-4 text-red-600 dark:text-red-400">❌ {e.erreur}</td>
+                        <td className="py-2 text-green-700 dark:text-green-400">✅ {e.correction}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -432,13 +431,13 @@ export default function CoursePage() {
 
             {/* Distinctions clés */}
             {s.distinctionsCles && s.distinctionsCles.length > 0 && (
-              <div className="border border-blue-100 rounded-xl p-5 mb-8">
+              <div className="border border-blue-100 dark:border-blue-900/30 rounded-xl p-5 mb-8">
                 <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">⚡ Distinctions fondamentales à maîtriser</p>
                 <div className="space-y-3">
                   {s.distinctionsCles.map((d, i) => (
-                    <div key={i} className="bg-blue-50 rounded-lg p-3 text-sm">
-                      <p className="font-bold text-blue-800 mb-1">{d.distinction}</p>
-                      <p className="text-gray-700">{d.explication}</p>
+                    <div key={i} className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-sm">
+                      <p className="font-bold text-blue-800 dark:text-blue-300 mb-1">{d.distinction}</p>
+                      <p className="text-gray-700 dark:text-gray-300">{d.explication}</p>
                     </div>
                   ))}
                 </div>
@@ -447,16 +446,16 @@ export default function CoursePage() {
 
             {/* Jurisprudence clés */}
             {s.jurisprudenceCles && s.jurisprudenceCles.length > 0 && (
-              <div className="border border-purple-100 rounded-xl p-5 mb-8">
+              <div className="border border-purple-100 dark:border-purple-900/30 rounded-xl p-5 mb-8">
                 <p className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-3">⚖️ Jurisprudence à connaître</p>
                 <div className="space-y-3">
                   {s.jurisprudenceCles.map((j, i) => (
                     <div key={i} className="flex gap-3 text-sm">
                       <div className="shrink-0">
-                        <span className="bg-purple-100 text-purple-700 font-semibold px-2 py-0.5 rounded text-xs">{j.juridiction}</span>
+                        <span className="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-semibold px-2 py-0.5 rounded text-xs">{j.juridiction}</span>
                         {j.date && <span className="text-gray-400 text-xs ml-1">{j.date}</span>}
                       </div>
-                      <p className="text-gray-700">{j.apport}</p>
+                      <p className="text-gray-700 dark:text-gray-300">{j.apport}</p>
                     </div>
                   ))}
                 </div>

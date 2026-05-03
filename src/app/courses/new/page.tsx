@@ -96,22 +96,21 @@ export default function NewCoursePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b px-6 py-4 flex items-center gap-4">
-        <a href="/dashboard" className="text-gray-500 hover:text-gray-700 text-sm">← Dashboard</a>
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+      <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-6 py-4 flex items-center gap-4">
+        <a href="/dashboard" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm">← Dashboard</a>
         <h1 className="text-lg font-bold text-indigo-600">Nouveau cours</h1>
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-2xl shadow-sm border p-8">
-          <h2 className="text-2xl font-bold text-black mb-2">Importer un cours</h2>
-          <p className="text-gray-600 mb-6">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-8">
+          <h2 className="text-2xl font-bold text-black dark:text-white mb-2">Importer un cours</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             Importe un fichier ou colle ton cours ci-dessous. L&apos;IA va le restructurer avec un plan, des définitions et un développement détaillé.
           </p>
 
           {/* Sélecteur de matière */}
           <div className="mb-6">
-            <p className="text-sm font-semibold text-gray-700 mb-3">Matière</p>
             <div className="flex flex-wrap gap-2">
               {SUBJECTS.map(s => (
                 <button
@@ -121,7 +120,7 @@ export default function NewCoursePage() {
                   className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
                     subject === s.value
                       ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-300'
                   }`}
                 >
                   {s.label}
@@ -132,7 +131,7 @@ export default function NewCoursePage() {
 
           {/* Zone d'upload fichier */}
           <div
-            className="border-2 border-dashed border-indigo-200 rounded-xl p-8 mb-6 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition"
+            className="border-2 border-dashed border-indigo-200 dark:border-indigo-800 rounded-xl p-8 mb-6 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition"
             onClick={() => fileRef.current?.click()}
           >
             <input
@@ -163,15 +162,15 @@ export default function NewCoursePage() {
                 <svg className="h-10 w-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <p className="text-black font-medium">Clique pour importer un fichier</p>
-                <p className="text-gray-500 text-sm">Word (.docx), LibreOffice (.odt), PDF (.pdf), Texte (.txt)</p>
+                <p className="text-black dark:text-white font-medium">Clique pour importer un fichier</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Word (.docx), LibreOffice (.odt), PDF (.pdf), Texte (.txt)</p>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-4 mb-6">
             <div className="flex-1 h-px bg-gray-200"/>
-            <span className="text-gray-400 text-sm">ou colle ton cours</span>
+            <span className="text-gray-400 dark:text-gray-600 text-sm">ou colle ton cours</span>
             <div className="flex-1 h-px bg-gray-200"/>
           </div>
 
@@ -182,9 +181,9 @@ export default function NewCoursePage() {
                 onChange={(e) => setContent(e.target.value)}
                 rows={16}
                 placeholder="Colle ton cours ici..."
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-black resize-y"
+                className="w-full border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-black dark:text-white bg-white dark:bg-gray-800 resize-y"
               />
-              <p className="text-xs text-gray-400 mt-1">{content.length} caractères</p>
+              <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">{content.length} caractères</p>
             </div>
 
             {error && (
