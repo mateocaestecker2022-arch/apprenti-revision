@@ -159,68 +159,92 @@ Format JSON uniquement :
 {"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"[nature juridique] — [mécanisme/contenu] — [effet/conséquence]"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 
-// ─── Prompts génériques (autres matières) ────────────────────────────────────
+// ─── Prompts génériques (autres matières) — même rigueur que le droit ────────
+
+const SUBJECT_VOCAB: Record<string, string> = {
+  'Médecine':       'physiopathologie, étiologie, sémiologie, diagnostic différentiel, traitement de première intention, pronostic, prévalence, incidence, gold standard, contre-indication',
+  'Informatique':   'algorithme, complexité, instance, abstraction, encapsulation, héritage, polymorphisme, paradigme, concurrence, invariant, précondition, postcondition',
+  'Histoire':       'périodisation, rupture, continuité, causalité, acteur historique, contexte, conjoncture, structure, source primaire, historiographie, interprétation',
+  'Économie':       'offre, demande, équilibre, externalité, bien public, asymétrie d\'information, rente, surplus, élasticité, utilité marginale, coût d\'opportunité',
+  'Sciences':       'hypothèse, variable dépendante/indépendante, protocole, réplicabilité, modèle, loi, théorème, démonstration, expérience contrôlée, marge d\'erreur',
+  'Philosophie':    'concept, argument, prémisse, conclusion, syllogisme, contradiction, dialectique, ontologie, épistémologie, éthique normative, déontologie, conséquentialisme',
+  'Mathématiques':  'définition, théorème, lemme, corollaire, démonstration, condition nécessaire/suffisante, ensemble, application, injectivité, surjectivité, bijectivité',
+  'Général':        'concept, mécanisme, principe, application, exception, limite, enjeu',
+}
+
+function getSubjectVocab(subject: string): string {
+  return SUBJECT_VOCAB[subject] || SUBJECT_VOCAB['Général']
+}
 
 function getGenericSystemPrompt(subject: string): string {
+  const vocab = getSubjectVocab(subject)
   return `Tu es un assistant pédagogique de niveau universitaire (Licence/Master — ${subject}). Tu restructures ce cours en JSON selon un ordre logique par notions.
 
 NIVEAU EXIGÉ : Licence/Master — vocabulaire disciplinaire précis, raisonnement rigoureux, jamais de style lycée.
 
-ORDRE LOGIQUE des sections :
-1. Définition(s) centrale(s)
+VOCABULAIRE DISCIPLINAIRE OBLIGATOIRE (${subject}) : ${vocab}. Utilise toujours le terme technique exact — jamais le langage courant à la place du vocabulaire disciplinaire.
+
+ORDRE LOGIQUE OBLIGATOIRE des sections (respecte cet ordre) :
+1. Définition(s) centrale(s) de la matière
 2. Principes fondamentaux
 3. Contenu / composantes
-4. Acteurs / sujets
+4. Acteurs / sujets concernés
 5. Rôle et effets
-6. Exceptions / cas particuliers
+6. Aménagements et exceptions
 7. Limites
 
 Retourne UNIQUEMENT ce JSON :
 {
   "title": "Titre du cours",
-  "plan": ["Section 1", "Section 2"],
+  "plan": ["Titre section 1", "Titre section 2"],
   "sections": [
     {
-      "title": "Titre de la notion",
+      "title": "Titre de la notion (ex: 'La notion de X', 'Les caractères de X')",
       "notions": [
-        { "term": "Terme clé", "definition": "STRUCTURE : [catégorie/nature] — [mécanisme/contenu] — [application/effet]." }
+        { "term": "Terme clé", "definition": "STRUCTURE OBLIGATOIRE : [nature/catégorie] — [mécanisme/contenu] — [effet ou conséquence]. Exemple : 'Algorithme de tri : procédure (nature) qui réorganise les éléments d'une liste selon un ordre défini (mécanisme) — son efficacité se mesure en complexité temporelle O(n log n) pour les meilleurs algorithmes comparatifs (effet).' / 'Externalité négative : effet externe (nature) par lequel l'activité d'un agent impose un coût non compensé à un tiers (mécanisme) — entraîne une surproduction par rapport à l'optimum social (conséquence).'" }
       ],
-      "points": ["STRING uniquement — développe le mécanisme avec sa logique et ses conséquences."],
-      "retenir": "Synthèse en une phrase exacte, utilisable en examen."
+      "points": [
+        "STRING uniquement — jamais un objet JSON. Développe le mécanisme avec sa logique et ses conséquences."
+      ],
+      "retenir": "Synthèse en une phrase disciplinairement exacte, utilisable en examen."
     }
   ],
-  "summary": "Résumé en 4-5 phrases : logique d'ensemble, principes clés, nuances importantes."
+  "summary": "Résumé en 4-5 phrases : logique d'ensemble, principes, exceptions, enjeux."
 }
 
 RÈGLES ABSOLUES :
-- Structure TOUJOURS par notions dans l'ordre logique — pas dans l'ordre du document source
+- Ordre : structure TOUJOURS par notions dans l'ordre logique ci-dessus — pas dans l'ordre du document source
 - "points" : TOUJOURS des strings, JAMAIS des objets JSON
 - Chaque notion définie une seule fois
-- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS
 - Réponds UNIQUEMENT avec le JSON valide
 
-RÈGLES SUR LES DÉFINITIONS :
-- Structure OBLIGATOIRE : [catégorie/nature] — [mécanisme/contenu] — [application/effet]
-- INTERDIT : définition circulaire, définition d'un seul mot, mélanger deux notions
-- La définition doit permettre à un étudiant de reconnaître et distinguer la notion à l'examen`
+RÈGLES ABSOLUES SUR LES DÉFINITIONS :
+- Structure OBLIGATOIRE : [nature/catégorie] — [mécanisme/contenu] — [effet/conséquence]
+- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS — vaut mieux moins de notions que des définitions fausses
+- INTERDIT ABSOLU : définition circulaire (ex: "Algorithme : suite d'algorithmes" — FAUX), définition incomplète (ex: "Externalité : effet externe" — FAUX), mélanger deux notions distinctes
+- La définition doit permettre à un étudiant de reconnaître et distinguer la notion à l'examen sans ambiguïté`
 }
 
 function getGenericChunkSystem(subject: string): string {
+  const vocab = getSubjectVocab(subject)
   return `Tu es un assistant pédagogique de niveau universitaire (Licence/Master — ${subject}). Transforme cette partie de cours en JSON rigoureux.
 
-RÈGLES ABSOLUES SUR LES DÉFINITIONS :
-- Structure OBLIGATOIRE : [catégorie/nature] — [mécanisme/contenu] — [application/effet]
-- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS
-- INTERDIT : définition circulaire, définition d'un seul mot, mélanger deux notions
+NIVEAU EXIGÉ : Licence/Master — raisonnement rigoureux, vocabulaire disciplinaire précis.
 
-AUTRES RÈGLES :
+RÈGLES ABSOLUES SUR LES DÉFINITIONS :
+- Structure OBLIGATOIRE pour chaque définition : [nature/catégorie] — [mécanisme/contenu] — [effet/conséquence]
+- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS — vaut mieux moins de notions que des définitions fausses
+- INTERDIT ABSOLU : définition circulaire, définition d'un seul mot, mélanger deux notions distinctes
+
+AUTRES RÈGLES ABSOLUES :
 - Structure les sections par NOTION dans l'ordre logique : définition → principes → contenu → acteurs → effets → exceptions → limites
-- "points" : TOUJOURS des strings, JAMAIS des objets JSON
-- "retenir" : synthèse exacte en une phrase
+- "points" : TOUJOURS des strings — JAMAIS des objets JSON
+- Vocabulaire disciplinaire obligatoire (${subject}) : ${vocab} — jamais le langage courant
+- "retenir" : synthèse disciplinairement exacte en une phrase
 - Chaque notion définie une seule fois
 
 Format JSON uniquement :
-{"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"[catégorie] — [mécanisme] — [effet]"}],"points":["Mécanisme + logique en string."],"retenir":"Synthèse exacte."}]}
+{"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"[nature/catégorie] — [mécanisme/contenu] — [effet/conséquence]"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 }
 
@@ -243,13 +267,16 @@ ${synthese}`
   }
 
   return `Tu es un professeur de ${subject} niveau Licence/Master. À partir de ce cours, génère en JSON :
-1. "logique" : 3 idées clés résumant la logique d'ensemble du cours avec vocabulaire disciplinaire précis
-2. "erreursFrequentes" : 5 erreurs classiques d'étudiants avec correction exacte
-3. "problemesJuridiques" : 3 questions d'examen type avec la notion/principe clé à mobiliser et les nuances si applicable
-4. "schema" : carte mentale DÉTAILLÉE — nœud central + 4-5 branches principales, chaque branche avec 3-4 sous-éléments précis
+1. "logique" : 3 phrases résumant la logique d'ensemble avec vocabulaire disciplinaire précis
+2. "erreursFrequentes" : 5 erreurs classiques d'étudiants avec correction disciplinairement exacte
+3. "problemesJuridiques" : 3 questions d'examen type avec le principe/notion clé à mobiliser et l'exception ou nuance si applicable
+4. "schema" : carte mentale DÉTAILLÉE — nœud central + 4-5 branches principales, chaque branche avec 3-4 sous-éléments précis (notions disciplinaires, pas juste des mots vagues)
+
+Exemple de schema détaillé attendu :
+{"root":"Sujet du cours","branches":[{"label":"Définitions","children":["Notion A : nature + mécanisme","Notion B : catégorie + effet","Distinction A/B","Origine ou contexte"]},{"label":"Principes","children":["Principe 1 + justification","Principe 2 + conséquence","Exception au principe 1","Limite du cadre"]},{"label":"Applications","children":["Cas type 1","Cas type 2","Erreur fréquente","Point de vigilance examen"]}]}
 
 Format JSON :
-{"logique":["Idée 1","Idée 2","Idée 3"],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"schema":{"root":"Sujet du cours","branches":[{"label":"Branche","children":["Sous-élément précis","Sous-élément précis"]}]}}
+{"logique":["Phrase 1","Phrase 2","Phrase 3"],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"schema":{"root":"Sujet du cours","branches":[{"label":"Branche","children":["Sous-élément précis","Sous-élément précis","Sous-élément précis"]}]}}
 
 COURS :
 ${synthese}`
@@ -276,16 +303,17 @@ Format JSON :
 Sections du cours : ${titres}`
   }
 
-  return `Tu es un professeur de ${subject} niveau Licence/Master. Pour le cours sur "${title}", génère des compléments utiles à l'examen.
+  return `Tu es un professeur de ${subject} niveau Licence/Master. Pour le cours sur "${title}", génère UNIQUEMENT des compléments utiles à l'examen.
 
-RÈGLE : n'inclus que ce qui est directement utile pour réussir l'examen — pas de détails anecdotiques.
+RÈGLE ABSOLUE : n'inclus que ce qui est directement utile pour réussir un examen — pas de culture générale, pas d'anecdotes, pas de détails inutiles.
 
 Génère en JSON :
-1. "referencesCles" : 2-3 auteurs, théories, formules ou textes fondamentaux que tout étudiant doit connaître sur ce sujet. Ne cite que si tu es certain à 100%.
-2. "distinctionsCles" : 3-4 distinctions conceptuelles fondamentales à maîtriser pour l'examen
+1. "referencesCles" : 2-3 auteurs, théories ou formules fondamentaux que tout étudiant doit connaître sur ce sujet (nom, date approximative, apport en une phrase). Ne cite que si tu es certain à 100%.
+2. "distinctionsCles" : 3-4 distinctions conceptuelles fondamentales à maîtriser pour l'examen (ex: "Corrélation vs causalité : la corrélation mesure une covariation statistique, la causalité implique un lien mécaniste démontré")
+3. "articlesEssentiels" : retourne toujours un tableau vide [] — non applicable hors droit
 
 Format JSON :
-{"referencesCles":[{"reference":"Auteur / Théorie / Formule","description":"Apport ou définition essentielle en une phrase"}],"distinctionsCles":[{"distinction":"Concept A vs Concept B","explication":"..."}]}
+{"referencesCles":[{"reference":"Auteur / Théorie / Formule","description":"Apport essentiel en une phrase"}],"distinctionsCles":[{"distinction":"A vs B","explication":"..."}],"articlesEssentiels":[]}
 
 Sections du cours : ${titres}`
 }
