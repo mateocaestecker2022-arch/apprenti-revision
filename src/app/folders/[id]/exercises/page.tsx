@@ -24,18 +24,18 @@ const TYPE_LABEL: Record<Exercise['type'], string> = {
 }
 
 const TYPE_COLOR: Record<Exercise['type'], string> = {
-  cas_pratique: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  consultation: 'bg-amber-50 text-amber-700 border-amber-200',
-  qualification: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  analyse: 'bg-blue-50 text-blue-700 border-blue-200',
-  application: 'bg-violet-50 text-violet-700 border-violet-200',
-  synthese: 'bg-teal-50 text-teal-700 border-teal-200',
+  cas_pratique: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700',
+  consultation: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700',
+  qualification: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700',
+  analyse: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700',
+  application: 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-700',
+  synthese: 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-700',
 }
 
 const SCORE_STYLE = {
-  correct: { bg: 'bg-green-50 border-green-200', icon: '✅', label: 'Bonne réponse !', text: 'text-green-700' },
-  partiel: { bg: 'bg-orange-50 border-orange-200', icon: '🟡', label: 'Réponse partielle', text: 'text-orange-700' },
-  incorrect: { bg: 'bg-red-50 border-red-200', icon: '❌', label: 'Réponse incorrecte', text: 'text-red-700' },
+  correct: { bg: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800', icon: '✅', label: 'Bonne réponse !', text: 'text-green-700 dark:text-green-400' },
+  partiel: { bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800', icon: '🟡', label: 'Réponse partielle', text: 'text-orange-700 dark:text-orange-400' },
+  incorrect: { bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800', icon: '❌', label: 'Réponse incorrecte', text: 'text-red-700 dark:text-red-400' },
 }
 
 export default function FolderExercisesPage() {
@@ -110,35 +110,34 @@ export default function FolderExercisesPage() {
   const correctCount = scores.filter(s => s === 'correct').length
   const partielCount = scores.filter(s => s === 'partiel').length
 
-  // Écran de fin
   if (done) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <nav className="bg-white border-b px-6 py-3 flex items-center gap-4">
-          <a href={`/folders/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au dossier</a>
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+        <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4">
+          <a href={`/folders/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au dossier</a>
         </nav>
-        <main className="max-w-2xl mx-auto px-6 py-16 text-center">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-16 text-center">
           <p className="text-6xl mb-4">🎓</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Session terminée !</h2>
-          <p className="text-gray-500 mb-6">{exercises.length} exercices complétés</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Session terminée !</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">{exercises.length} exercices complétés</p>
           <div className="flex justify-center gap-6 mb-8">
             <div className="text-center">
-              <p className="text-3xl font-bold text-green-600">{correctCount}</p>
-              <p className="text-sm text-gray-500">Correct</p>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400">{correctCount}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Correct</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-orange-500">{partielCount}</p>
-              <p className="text-sm text-gray-500">Partiel</p>
+              <p className="text-3xl font-bold text-orange-500 dark:text-orange-400">{partielCount}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Partiel</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-red-500">{exercises.length - correctCount - partielCount}</p>
-              <p className="text-sm text-gray-500">Incorrect</p>
+              <p className="text-3xl font-bold text-red-500 dark:text-red-400">{exercises.length - correctCount - partielCount}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Incorrect</p>
             </div>
           </div>
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => { setCurrent(0); setUserAnswer(''); setResult(null); setShowAnswer(false); setDone(false); setScores([]) }}
-              className="border border-indigo-300 text-indigo-600 px-6 py-3 rounded-xl font-medium hover:bg-indigo-50 transition"
+              className="border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 px-6 py-3 rounded-xl font-medium hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition"
             >
               Recommencer
             </button>
@@ -155,21 +154,20 @@ export default function FolderExercisesPage() {
     )
   }
 
-  // Écran d'accueil
   if (exercises.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <nav className="bg-white border-b px-6 py-3 flex items-center gap-4">
-          <a href={`/folders/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au dossier</a>
-          <h1 className="font-bold text-gray-900">Exercices du dossier</h1>
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+        <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4">
+          <a href={`/folders/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au dossier</a>
+          <h1 className="font-bold text-gray-900 dark:text-white">Exercices du dossier</h1>
         </nav>
-        <main className="max-w-2xl mx-auto px-6 py-20 text-center">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-20 text-center">
           <p className="text-6xl mb-4">✍️</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Exercices pratiques</h2>
-          <p className="text-gray-500 mb-2">Exercices générés depuis les cours du dossier.</p>
-          <p className="text-gray-400 text-sm mb-8">Tu rédiges ta réponse, l&apos;IA te corrige.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Exercices pratiques</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-2">Exercices générés depuis les cours du dossier.</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mb-8">Tu rédiges ta réponse, l&apos;IA te corrige.</p>
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl px-4 py-3 text-sm">
               {error}
             </div>
           )}
@@ -197,46 +195,43 @@ export default function FolderExercisesPage() {
   const scoreStyle = result ? SCORE_STYLE[result.score] : null
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b px-6 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+      <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <a href={`/folders/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au dossier</a>
-          <h1 className="font-bold text-gray-900">Exercices</h1>
+          <a href={`/folders/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au dossier</a>
+          <h1 className="font-bold text-gray-900 dark:text-white">Exercices</h1>
         </div>
-        <span className="text-sm text-gray-400">{current + 1} / {exercises.length}</span>
+        <span className="text-sm text-gray-400 dark:text-gray-500">{current + 1} / {exercises.length}</span>
       </nav>
 
-      <main className="max-w-2xl mx-auto px-6 py-8">
-        {/* Barre de progression */}
-        <div className="w-full bg-gray-100 rounded-full h-2 mb-6">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-6">
           <div
             className="bg-indigo-600 h-2 rounded-full transition-all"
             style={{ width: `${((current + 1) / exercises.length) * 100}%` }}
           />
         </div>
 
-        {/* Question */}
-        <div className="bg-white rounded-2xl shadow-sm border p-6 mb-4">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-6 mb-4">
           <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full border mb-4 ${TYPE_COLOR[ex.type]}`}>
             {TYPE_LABEL[ex.type]}
           </span>
-          <p className="text-base font-semibold text-gray-900 leading-relaxed">
+          <p className="text-base font-semibold text-gray-900 dark:text-white leading-relaxed">
             {ex.question}
           </p>
         </div>
 
-        {/* Zone de réponse */}
-        <div className="bg-white rounded-2xl shadow-sm border p-6 mb-4">
-          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-6 mb-4">
+          <label className="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">
             Ta réponse
           </label>
           <textarea
             value={userAnswer}
             onChange={e => setUserAnswer(e.target.value)}
             disabled={!!result}
-            placeholder="Rédige ta réponse juridique ici..."
+            placeholder="Rédige ta réponse ici..."
             rows={6}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:bg-gray-50 disabled:text-gray-500"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-500"
           />
           {!result && (
             <button
@@ -257,15 +252,12 @@ export default function FolderExercisesPage() {
           )}
         </div>
 
-        {/* Feedback IA */}
         {result && scoreStyle && (
           <div className={`rounded-2xl border p-5 mb-4 ${scoreStyle.bg}`}>
             <p className={`font-bold mb-2 ${scoreStyle.text}`}>
               {scoreStyle.icon} {scoreStyle.label}
             </p>
             <p className={`text-sm leading-relaxed ${scoreStyle.text}`}>{result.feedback}</p>
-
-            {/* Réponse modèle */}
             <div className="mt-4">
               <button
                 onClick={() => setShowAnswer(!showAnswer)}
@@ -274,16 +266,15 @@ export default function FolderExercisesPage() {
                 {showAnswer ? 'Masquer la correction' : 'Voir la correction complète'}
               </button>
               {showAnswer && (
-                <div className="mt-3 bg-white bg-opacity-70 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Correction</p>
-                  <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{ex.answer}</p>
+                <div className="mt-3 bg-white dark:bg-gray-800 bg-opacity-70 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Correction</p>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{ex.answer}</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Bouton suivant */}
         {result && (
           <button
             onClick={next}

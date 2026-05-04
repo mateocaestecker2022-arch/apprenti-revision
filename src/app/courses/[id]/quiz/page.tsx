@@ -77,28 +77,28 @@ export default function QuizPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-white">
-        <nav className="border-b px-6 py-3 flex items-center gap-4">
-          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4 bg-white dark:bg-gray-900">
+          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au cours</a>
         </nav>
-        <main className="max-w-2xl mx-auto px-6 py-10">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
           <div className="text-center mb-8">
             <p className="text-5xl font-bold text-indigo-600 mb-2">{score}/{questions.length}</p>
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-gray-400">
               {score === questions.length ? '🎉 Parfait !' : score >= questions.length * 0.7 ? '👍 Bien joué !' : '📚 Continue à réviser !'}
             </p>
           </div>
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <div key={i} className={`border rounded-xl p-4 ${answers[i] === q.answer ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                <p className="font-medium text-gray-900 mb-2 text-sm">{i + 1}. {q.question}</p>
-                <p className="text-sm text-gray-600 mb-1">
-                  Ta réponse : <span className={answers[i] === q.answer ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>{q.options[answers[i]]}</span>
+              <div key={i} className={`border rounded-xl p-4 ${answers[i] === q.answer ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'}`}>
+                <p className="font-medium text-gray-900 dark:text-white mb-2 text-sm">{i + 1}. {q.question}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+                  Ta réponse : <span className={answers[i] === q.answer ? 'text-green-700 dark:text-green-400 font-medium' : 'text-red-700 dark:text-red-400 font-medium'}>{q.options[answers[i]]}</span>
                 </p>
                 {answers[i] !== q.answer && (
-                  <p className="text-sm text-green-700">Bonne réponse : {q.options[q.answer]}</p>
+                  <p className="text-sm text-green-700 dark:text-green-400">Bonne réponse : {q.options[q.answer]}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">{q.explanation}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{q.explanation}</p>
               </div>
             ))}
           </div>
@@ -112,17 +112,17 @@ export default function QuizPage() {
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen bg-white">
-        <nav className="border-b px-6 py-3 flex items-center gap-4">
-          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
-          <h1 className="font-bold text-gray-900">Quiz</h1>
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4 bg-white dark:bg-gray-900">
+          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au cours</a>
+          <h1 className="font-bold text-gray-900 dark:text-white">Quiz</h1>
         </nav>
-        <main className="max-w-2xl mx-auto px-6 py-20 text-center">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-20 text-center">
           <p className="text-6xl mb-4">🧠</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Teste tes connaissances</h2>
-          <p className="text-gray-500 mb-8">L&apos;IA va générer 20 questions QCM basées sur ton cours.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Teste tes connaissances</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">L&apos;IA va générer 20 questions QCM basées sur ton cours.</p>
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl px-4 py-3 text-sm">
               {error}
             </div>
           )}
@@ -149,27 +149,26 @@ export default function QuizPage() {
   const q = questions[current]
 
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="border-b px-6 py-3 flex items-center gap-4">
-        <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
-        <h1 className="font-bold text-gray-900">Quiz</h1>
-        <span className="ml-auto text-sm text-gray-400">{current + 1} / {questions.length}</span>
+    <div className="min-h-screen bg-white dark:bg-gray-950">
+      <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4 bg-white dark:bg-gray-900">
+        <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au cours</a>
+        <h1 className="font-bold text-gray-900 dark:text-white">Quiz</h1>
+        <span className="ml-auto text-sm text-gray-400 dark:text-gray-500">{current + 1} / {questions.length}</span>
       </nav>
-      <main className="max-w-2xl mx-auto px-6 py-10">
-        {/* Barre de progression */}
-        <div className="w-full bg-gray-100 rounded-full h-2 mb-8">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-8">
           <div className="bg-indigo-600 h-2 rounded-full transition-all" style={{ width: `${((current + 1) / questions.length) * 100}%` }}/>
         </div>
 
-        <h2 className="text-lg font-bold text-gray-900 mb-6">{q.question}</h2>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">{q.question}</h2>
 
         <div className="space-y-3 mb-6">
           {q.options.map((opt, i) => {
-            let style = 'border border-gray-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer'
+            let style = 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300 dark:hover:border-indigo-600 cursor-pointer text-gray-800 dark:text-gray-200'
             if (selected !== null) {
-              if (i === q.answer) style = 'border-2 border-green-500 bg-green-50'
-              else if (i === selected) style = 'border-2 border-red-400 bg-red-50'
-              else style = 'border border-gray-200 bg-gray-50 opacity-60'
+              if (i === q.answer) style = 'border-2 border-green-500 bg-green-50 dark:bg-green-900/20 text-gray-800 dark:text-gray-200'
+              else if (i === selected) style = 'border-2 border-red-400 bg-red-50 dark:bg-red-900/20 text-gray-800 dark:text-gray-200'
+              else style = 'border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-60 text-gray-800 dark:text-gray-200'
             }
             return (
               <button
@@ -184,11 +183,11 @@ export default function QuizPage() {
         </div>
 
         {selected !== null && (
-          <div className={`rounded-xl p-4 mb-6 text-sm ${selected === q.answer ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
-            <p className={`font-semibold mb-1 ${selected === q.answer ? 'text-green-700' : 'text-orange-700'}`}>
+          <div className={`rounded-xl p-4 mb-6 text-sm ${selected === q.answer ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'}`}>
+            <p className={`font-semibold mb-1 ${selected === q.answer ? 'text-green-700 dark:text-green-400' : 'text-orange-700 dark:text-orange-400'}`}>
               {selected === q.answer ? '✓ Bonne réponse !' : `✗ Mauvaise réponse — La bonne réponse était : ${q.options[q.answer]}`}
             </p>
-            <p className="text-gray-700 leading-relaxed">{q.explanation}</p>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{q.explanation}</p>
           </div>
         )}
 

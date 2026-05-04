@@ -76,7 +76,6 @@ export default function FlashcardsPage() {
 
   function handleReviewUnknown() {
     if (current + 1 >= reviewCards.length) {
-      // Repart du début avec les cartes encore ratées
       const stillUnknown = reviewCards.filter((_, i) => !reviewKnown.includes(i) && i !== current)
       if (stillUnknown.length === 0) {
         setReviewDone(true)
@@ -111,17 +110,16 @@ export default function FlashcardsPage() {
     }
   }
 
-  // Fin de révision des cartes à revoir
   if (reviewMode && reviewDone) {
     return (
-      <div className="min-h-screen bg-white">
-        <nav className="border-b px-6 py-3 flex items-center gap-4">
-          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4 bg-white dark:bg-gray-900">
+          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au cours</a>
         </nav>
-        <main className="max-w-lg mx-auto px-6 py-20 text-center">
+        <main className="max-w-lg mx-auto px-4 sm:px-6 py-20 text-center">
           <p className="text-5xl mb-4">🏆</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Bravo, tu as tout revu !</h2>
-          <p className="text-gray-500 mb-8">Tu maîtrises toutes les cartes à revoir.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Bravo, tu as tout revu !</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">Tu maîtrises toutes les cartes à revoir.</p>
           <button onClick={generateCards} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition">
             Nouvelle session complète
           </button>
@@ -130,24 +128,23 @@ export default function FlashcardsPage() {
     )
   }
 
-  // Résultats de la session principale
   if (done) {
     return (
-      <div className="min-h-screen bg-white">
-        <nav className="border-b px-6 py-3 flex items-center gap-4">
-          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4 bg-white dark:bg-gray-900">
+          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au cours</a>
         </nav>
-        <main className="max-w-lg mx-auto px-6 py-10 text-center">
+        <main className="max-w-lg mx-auto px-4 sm:px-6 py-10 text-center">
           <p className="text-5xl mb-4">🎯</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Session terminée !</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Session terminée !</h2>
           <div className="flex gap-4 justify-center mb-8">
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex-1">
-              <p className="text-2xl font-bold text-green-600">{known.length}</p>
-              <p className="text-sm text-green-700">Je sais ✓</p>
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex-1">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{known.length}</p>
+              <p className="text-sm text-green-700 dark:text-green-400">Je sais ✓</p>
             </div>
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex-1">
-              <p className="text-2xl font-bold text-red-500">{unknown.length}</p>
-              <p className="text-sm text-red-600">À revoir</p>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex-1">
+              <p className="text-2xl font-bold text-red-500 dark:text-red-400">{unknown.length}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">À revoir</p>
             </div>
           </div>
           {unknown.length > 0 && (
@@ -159,12 +156,12 @@ export default function FlashcardsPage() {
                 🔁 Réviser les {unknown.length} cartes à revoir
               </button>
               <div className="mb-6 text-left">
-                <p className="font-semibold text-gray-700 mb-3 text-sm mt-4">Cartes à revoir :</p>
+                <p className="font-semibold text-gray-700 dark:text-gray-300 mb-3 text-sm mt-4">Cartes à revoir :</p>
                 <div className="space-y-2">
                   {unknown.map(i => (
-                    <div key={i} className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-gray-700">
+                    <div key={i} className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
                       <p className="font-medium">{cards[i].question}</p>
-                      <p className="text-gray-500 mt-1">{cards[i].answer}</p>
+                      <p className="text-gray-500 dark:text-gray-400 mt-1">{cards[i].answer}</p>
                     </div>
                   ))}
                 </div>
@@ -181,17 +178,17 @@ export default function FlashcardsPage() {
 
   if (cards.length === 0) {
     return (
-      <div className="min-h-screen bg-white">
-        <nav className="border-b px-6 py-3 flex items-center gap-4">
-          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
-          <h1 className="font-bold text-gray-900">Flashcards</h1>
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4 bg-white dark:bg-gray-900">
+          <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au cours</a>
+          <h1 className="font-bold text-gray-900 dark:text-white">Flashcards</h1>
         </nav>
-        <main className="max-w-lg mx-auto px-6 py-20 text-center">
+        <main className="max-w-lg mx-auto px-4 sm:px-6 py-20 text-center">
           <p className="text-6xl mb-4">🃏</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Flashcards</h2>
-          <p className="text-gray-500 mb-8">L&apos;IA va créer des cartes de révision basées sur les notions clés du cours.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Flashcards</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">L&apos;IA va créer des cartes de révision basées sur les notions clés du cours.</p>
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl px-4 py-3 text-sm">
               {error}
             </div>
           )}
@@ -219,42 +216,41 @@ export default function FlashcardsPage() {
   const card = activeCards[current]
 
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="border-b px-6 py-3 flex items-center gap-4">
-        <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">← Retour au cours</a>
-        <h1 className="font-bold text-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
+      <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center gap-4 bg-white dark:bg-gray-900">
+        <a href={`/courses/${id}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Retour au cours</a>
+        <h1 className="font-bold text-gray-900 dark:text-white">
           {reviewMode ? '🔁 Révision des cartes à revoir' : 'Flashcards'}
         </h1>
-        <span className="ml-auto text-sm text-gray-400">{current + 1} / {activeCards.length}</span>
+        <span className="ml-auto text-sm text-gray-400 dark:text-gray-500">{current + 1} / {activeCards.length}</span>
       </nav>
-      <main className="max-w-lg mx-auto px-6 py-10">
+      <main className="max-w-lg mx-auto px-4 sm:px-6 py-10">
         {reviewMode && (
-          <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-2 mb-6 text-sm text-orange-700 text-center">
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl px-4 py-2 mb-6 text-sm text-orange-700 dark:text-orange-400 text-center">
             Mode révision — répète jusqu&apos;à maîtriser toutes les cartes
           </div>
         )}
-        <div className="w-full bg-gray-100 rounded-full h-2 mb-8">
+        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-8">
           <div
             className={`h-2 rounded-full transition-all ${reviewMode ? 'bg-orange-500' : 'bg-indigo-600'}`}
             style={{ width: `${((current + 1) / activeCards.length) * 100}%` }}
           />
         </div>
 
-        {/* Carte */}
         <div
           onClick={() => setFlipped(!flipped)}
-          className="border-2 border-gray-200 rounded-2xl p-8 min-h-48 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-300 transition mb-6 text-center"
+          className="border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 min-h-48 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600 transition mb-6 text-center bg-white dark:bg-gray-900"
         >
           {!flipped ? (
             <>
-              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">Question</p>
-              <p className="text-lg font-semibold text-gray-900">{card.question}</p>
-              <p className="text-xs text-gray-400 mt-6">Clique pour voir la réponse</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Question</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">{card.question}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-6">Clique pour voir la réponse</p>
             </>
           ) : (
             <>
-              <p className="text-xs text-indigo-500 uppercase tracking-widest mb-4">Réponse</p>
-              <p className="text-base text-gray-700 leading-relaxed">{card.answer}</p>
+              <p className="text-xs text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mb-4">Réponse</p>
+              <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">{card.answer}</p>
             </>
           )}
         </div>
@@ -263,13 +259,13 @@ export default function FlashcardsPage() {
           <div className="flex gap-3">
             <button
               onClick={reviewMode ? handleReviewUnknown : handleUnknown}
-              className="flex-1 border-2 border-red-300 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition"
+              className="flex-1 border-2 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 py-3 rounded-xl font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition"
             >
               ✗ À revoir
             </button>
             <button
               onClick={reviewMode ? handleReviewKnown : handleKnown}
-              className="flex-1 border-2 border-green-400 text-green-700 py-3 rounded-xl font-medium hover:bg-green-50 transition"
+              className="flex-1 border-2 border-green-400 dark:border-green-700 text-green-700 dark:text-green-400 py-3 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition"
             >
               ✓ Je sais
             </button>
