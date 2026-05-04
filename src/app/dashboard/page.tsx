@@ -29,59 +29,60 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
 
       {/* NAV */}
-      <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-6 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center gap-2">
+      <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="text-xl">📚</span>
-          <span className="font-extrabold text-indigo-600 text-lg">Apprenti Révision</span>
+          <span className="font-extrabold text-indigo-600 text-base sm:text-lg">Apprenti Révision</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           <span className="text-sm font-medium text-gray-600 dark:text-gray-300 hidden sm:block">
             👋 {firstName}
           </span>
           <ThemeToggle />
-          <a href="/account/password" className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:border-indigo-200 dark:hover:border-indigo-700">
+          <a href="/account/password" className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-lg hover:border-indigo-200 dark:hover:border-indigo-700 hidden sm:block">
             Mot de passe
           </a>
-          <a href="/api/auth/signout" className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:border-red-200 dark:hover:border-red-800">
-            Déconnexion
+          <a href="/api/auth/signout" className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-lg hover:border-red-200 dark:hover:border-red-800">
+            <span className="hidden sm:inline">Déconnexion</span>
+            <span className="sm:hidden">↪</span>
           </a>
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {/* HEADER */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">Mes révisions</h1>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">Mes révisions</h1>
             <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gère tes cours et révise intelligemment</p>
           </div>
-          <a href="/courses/new" className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition text-sm shadow-md shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center gap-2">
+          <a href="/courses/new" className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition text-sm shadow-md shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center gap-2 self-start sm:self-auto">
             <span>+</span> Nouveau cours
           </a>
         </div>
 
         {/* STATS */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border dark:border-gray-800 flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center text-2xl shrink-0">📄</div>
-            <div>
-              <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{courses.length}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Cours total</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 sm:p-5 shadow-sm border dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-4">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center text-xl sm:text-2xl shrink-0">📄</div>
+            <div className="text-center sm:text-left">
+              <p className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">{courses.length}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium leading-tight">Cours total</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border dark:border-gray-800 flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-xl flex items-center justify-center text-2xl shrink-0">✅</div>
-            <div>
-              <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{ready}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Prêts à réviser</p>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 sm:p-5 shadow-sm border dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-4">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/40 rounded-xl flex items-center justify-center text-xl sm:text-2xl shrink-0">✅</div>
+            <div className="text-center sm:text-left">
+              <p className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">{ready}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium leading-tight">Prêts</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border dark:border-gray-800 flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-xl flex items-center justify-center text-2xl shrink-0">📁</div>
-            <div>
-              <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{folders.length}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Classeurs</p>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 sm:p-5 shadow-sm border dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-4">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 bg-purple-100 dark:bg-purple-900/40 rounded-xl flex items-center justify-center text-xl sm:text-2xl shrink-0">📁</div>
+            <div className="text-center sm:text-left">
+              <p className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">{folders.length}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium leading-tight">Classeurs</p>
             </div>
           </div>
         </div>

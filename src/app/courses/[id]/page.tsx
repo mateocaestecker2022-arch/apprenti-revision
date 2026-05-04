@@ -161,53 +161,53 @@ export default function CoursePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Navbar */}
-      <nav className="border-b dark:border-gray-800 px-6 py-3 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-900 z-10">
-        <div className="flex items-center gap-3">
-          <a href="/dashboard" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Dashboard</a>
+      <nav className="border-b dark:border-gray-800 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-900 z-10 gap-2">
+        <div className="flex items-center gap-2 shrink-0 min-w-0">
+          <a href="/dashboard" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm shrink-0">← <span className="hidden sm:inline">Dashboard</span></a>
           {course.folder && (
-            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">{course.folder.name}</span>
+            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full truncate max-w-[100px] sm:max-w-none">{course.folder.name}</span>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={() => setShowRaw(!showRaw)} className="text-gray-400 hover:text-gray-600 text-sm border rounded-lg px-3 py-1.5">
-            {showRaw ? 'Cours structuré' : 'Cours original'}
+        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <button onClick={() => setShowRaw(!showRaw)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs border dark:border-gray-700 rounded-lg px-2 py-1.5 hidden sm:block">
+            {showRaw ? 'Structuré' : 'Original'}
           </button>
           {course && (
             <AssignFolderButton courseId={course.id} currentFolderId={course.folderId} folders={folders} />
           )}
           {/* Export */}
           <div className="relative">
-            <button onClick={() => setShowExport(!showExport)} className="text-gray-500 hover:text-gray-700 text-sm border rounded-lg px-3 py-1.5">
-              ⬇️ Exporter
+            <button onClick={() => setShowExport(!showExport)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs border dark:border-gray-700 rounded-lg px-2 py-1.5">
+              ⬇️ <span className="hidden sm:inline">Exporter</span>
             </button>
             {showExport && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowExport(false)} />
-                <div className="absolute right-0 top-9 z-50 bg-white border rounded-xl shadow-lg py-1 min-w-[160px]">
-                  <button onClick={() => { window.print(); setShowExport(false) }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-slate-50">
+                <div className="absolute right-0 top-9 z-50 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-lg py-1 min-w-[160px]">
+                  <button onClick={() => { window.print(); setShowExport(false) }} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700">
                     🖨️ PDF (impression)
                   </button>
-                  <a href={`/api/courses/${id}/export?format=docx`} onClick={() => setShowExport(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50">
+                  <a href={`/api/courses/${id}/export?format=docx`} onClick={() => setShowExport(false)} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700">
                     📄 Word (.docx)
                   </a>
-                  <a href={`/api/courses/${id}/export?format=odt`} onClick={() => setShowExport(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50">
+                  <a href={`/api/courses/${id}/export?format=odt`} onClick={() => setShowExport(false)} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700">
                     📝 LibreOffice (.odt)
                   </a>
                 </div>
               </>
             )}
           </div>
-          <a href={`/courses/${id}/flashcards`} className="border border-indigo-300 text-indigo-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-50 transition">
-            🃏 Flashcards
+          <a href={`/courses/${id}/flashcards`} className="border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+            🃏 <span className="hidden sm:inline">Flashcards</span>
           </a>
-          <a href={`/courses/${id}/quiz`} className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-            🧠 Quiz
+          <a href={`/courses/${id}/quiz`} className="bg-indigo-600 text-white px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-indigo-700 transition">
+            🧠 <span className="hidden sm:inline">Quiz</span>
           </a>
-          <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-sm px-2">Supprimer</button>
+          <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-xs px-1.5">🗑️</button>
         </div>
       </nav>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {/* Cours original */}
         {showRaw ? (
@@ -410,22 +410,33 @@ export default function CoursePage() {
             {s.erreursFrequentes && s.erreursFrequentes.length > 0 && (
               <div className="border border-red-100 dark:border-red-900/30 rounded-xl p-5 mb-8">
                 <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-3">⚠️ Erreurs fréquentes à éviter</p>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                      <th className="pb-2 font-medium w-1/2">Erreur</th>
-                      <th className="pb-2 font-medium w-1/2">Correction</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {s.erreursFrequentes.map((e, i) => (
-                      <tr key={i} className="border-b dark:border-gray-700 last:border-0">
-                        <td className="py-2 pr-4 text-red-600 dark:text-red-400">❌ {e.erreur}</td>
-                        <td className="py-2 text-green-700 dark:text-green-400">✅ {e.correction}</td>
+                {/* Table sur desktop, liste sur mobile */}
+                <div className="hidden sm:block">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
+                        <th className="pb-2 font-medium w-1/2">Erreur</th>
+                        <th className="pb-2 font-medium w-1/2">Correction</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {s.erreursFrequentes.map((e, i) => (
+                        <tr key={i} className="border-b dark:border-gray-700 last:border-0">
+                          <td className="py-2 pr-4 text-red-600 dark:text-red-400">❌ {e.erreur}</td>
+                          <td className="py-2 text-green-700 dark:text-green-400">✅ {e.correction}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="sm:hidden space-y-3">
+                  {s.erreursFrequentes.map((e, i) => (
+                    <div key={i} className="text-sm space-y-1">
+                      <p className="text-red-600 dark:text-red-400">❌ {e.erreur}</p>
+                      <p className="text-green-700 dark:text-green-400 pl-3">✅ {e.correction}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
