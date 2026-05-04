@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "worker:start": "tsx worker.ts",
-    "analyze": "tsx scripts/analyze-codebase.ts"
+    "analyze": "tsx scripts/analyze-codebase.ts",
+    "analyze:static": "tsx scripts/analyze-static.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",

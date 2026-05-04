@@ -159,10 +159,10 @@ Format JSON uniquement :
 {"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"[nature juridique] — [mécanisme/contenu] — [effet/conséquence]"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 
-// ─── Prompts génériques (autres matières) — même rigueur que le droit ────────
+// ─── Configuration par matière ────────────────────────────────────────────────
 
 const SUBJECT_VOCAB: Record<string, string> = {
-  'Médecine':       'physiopathologie, étiologie, sémiologie, diagnostic différentiel, traitement de première intention, pronostic, prévalence, incidence, gold standard, contre-indication',
+  'Médecine':       'physiopathologie, étiologie, sémiologie, diagnostic différentiel, traitement de première intention, pronostic, prévalence, incidence, gold standard, contre-indication, classification',
   'Informatique':   'algorithme, complexité, instance, abstraction, encapsulation, héritage, polymorphisme, paradigme, concurrence, invariant, précondition, postcondition',
   'Histoire':       'périodisation, rupture, continuité, causalité, acteur historique, contexte, conjoncture, structure, source primaire, historiographie, interprétation',
   'Économie':       'offre, demande, équilibre, externalité, bien public, asymétrie d\'information, rente, surplus, élasticité, utilité marginale, coût d\'opportunité',
@@ -172,12 +172,119 @@ const SUBJECT_VOCAB: Record<string, string> = {
   'Général':        'concept, mécanisme, principe, application, exception, limite, enjeu',
 }
 
+// Ordre des sections adapté à chaque discipline
+const SUBJECT_SECTION_ORDER: Record<string, string> = {
+  'Médecine': `1. Définition et classification de la pathologie (ex: ICFEr vs ICFEp)
+2. Physiopathologie (mécanismes biologiques, cascade)
+3. Étiologies et facteurs de risque
+4. Signes cliniques (symptômes + signes physiques)
+5. Examens complémentaires et critères diagnostiques
+6. Traitement (objectifs, logique des médicaments, étapes)
+7. Complications et pronostic
+INTERDIT ABSOLU : ne jamais créer de sections "acteurs", "droits des patients", "système de santé" — ce n'est pas prioritaire en médecine clinique.`,
+
+  'Informatique': `1. Définition et positionnement du concept
+2. Fondements théoriques (propriétés, invariants, preuves)
+3. Structure et algorithme (fonctionnement pas à pas)
+4. Complexité et performance (temporelle / spatiale)
+5. Implémentation et cas d'usage concrets
+6. Comparaison avec d'autres approches
+7. Limites et cas limites`,
+
+  'Histoire': `1. Contexte historique (cadre chronologique et géographique)
+2. Causes et facteurs explicatifs (structurels et conjoncturels)
+3. Déroulement des événements (chronologie)
+4. Acteurs et forces en présence
+5. Conséquences immédiates et à long terme
+6. Interprétations historiographiques (débats entre historiens)
+7. Mémoire et héritage`,
+
+  'Économie': `1. Définition et cadre conceptuel
+2. Modèle théorique (hypothèses, agents économiques)
+3. Mécanismes (offre, demande, équilibre, prix)
+4. Effets et conséquences (efficacité, équité, bien-être)
+5. Politiques économiques et interventions publiques
+6. Limites du modèle et critiques
+7. Applications empiriques et exemples concrets`,
+
+  'Sciences': `1. Définition et positionnement du concept
+2. Hypothèse et cadre théorique
+3. Modèle et lois (formulation, équations si applicable)
+4. Protocole expérimental et démonstration
+5. Résultats, données et interprétation
+6. Applications pratiques et technologiques
+7. Limites, incertitudes et perspectives`,
+
+  'Philosophie': `1. Problématique et enjeux de la question
+2. Définition des concepts clés
+3. Thèse principale et arguments
+4. Objections et contre-thèses majeures
+5. Synthèse dialectique ou dépassement
+6. Positionnements des auteurs majeurs (avec dates)
+7. Enjeux contemporains`,
+
+  'Mathématiques': `1. Définitions et notations
+2. Propriétés fondamentales
+3. Théorèmes et démonstrations (logique de la preuve)
+4. Corollaires et cas particuliers
+5. Applications et exercices types
+6. Contre-exemples (ce qui ne vérifie pas les conditions)
+7. Liens avec d'autres notions du programme`,
+
+  'Général': `1. Définition centrale
+2. Principes fondamentaux
+3. Mécanismes et fonctionnement
+4. Applications concrètes
+5. Limites et nuances`,
+}
+
+// Questions d'examen types par matière (pour l'enrichissement)
+const SUBJECT_EXAM_QUESTIONS: Record<string, string> = {
+  'Médecine':      '"problemesJuridiques" : 3 cas cliniques types niveau ECN/examen avec présentation du patient, diagnostic à poser et traitement à proposer. Structure : "Un patient de X ans consulte pour... — Quel est votre diagnostic ? — Quelle prise en charge ?"',
+  'Informatique':  '"problemesJuridiques" : 3 exercices types avec un problème algorithmique ou de conception à résoudre, en précisant la notion clé à mobiliser et le piège à éviter.',
+  'Histoire':      '"problemesJuridiques" : 3 questions de dissertation ou commentaire de document types, avec la problématique à traiter et le plan suggéré.',
+  'Économie':      '"problemesJuridiques" : 3 exercices types (graphique offre/demande, calcul d\'élasticité, analyse de politique économique) avec la méthode de résolution.',
+  'Sciences':      '"problemesJuridiques" : 3 problèmes types niveau examen avec les étapes de résolution et les formules à mobiliser.',
+  'Philosophie':   '"problemesJuridiques" : 3 sujets de dissertation types avec la problématique, le plan dialectique suggéré et les auteurs à citer.',
+  'Mathématiques': '"problemesJuridiques" : 3 exercices types avec énoncé, méthode de résolution et erreurs classiques à éviter.',
+  'Général':       '"problemesJuridiques" : 3 questions d\'examen types avec la notion clé à mobiliser et la nuance importante.',
+}
+
+// Références/compléments par matière
+const SUBJECT_REFERENCES: Record<string, string> = {
+  'Médecine':      '1. "referencesCles" : 2-3 classifications ou scores cliniques incontournables (ex: NYHA pour l\'insuffisance cardiaque, score de Glasgow) avec leur utilité pratique. Ne cite que si certain à 100%.\n2. "distinctionsCles" : 3-4 diagnostics différentiels ou distinctions cliniques fondamentales à maîtriser (ex: "IC gauche vs IC droite : signes cliniques différents").',
+  'Informatique':  '1. "referencesCles" : 2-3 algorithmes, structures de données ou théorèmes fondamentaux à connaître (auteur/nom, complexité, usage). Ne cite que si certain à 100%.\n2. "distinctionsCles" : 3-4 distinctions techniques fondamentales (ex: "Pile vs File : LIFO vs FIFO").',
+  'Histoire':      '1. "referencesCles" : 2-3 historiens ou œuvres historiographiques de référence sur ce sujet (auteur, date, thèse). Ne cite que si certain à 100%.\n2. "distinctionsCles" : 3-4 distinctions analytiques clés (ex: "Cause structurelle vs conjoncturelle").',
+  'Économie':      '1. "referencesCles" : 2-3 économistes ou théories fondamentaux liés au sujet (auteur, date, apport). Ne cite que si certain à 100%.\n2. "distinctionsCles" : 3-4 distinctions économiques fondamentales (ex: "Court terme vs long terme en analyse de marché").',
+  'Sciences':      '1. "referencesCles" : 2-3 scientifiques, lois ou expériences fondamentales liées au sujet (nom, date, apport). Ne cite que si certain à 100%.\n2. "distinctionsCles" : 3-4 distinctions conceptuelles clés (ex: "Corrélation vs causalité").',
+  'Philosophie':   '1. "referencesCles" : 2-3 auteurs et œuvres majeurs à citer sur ce sujet (auteur, œuvre, thèse en une phrase). Ne cite que si certain à 100%.\n2. "distinctionsCles" : 3-4 distinctions conceptuelles fondamentales (ex: "Liberté négative vs liberté positive : Berlin").',
+  'Mathématiques': '1. "referencesCles" : 2-3 théorèmes ou résultats fondamentaux à connaître impérativement (nom, énoncé simplifié, condition d\'application). Ne cite que si certain à 100%.\n2. "distinctionsCles" : 3-4 distinctions logiques clés (ex: "Condition nécessaire vs suffisante").',
+  'Général':       '1. "referencesCles" : 2-3 références, auteurs ou concepts fondamentaux liés au sujet. Ne cite que si certain à 100%.\n2. "distinctionsCles" : 3-4 distinctions conceptuelles importantes à maîtriser.',
+}
+
+// Focus des QCM par matière
+const SUBJECT_QUIZ_FOCUS: Record<string, string> = {
+  'Médecine':      'Mélange obligatoire : au moins 6 questions de PHYSIOPATHOLOGIE (mécanismes), au moins 6 questions CLINIQUES (signes, diagnostic, classification), au moins 5 questions de TRAITEMENT (médicaments, objectifs, étapes). INTERDIT : questions sur le système de santé, les acteurs ou les droits des patients.',
+  'Informatique':  'Mélange obligatoire : au moins 6 questions sur des DÉFINITIONS/PROPRIÉTÉS, au moins 6 questions d\'APPLICATION (tracer un algorithme, calculer une complexité), au moins 5 questions d\'ANALYSE (choisir la meilleure structure, corriger un bug).',
+  'Histoire':      'Mélange obligatoire : au moins 5 questions sur le CONTEXTE/CAUSES, au moins 5 questions sur les ÉVÉNEMENTS/CHRONOLOGIE, au moins 5 questions sur les CONSÉQUENCES/INTERPRÉTATIONS, au moins 3 questions sur les ACTEURS clés.',
+  'Économie':      'Mélange obligatoire : au moins 6 questions sur les MÉCANISMES (offre/demande, équilibre), au moins 5 questions d\'APPLICATION (calcul, graphique, analyse), au moins 5 questions sur les POLITIQUES ÉCONOMIQUES et leurs effets.',
+  'Sciences':      'Mélange obligatoire : au moins 6 questions sur les CONCEPTS/LOIS, au moins 6 questions d\'APPLICATION (calcul, expérience), au moins 5 questions d\'ANALYSE (interpréter un résultat, identifier une erreur expérimentale).',
+  'Philosophie':   'Mélange obligatoire : au moins 6 questions sur les CONCEPTS/DÉFINITIONS, au moins 5 questions sur les AUTEURS et leurs thèses, au moins 5 questions d\'ANALYSE (identifier un argument, détecter une contradiction), au moins 3 questions de DISSERTATION (choisir la bonne problématique).',
+  'Mathématiques': 'Mélange obligatoire : au moins 6 questions sur les DÉFINITIONS/THÉORÈMES, au moins 6 questions d\'APPLICATION (calcul, démonstration courte), au moins 5 questions d\'ANALYSE (vrai/faux avec justification, contre-exemple).',
+  'Général':       'Mélange obligatoire : au moins 7 questions sur des DÉFINITIONS, au moins 6 questions d\'APPLICATION, au moins 4 questions d\'ANALYSE.',
+}
+
 function getSubjectVocab(subject: string): string {
   return SUBJECT_VOCAB[subject] || SUBJECT_VOCAB['Général']
 }
 
+function getSubjectSectionOrder(subject: string): string {
+  return SUBJECT_SECTION_ORDER[subject] || SUBJECT_SECTION_ORDER['Général']
+}
+
 function getGenericSystemPrompt(subject: string): string {
   const vocab = getSubjectVocab(subject)
+  const order = getSubjectSectionOrder(subject)
   return `Tu es un assistant pédagogique de niveau universitaire (Licence/Master — ${subject}). Tu restructures ce cours en JSON selon un ordre logique par notions.
 
 NIVEAU EXIGÉ : Licence/Master — vocabulaire disciplinaire précis, raisonnement rigoureux, jamais de style lycée.
@@ -185,13 +292,7 @@ NIVEAU EXIGÉ : Licence/Master — vocabulaire disciplinaire précis, raisonneme
 VOCABULAIRE DISCIPLINAIRE OBLIGATOIRE (${subject}) : ${vocab}. Utilise toujours le terme technique exact — jamais le langage courant à la place du vocabulaire disciplinaire.
 
 ORDRE LOGIQUE OBLIGATOIRE des sections (respecte cet ordre) :
-1. Définition(s) centrale(s) de la matière
-2. Principes fondamentaux
-3. Contenu / composantes
-4. Acteurs / sujets concernés
-5. Rôle et effets
-6. Aménagements et exceptions
-7. Limites
+${order}
 
 Retourne UNIQUEMENT ce JSON :
 {
@@ -199,9 +300,9 @@ Retourne UNIQUEMENT ce JSON :
   "plan": ["Titre section 1", "Titre section 2"],
   "sections": [
     {
-      "title": "Titre de la notion (ex: 'La notion de X', 'Les caractères de X')",
+      "title": "Titre de la notion (ex: 'Physiopathologie de X', 'Classification de X', 'Traitement de X')",
       "notions": [
-        { "term": "Terme clé", "definition": "STRUCTURE OBLIGATOIRE : [nature/catégorie] — [mécanisme/contenu] — [effet ou conséquence]. Exemple : 'Algorithme de tri : procédure (nature) qui réorganise les éléments d'une liste selon un ordre défini (mécanisme) — son efficacité se mesure en complexité temporelle O(n log n) pour les meilleurs algorithmes comparatifs (effet).' / 'Externalité négative : effet externe (nature) par lequel l'activité d'un agent impose un coût non compensé à un tiers (mécanisme) — entraîne une surproduction par rapport à l'optimum social (conséquence).'" }
+        { "term": "Terme clé", "definition": "STRUCTURE OBLIGATOIRE : [nature/catégorie] — [mécanisme/contenu] — [effet ou conséquence]." }
       ],
       "points": [
         "STRING uniquement — jamais un objet JSON. Développe le mécanisme avec sa logique et ses conséquences."
@@ -209,42 +310,42 @@ Retourne UNIQUEMENT ce JSON :
       "retenir": "Synthèse en une phrase disciplinairement exacte, utilisable en examen."
     }
   ],
-  "summary": "Résumé en 4-5 phrases : logique d'ensemble, principes, exceptions, enjeux."
+  "summary": "Résumé en 4-5 phrases : logique d'ensemble, points clés à l'examen, pièges fréquents."
 }
 
 RÈGLES ABSOLUES :
-- Ordre : structure TOUJOURS par notions dans l'ordre logique ci-dessus — pas dans l'ordre du document source
+- Ordre : structure TOUJOURS dans l'ordre logique ci-dessus — pas dans l'ordre du document source
 - "points" : TOUJOURS des strings, JAMAIS des objets JSON
 - Chaque notion définie une seule fois
 - Réponds UNIQUEMENT avec le JSON valide
 
 RÈGLES ABSOLUES SUR LES DÉFINITIONS :
 - Structure OBLIGATOIRE : [nature/catégorie] — [mécanisme/contenu] — [effet/conséquence]
-- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS — vaut mieux moins de notions que des définitions fausses
-- INTERDIT ABSOLU : définition circulaire (ex: "Algorithme : suite d'algorithmes" — FAUX), définition incomplète (ex: "Externalité : effet externe" — FAUX), mélanger deux notions distinctes
-- La définition doit permettre à un étudiant de reconnaître et distinguer la notion à l'examen sans ambiguïté`
+- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS
+- INTERDIT ABSOLU : définition circulaire, définition incomplète, mélanger deux notions distinctes`
 }
 
 function getGenericChunkSystem(subject: string): string {
   const vocab = getSubjectVocab(subject)
+  const order = getSubjectSectionOrder(subject)
   return `Tu es un assistant pédagogique de niveau universitaire (Licence/Master — ${subject}). Transforme cette partie de cours en JSON rigoureux.
 
 NIVEAU EXIGÉ : Licence/Master — raisonnement rigoureux, vocabulaire disciplinaire précis.
 
 RÈGLES ABSOLUES SUR LES DÉFINITIONS :
 - Structure OBLIGATOIRE pour chaque définition : [nature/catégorie] — [mécanisme/contenu] — [effet/conséquence]
-- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS — vaut mieux moins de notions que des définitions fausses
+- Si tu n'es pas certain à 100% d'une définition, NE L'INCLUS PAS
 - INTERDIT ABSOLU : définition circulaire, définition d'un seul mot, mélanger deux notions distinctes
 
 AUTRES RÈGLES ABSOLUES :
-- Structure les sections par NOTION dans l'ordre logique : définition → principes → contenu → acteurs → effets → exceptions → limites
+- Structure les sections dans cet ordre logique : ${order.split('\n')[0]} → ... (voir ordre complet ci-dessus)
 - "points" : TOUJOURS des strings — JAMAIS des objets JSON
 - Vocabulaire disciplinaire obligatoire (${subject}) : ${vocab} — jamais le langage courant
 - "retenir" : synthèse disciplinairement exacte en une phrase
 - Chaque notion définie une seule fois
 
 Format JSON uniquement :
-{"sections":[{"title":"Nom de la notion","notions":[{"term":"Terme","definition":"[nature/catégorie] — [mécanisme/contenu] — [effet/conséquence]"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
+{"sections":[{"title":"Nom de la section selon l'ordre ${subject}","notions":[{"term":"Terme","definition":"[nature/catégorie] — [mécanisme/contenu] — [effet/conséquence]"}],"points":["Mécanisme + logique + conséquences en string."],"retenir":"Synthèse exacte niveau examen."}]}
 Réponds UNIQUEMENT avec le JSON valide.`
 }
 
@@ -266,14 +367,25 @@ COURS :
 ${synthese}`
   }
 
-  return `Tu es un professeur de ${subject} niveau Licence/Master. À partir de ce cours, génère en JSON :
-1. "logique" : 3 phrases résumant la logique d'ensemble avec vocabulaire disciplinaire précis
-2. "erreursFrequentes" : 5 erreurs classiques d'étudiants avec correction disciplinairement exacte
-3. "problemesJuridiques" : 3 questions d'examen type avec le principe/notion clé à mobiliser et l'exception ou nuance si applicable
-4. "schema" : carte mentale DÉTAILLÉE — nœud central + 4-5 branches principales, chaque branche avec 3-4 sous-éléments précis (notions disciplinaires, pas juste des mots vagues)
+  const examQuestions = SUBJECT_EXAM_QUESTIONS[subject] || SUBJECT_EXAM_QUESTIONS['Général']
 
-Exemple de schema détaillé attendu :
-{"root":"Sujet du cours","branches":[{"label":"Définitions","children":["Notion A : nature + mécanisme","Notion B : catégorie + effet","Distinction A/B","Origine ou contexte"]},{"label":"Principes","children":["Principe 1 + justification","Principe 2 + conséquence","Exception au principe 1","Limite du cadre"]},{"label":"Applications","children":["Cas type 1","Cas type 2","Erreur fréquente","Point de vigilance examen"]}]}
+  // Exemple de schema adapté à la matière
+  const schemaExemples: Record<string, string> = {
+    'Médecine':      '{"root":"Insuffisance cardiaque","branches":[{"label":"Physiopathologie","children":["↓ débit cardiaque","Activation neuro-hormonale (SRA, SNS)","Remodelage ventriculaire","Mécanismes compensateurs"]},{"label":"Classification","children":["ICFEr : FEVG < 40%","ICFEp : FEVG ≥ 50%","NYHA I à IV (dyspnée)","Aiguë vs chronique"]},{"label":"Clinique","children":["Dyspnée d\'effort puis de repos","Œdèmes des membres inférieurs","Orthopnée, dyspnée paroxystique","Râles crépitants, turgescence jugulaire"]},{"label":"Traitement","children":["IEC / ARA2 (réduction de la postcharge)","Bêtabloquants (remodelage)","Diurétiques (symptômes)","Défibrillateur si FEVG < 35%"]}]}',
+    'Informatique':  '{"root":"Tri rapide (Quicksort)","branches":[{"label":"Principe","children":["Diviser pour régner","Choix du pivot","Partition autour du pivot","Récursion sur sous-tableaux"]},{"label":"Complexité","children":["Moyenne : O(n log n)","Pire cas : O(n²) si pivot mal choisi","Espace : O(log n) pile récursion","En place : pas de tableau auxiliaire"]},{"label":"Implémentation","children":["Partition de Lomuto","Partition de Hoare","Pivot médiane de 3","Cas de base : tableau de taille ≤ 1"]},{"label":"Comparaison","children":["Plus rapide que tri fusion en pratique","Moins stable que tri par insertion","Meilleur cache que tri fusion","Randomisation évite le pire cas"]}]}',
+    'Histoire':      '{"root":"Révolution française (1789)","branches":[{"label":"Causes","children":["Crise financière de l\'État","Mauvaises récoltes (1788)","Idées des Lumières","Blocage des réformes par les privilégiés"]},{"label":"Déroulement","children":["États généraux (mai 1789)","Prise de la Bastille (14 juillet)","Déclaration des droits (août)","Abolition des privilèges"]},{"label":"Acteurs","children":["Tiers état / bourgeoisie","Robespierre et les Jacobins","Louis XVI","Sans-culottes parisiens"]},{"label":"Conséquences","children":["Fin de l\'Ancien Régime","Modèle pour l\'Europe","Guerres révolutionnaires","Naissance de la citoyenneté"]}]}',
+    'Philosophie':   '{"root":"La liberté","branches":[{"label":"Concepts clés","children":["Liberté négative (absence de contrainte)","Liberté positive (autonomie, Kant)","Libre arbitre vs déterminisme","Liberté comme responsabilité (Sartre)"]},{"label":"Auteurs","children":["Kant : liberté = autonomie de la raison","Sartre : condamnés à être libres","Mill : liberté sauf nuire à autrui","Spinoza : liberté = nécessité comprise"]},{"label":"Objections","children":["Déterminisme (Spinoza, Laplace)","Conditionnements sociaux (Bourdieu)","Inconscient (Freud)","Liberté illusoire ?"]},{"label":"Enjeux","children":["Fondement du droit","Responsabilité morale","Politique libérale","Liberté collective vs individuelle"]}]}',
+  }
+  const schemaEx = schemaExemples[subject] || '{"root":"Sujet du cours","branches":[{"label":"Définitions","children":["Notion A : nature + mécanisme","Notion B : catégorie + effet","Distinction A/B","Point clé examen"]},{"label":"Mécanismes","children":["Étape 1 + logique","Étape 2 + conséquence","Exception principale","Condition d\'application"]},{"label":"Applications","children":["Cas type 1","Cas type 2","Erreur fréquente","Point de vigilance examen"]}]}'
+
+  return `Tu es un professeur de ${subject} niveau Licence/Master. À partir de ce cours, génère en JSON :
+1. "logique" : 3 phrases résumant la logique d'ensemble avec vocabulaire disciplinaire précis — ce qu'un étudiant doit avoir compris pour réussir l'examen
+2. "erreursFrequentes" : 5 erreurs classiques d'étudiants en ${subject} sur ce sujet, avec correction disciplinairement exacte
+3. ${examQuestions}
+4. "schema" : carte mentale DÉTAILLÉE centrée sur les points clés de l'examen — nœud central + 4-5 branches principales, chaque branche avec 3-4 sous-éléments précis
+
+Exemple de schema attendu :
+${schemaEx}
 
 Format JSON :
 {"logique":["Phrase 1","Phrase 2","Phrase 3"],"erreursFrequentes":[{"erreur":"...","correction":"..."}],"problemesJuridiques":[{"question":"...","principe":"...","exception":"..."}],"schema":{"root":"Sujet du cours","branches":[{"label":"Branche","children":["Sous-élément précis","Sous-élément précis","Sous-élément précis"]}]}}
@@ -303,17 +415,18 @@ Format JSON :
 Sections du cours : ${titres}`
   }
 
-  return `Tu es un professeur de ${subject} niveau Licence/Master. Pour le cours sur "${title}", génère UNIQUEMENT des compléments utiles à l'examen.
+  const referencesPrompt = SUBJECT_REFERENCES[subject] || SUBJECT_REFERENCES['Général']
 
-RÈGLE ABSOLUE : n'inclus que ce qui est directement utile pour réussir un examen — pas de culture générale, pas d'anecdotes, pas de détails inutiles.
+  return `Tu es un professeur de ${subject} niveau Licence/Master. Pour le cours sur "${title}", génère UNIQUEMENT des compléments directement utiles à l'examen.
+
+RÈGLE ABSOLUE : n'inclus que ce qui est utile pour réussir un examen de ${subject} — pas de culture générale hors sujet, pas d'anecdotes inutiles.
 
 Génère en JSON :
-1. "referencesCles" : 2-3 auteurs, théories ou formules fondamentaux que tout étudiant doit connaître sur ce sujet (nom, date approximative, apport en une phrase). Ne cite que si tu es certain à 100%.
-2. "distinctionsCles" : 3-4 distinctions conceptuelles fondamentales à maîtriser pour l'examen (ex: "Corrélation vs causalité : la corrélation mesure une covariation statistique, la causalité implique un lien mécaniste démontré")
-3. "articlesEssentiels" : retourne toujours un tableau vide [] — non applicable hors droit
+${referencesPrompt}
+3. "articlesEssentiels" : retourne toujours un tableau vide [] — non applicable en ${subject}
 
 Format JSON :
-{"referencesCles":[{"reference":"Auteur / Théorie / Formule","description":"Apport essentiel en une phrase"}],"distinctionsCles":[{"distinction":"A vs B","explication":"..."}],"articlesEssentiels":[]}
+{"referencesCles":[{"reference":"Auteur / Théorie / Classification / Formule","description":"Apport essentiel en une phrase"}],"distinctionsCles":[{"distinction":"A vs B","explication":"..."}],"articlesEssentiels":[]}
 
 Sections du cours : ${titres}`
 }
@@ -323,7 +436,14 @@ Sections du cours : ${titres}`
 async function processCourse(content: string, subject: string = 'Général'): Promise<object> {
   const cacheKey = `course:${subject}:${hashContent(content)}`
   const cached = await redis.get(cacheKey)
-  if (cached) return JSON.parse(cached)
+  if (cached) {
+    try {
+      return JSON.parse(cached)
+    } catch {
+      console.error('[Worker] Cache Redis corrompu, retraitement du cours...')
+      await redis.del(cacheKey)
+    }
+  }
 
   let result: object
 
