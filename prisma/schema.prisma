@@ -17,10 +17,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  folders  Folder[]
-  courses  Course[]
-  sessions Session[]
-  accounts Account[]
+  folders     Folder[]
+  courses     Course[]
+  sessions    Session[]
+  accounts    Account[]
+  suggestions Suggestion[]
 }
 
 model Account {
@@ -137,4 +138,13 @@ model PasswordResetToken {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model Suggestion {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

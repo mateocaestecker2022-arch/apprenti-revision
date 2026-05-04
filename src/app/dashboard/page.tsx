@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { DeleteCourseButton } from '@/components/DeleteCourseButton'
 import { CreateFolderButton } from '@/components/CreateFolderButton'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { SuggestionButton } from '@/components/SuggestionButton'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -39,6 +40,7 @@ export default async function DashboardPage() {
             👋 {firstName}
           </span>
           <ThemeToggle />
+          <SuggestionButton />
           <a href="/account/password" className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-lg hover:border-indigo-200 dark:hover:border-indigo-700 hidden sm:block">
             Mot de passe
           </a>
