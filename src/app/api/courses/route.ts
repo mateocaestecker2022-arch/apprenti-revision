@@ -15,11 +15,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Contenu trop court' }, { status: 400 })
   }
 
-  // Si aucun subject fourni, utilise la filière de l'utilisateur
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { filiere: true } })
-  const resolvedSubject = subject || user?.filiere || 'Général'
-
   try {
+    // Si aucun subject fourni, utilise la filière de l'utilisateur
+    const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { filiere: true } })
+    const resolvedSubject = subject || user?.filiere || 'Général'
+
     // Créer le cours immédiatement avec status "processing"
     const course = await prisma.course.create({
       data: {
@@ -54,11 +54,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
-  const courses = await prisma.course.findMany({
-    where: { userId: session.user.id },
-    include: { folder: true },
-    orderBy: { updatedAt: 'desc' },
-  })
-
-  return NextResponse.json(courses)
+  try {
+    const courses = await prisma.course.findMany({
+      where: { userId: session.user.id },
+      include: { folder: true },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return NextResponse.json(courses)
+  } catch (error) {
+    console.error('[GET /api/courses]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
 }

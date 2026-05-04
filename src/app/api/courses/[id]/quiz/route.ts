@@ -78,7 +78,9 @@ ${context}`
         response_format: { type: 'json_object' },
       })
       const raw = res.choices[0]?.message?.content || ''
-      const { questions } = JSON.parse(raw)
+      const match = raw.match(/\{[\s\S]*\}/)
+      if (!match) throw new Error('Pas de JSON dans la réponse')
+      const { questions } = JSON.parse(match[0])
 
       if (!questions || questions.length === 0) {
         return NextResponse.json({ error: 'Erreur génération' }, { status: 500 })
@@ -107,10 +109,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-  const quiz = await prisma.quiz.findFirst({
-    where: { courseId: params.id },
-    orderBy: { createdAt: 'desc' },
-  })
-
-  return NextResponse.json(quiz)
+  try {
+    const quiz = await prisma.quiz.findFirst({
+      where: { courseId: params.id },
+      orderBy: { createdAt: 'desc' },
+    })
+    return NextResponse.json(quiz)
+  } catch (error) {
+    console.error('[GET /api/courses/[id]/quiz]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
 }

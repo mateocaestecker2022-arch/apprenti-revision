@@ -137,15 +137,19 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-  const folder = await prisma.folder.findFirst({
-    where: { id: params.id, userId: session.user.id },
-  })
-  if (!folder) return NextResponse.json({ error: 'Dossier introuvable' }, { status: 404 })
+  try {
+    const folder = await prisma.folder.findFirst({
+      where: { id: params.id, userId: session.user.id },
+    })
+    if (!folder) return NextResponse.json({ error: 'Dossier introuvable' }, { status: 404 })
 
-  const record = await prisma.folderExercise.findFirst({
-    where: { folderId: params.id },
-    orderBy: { createdAt: 'desc' },
-  })
-
-  return NextResponse.json(record ?? null)
+    const record = await prisma.folderExercise.findFirst({
+      where: { folderId: params.id },
+      orderBy: { createdAt: 'desc' },
+    })
+    return NextResponse.json(record ?? null)
+  } catch (error) {
+    console.error('[GET /api/folders/[id]/exercises]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
 }

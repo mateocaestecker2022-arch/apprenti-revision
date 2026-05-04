@@ -11,9 +11,11 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "worker:start": "tsx worker.ts"
+    "worker:start": "tsx worker.ts",
+    "analyze": "tsx scripts/analyze-codebase.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0",
     "@auth/prisma-adapter": "^2.4.2",
     "@google/generative-ai": "^0.21.0",
     "@prisma/client": "^5.17.0",

@@ -102,6 +102,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
+  try {
   const format = req.nextUrl.searchParams.get('format') || 'docx'
 
   const course = await prisma.course.findFirst({
@@ -185,4 +186,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   return NextResponse.json({ error: 'Format non supporté' }, { status: 400 })
+  } catch (error) {
+    console.error('[GET /api/courses/[id]/export]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
 }

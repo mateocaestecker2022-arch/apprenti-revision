@@ -45,7 +45,9 @@ ${context}`
         response_format: { type: 'json_object' },
       })
       const raw = res.choices[0]?.message?.content || ''
-      const generatedCards: Array<{ question: string; answer: string }> = JSON.parse(raw).cards || []
+      const matchRaw = raw.match(/\{[\s\S]*\}/)
+      if (!matchRaw) throw new Error('Pas de JSON dans la réponse')
+      const generatedCards: Array<{ question: string; answer: string }> = JSON.parse(matchRaw[0]).cards || []
 
       const allCards = [...notionCards, ...generatedCards]
 
@@ -77,6 +79,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-  const cards = await prisma.flashcard.findMany({ where: { courseId: params.id } })
-  return NextResponse.json(cards)
+  try {
+    const cards = await prisma.flashcard.findMany({ where: { courseId: params.id } })
+    return NextResponse.json(cards)
+  } catch (error) {
+    console.error('[GET /api/courses/[id]/flashcards]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
 }

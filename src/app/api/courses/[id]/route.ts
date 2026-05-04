@@ -8,30 +8,41 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
-  const course = await prisma.course.findFirst({
-    where: { id: params.id, userId: session.user.id },
-    include: { folder: true },
-  })
+  try {
+    const course = await prisma.course.findFirst({
+      where: { id: params.id, userId: session.user.id },
+      include: { folder: true },
+    })
 
-  if (!course) {
-    return NextResponse.json({ error: 'Cours introuvable' }, { status: 404 })
+    if (!course) {
+      return NextResponse.json({ error: 'Cours introuvable' }, { status: 404 })
+    }
+
+    return NextResponse.json(course)
+  } catch (error) {
+    console.error('[GET /api/courses/[id]]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
-
-  return NextResponse.json(course)
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-  const { folderId } = await req.json()
+  try {
+    const { folderId } = await req.json()
 
-  const course = await prisma.course.updateMany({
-    where: { id: params.id, userId: session.user.id },
-    data: { folderId: folderId || null },
-  })
+    const result = await prisma.course.updateMany({
+      where: { id: params.id, userId: session.user.id },
+      data: { folderId: folderId || null },
+    })
 
-  return NextResponse.json({ success: true })
+    if (result.count === 0) return NextResponse.json({ error: 'Cours introuvable' }, { status: 404 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[PATCH /api/courses/[id]]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
@@ -40,9 +51,13 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
-  await prisma.course.deleteMany({
-    where: { id: params.id, userId: session.user.id },
-  })
-
-  return NextResponse.json({ success: true })
+  try {
+    await prisma.course.deleteMany({
+      where: { id: params.id, userId: session.user.id },
+    })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[DELETE /api/courses/[id]]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
 }

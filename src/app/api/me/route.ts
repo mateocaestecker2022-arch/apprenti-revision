@@ -8,10 +8,14 @@ export async function GET() {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { filiere: true },
-  })
-
-  return NextResponse.json({ filiere: user?.filiere || 'Général' })
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { filiere: true },
+    })
+    return NextResponse.json({ filiere: user?.filiere || 'Général' })
+  } catch (error) {
+    console.error('[GET /api/me]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
 }
