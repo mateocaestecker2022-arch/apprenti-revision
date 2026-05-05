@@ -3,14 +3,14 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { StuckCoursesSection } from './StuckCoursesSection'
 
-const ADMIN_EMAIL = 'mateocaestecker2022@gmail.com'
+const ADMIN_USER_ID = 'cmohf50fk000a6k88biaq9yza'
 const STUCK_MINUTES = 30
 
 const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
 
 export default async function AdminStatsPage() {
   const session = await auth()
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) redirect('/dashboard')
+  if (!session?.user?.id || session.user.id !== ADMIN_USER_ID) redirect('/dashboard')
 
   const now = new Date()
   const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0)

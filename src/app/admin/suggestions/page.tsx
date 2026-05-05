@@ -2,11 +2,11 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 
-const ADMIN_EMAIL = 'mateocaestecker2022@gmail.com'
+const ADMIN_USER_ID = 'cmohf50fk000a6k88biaq9yza'
 
 export default async function AdminSuggestionsPage() {
   const session = await auth()
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) redirect('/dashboard')
+  if (!session?.user?.id || session.user.id !== ADMIN_USER_ID) redirect('/dashboard')
 
   const suggestions = await prisma.suggestion.findMany({
     orderBy: { createdAt: 'desc' },

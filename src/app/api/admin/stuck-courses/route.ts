@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-const ADMIN_EMAIL = 'mateocaestecker2022@gmail.com'
+const ADMIN_USER_ID = 'cmohf50fk000a6k88biaq9yza'
 const STUCK_MINUTES = 30
 
-function isAdmin(email: string | null | undefined) {
-  return email === ADMIN_EMAIL
+function isAdmin(id: string | null | undefined) {
+  return id === ADMIN_USER_ID
 }
 
 // GET — liste des cours bloqués en processing depuis plus de STUCK_MINUTES
 export async function GET() {
   const session = await auth()
-  if (!isAdmin(session?.user?.email)) {
+  if (!isAdmin(session?.user?.id)) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
   }
 
@@ -35,7 +35,7 @@ export async function GET() {
 // POST — repasse en "error" un cours spécifique (courseId) ou tous les bloqués
 export async function POST(req: NextRequest) {
   const session = await auth()
-  if (!isAdmin(session?.user?.email)) {
+  if (!isAdmin(session?.user?.id)) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
   }
 
