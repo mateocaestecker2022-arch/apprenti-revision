@@ -1,12 +1,11 @@
-import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 
-const ADMIN_USER_ID = 'cmohf50fk000a6k88biaq9yza'
-
 export default async function AdminSuggestionsPage() {
-  const session = await auth()
-  if (!session?.user?.id || session.user.id !== ADMIN_USER_ID) redirect('/dashboard')
+  const cookieStore = await cookies()
+  const adminToken = cookieStore.get('admin_token')?.value
+  if (!adminToken || adminToken !== process.env.ADMIN_TOKEN) redirect('/admin/login')
 
   const suggestions = await prisma.suggestion.findMany({
     orderBy: { createdAt: 'desc' },
