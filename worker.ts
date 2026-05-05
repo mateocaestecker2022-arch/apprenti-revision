@@ -584,7 +584,13 @@ const worker = new Worker(
       const structured = await processCourse(content, subject) as {
         title?: string
         keywords?: unknown[]
+        sections?: unknown[]
         [key: string]: unknown
+      }
+
+      // Validation : si aucune section générée, le contenu est vide (rate limit total)
+      if (!structured.sections || structured.sections.length === 0) {
+        throw new Error('Aucune section générée — probablement un rate limit Groq total')
       }
 
       await prisma.course.update({
