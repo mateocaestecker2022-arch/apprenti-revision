@@ -9,11 +9,9 @@ async function isAdmin() {
   return cookieStore.get('admin_token')?.value === process.env.ADMIN_TOKEN
 }
 
-// GET — liste des cours bloqués en processing depuis plus de STUCK_MINUTES
 export async function GET() {
-  if (!await isAdmin()) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
-  }
+  const admin = await isAdmin()
+  if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
   const cutoff = new Date(Date.now() - STUCK_MINUTES * 60 * 1000)
   const stuck = await prisma.course.findMany({
@@ -31,12 +29,9 @@ export async function GET() {
   return NextResponse.json(stuck)
 }
 
-// POST — repasse en "error" un cours spécifique (courseId) ou tous les bloqués
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!await isAdmin()) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
-  }
+  const admin = await isAdmin()
+  if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
   const { courseId } = await req.json().catch(() => ({}))
   const cutoff = new Date(Date.now() - STUCK_MINUTES * 60 * 1000)
