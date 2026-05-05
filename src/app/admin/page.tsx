@@ -1,18 +1,32 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { StuckCoursesSection } from './StuckCoursesSection'
 
 const ADMIN_EMAIL = 'mateocaestecker2022@gmail.com'
+const STUCK_MINUTES = 30
 
 export default async function AdminStatsPage() {
   const session = await auth()
   if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) redirect('/dashboard')
 
-  const [totalUsers, totalCourses, totalQuizzes, totalSuggestions] = await Promise.all([
+  const cutoff = new Date(Date.now() - STUCK_MINUTES * 60 * 1000)
+  const [totalUsers, totalCourses, totalQuizzes, totalSuggestions, stuckCourses] = await Promise.all([
     prisma.user.count(),
     prisma.course.count(),
     prisma.quiz.count(),
     prisma.suggestion.count(),
+    prisma.course.findMany({
+      where: { status: 'processing', updatedAt: { lt: cutoff } },
+      select: {
+        id: true,
+        title: true,
+        updatedAt: true,
+        subject: true,
+        user: { select: { name: true, email: true } },
+      },
+      orderBy: { updatedAt: 'asc' },
+    }),
   ])
 
   const stats = [
@@ -77,6 +91,12 @@ export default async function AdminStatsPage() {
             ))}
           </div>
         </div>
+
+        {/* Cours bloqués */}
+        <StuckCoursesSection initial={stuckCourses.map(c => ({
+          ...c,
+          updatedAt: c.updatedAt.toISOString(),
+        }))} />
 
       </main>
     </div>
