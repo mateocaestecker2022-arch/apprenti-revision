@@ -1,6 +1,5 @@
 import { Worker } from 'bullmq'
 import { PrismaClient, Prisma } from '@prisma/client'
-import crypto from 'crypto'
 import { Redis } from 'ioredis'
 import Groq from 'groq-sdk'
 
@@ -32,10 +31,6 @@ function filterArticles(articles: Array<{ article: string; description: string }
     const match = a.article.match(/(\d+(?:-\d+)?)/)
     return match && WHITELIST_ARTICLE_NUMBERS.has(match[1])
   })
-}
-
-function hashContent(content: string): string {
-  return crypto.createHash('sha256').update(content).digest('hex')
 }
 
 function splitIntoChunks(text: string): string[] {
@@ -474,16 +469,6 @@ function mergeDuplicateSections(
 // ─── Traitement principal ─────────────────────────────────────────────────────
 
 async function processCourse(content: string, subject: string = 'Général'): Promise<object> {
-  const cacheKey = `course:${subject}:${hashContent(content)}`
-  const cached = await redis.get(cacheKey)
-  if (cached) {
-    try {
-      return JSON.parse(cached)
-    } catch {
-      console.error('[Worker] Cache Redis corrompu, retraitement du cours...')
-      await redis.del(cacheKey)
-    }
-  }
 
   let result: object
 
@@ -585,7 +570,6 @@ Format JSON valide uniquement : {"title":"Titre du cours","summary":"Résumé en
     console.error('[Worker] Compléments échoués (non bloquant):', e)
   }
 
-  await redis.setex(cacheKey, 86400, JSON.stringify(result))
   return result
 }
 
