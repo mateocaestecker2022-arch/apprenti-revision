@@ -2,10 +2,17 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { prisma } from '@/lib/prisma'
 
 export default async function Home() {
   const session = await auth()
   if (session) redirect('/dashboard')
+
+  const avis = await prisma.suggestion.findMany({
+    where: { public: true },
+    orderBy: { createdAt: 'desc' },
+    include: { user: { select: { name: true, filiere: true } } },
+  })
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
@@ -174,6 +181,34 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* AVIS */}
+      {avis.length > 0 && (
+        <section className="py-14 px-4 bg-white dark:bg-gray-950">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-2">
+              Ce qu&apos;ils en pensent
+            </h2>
+            <p className="text-center text-gray-400 dark:text-gray-500 text-sm mb-10">Des étudiants qui utilisent Apprenti Révision au quotidien.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {avis.map((a) => (
+                <div key={a.id} className="bg-slate-50 dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-5 flex flex-col gap-3">
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex-1">&ldquo;{a.content}&rdquo;</p>
+                  <div className="flex items-center gap-2 pt-2 border-t dark:border-gray-800">
+                    <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs shrink-0">
+                      {(a.user.name || '?')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{a.user.name || 'Étudiant'}</p>
+                      <p className="text-xs text-indigo-500 dark:text-indigo-400">{a.user.filiere}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA FINAL */}
       <section className="py-14 px-4 bg-gradient-to-br from-indigo-600 to-purple-700">

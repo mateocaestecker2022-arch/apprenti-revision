@@ -1,16 +1,42 @@
-import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
+'use client'
 
-export default async function AdminSuggestionsPage() {
-  const cookieStore = await cookies()
-  const adminToken = cookieStore.get('admin_token')?.value
-  if (!adminToken || adminToken !== process.env.ADMIN_TOKEN) redirect('/admin/login')
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-  const suggestions = await prisma.suggestion.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: { user: { select: { name: true, email: true, filiere: true } } },
-  })
+type Suggestion = {
+  id: string
+  content: string
+  public: boolean
+  createdAt: string
+  user: { name: string | null; email: string; filiere: string }
+}
+
+export default function AdminSuggestionsPage() {
+  const router = useRouter()
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [loading, setLoading] = useState(true)
+  const [toggling, setToggling] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/admin/suggestions/list')
+      .then(r => {
+        if (r.status === 403) { router.push('/admin/login'); return null }
+        return r.json()
+      })
+      .then(data => { if (data) setSuggestions(data) })
+      .finally(() => setLoading(false))
+  }, [router])
+
+  async function toggle(id: string, current: boolean) {
+    setToggling(id)
+    await fetch('/api/admin/suggestions', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, public: !current }),
+    })
+    setSuggestions(prev => prev.map(s => s.id === id ? { ...s, public: !current } : s))
+    setToggling(null)
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
@@ -27,11 +53,16 @@ export default async function AdminSuggestionsPage() {
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">💡 Suggestions</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
-            {suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''} reçue{suggestions.length !== 1 ? 's' : ''}
+            {suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''} —{' '}
+            <span className="text-green-600 dark:text-green-400">
+              {suggestions.filter(s => s.public).length} publiée{suggestions.filter(s => s.public).length !== 1 ? 's' : ''} comme avis
+            </span>
           </p>
         </div>
 
-        {suggestions.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16 text-gray-400">Chargement...</div>
+        ) : suggestions.length === 0 ? (
           <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-14 text-center shadow-sm">
             <p className="text-4xl mb-3">💬</p>
             <p className="text-gray-500 dark:text-gray-400">Aucune suggestion pour l&apos;instant.</p>
@@ -39,10 +70,9 @@ export default async function AdminSuggestionsPage() {
         ) : (
           <div className="space-y-4">
             {suggestions.map((s) => (
-              <div key={s.id} className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
-                {/* Header auteur */}
+              <div key={s.id} className={`bg-white dark:bg-gray-900 border rounded-2xl shadow-sm overflow-hidden transition ${s.public ? 'border-green-300 dark:border-green-700' : 'dark:border-gray-800'}`}>
                 <div className="flex items-center justify-between px-5 py-3 border-b dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs shrink-0">
                       {(s.user.name || s.user.email)?.[0]?.toUpperCase()}
                     </div>
@@ -52,11 +82,23 @@ export default async function AdminSuggestionsPage() {
                       <span className="text-xs text-indigo-500 dark:text-indigo-400 ml-2 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded">{s.user.filiere}</span>
                     </div>
                   </div>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
-                    {new Date(s.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">
+                      {new Date(s.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                    <button
+                      onClick={() => toggle(s.id, s.public)}
+                      disabled={toggling === s.id}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition ${
+                        s.public
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600'
+                      } disabled:opacity-50`}
+                    >
+                      {toggling === s.id ? '...' : s.public ? '✓ Avis publié' : 'Publier comme avis'}
+                    </button>
+                  </div>
                 </div>
-                {/* Contenu */}
                 <div className="px-5 py-4">
                   <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
                     {s.content}
