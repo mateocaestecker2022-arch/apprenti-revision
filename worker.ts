@@ -605,7 +605,7 @@ const worker = new Worker(
       })
     }
   },
-  { connection, concurrency: 1 }
+  { connection, concurrency: 1, lockDuration: 600000 }
 )
 
 worker.on('completed', (job) => console.log(`Job ${job.id} completed`))
