@@ -10,7 +10,7 @@ const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
 
 export default async function AdminStatsPage() {
   const session = await auth()
-  console.log('[ADMIN] session email:', session?.user?.email)
+  console.log('[ADMIN] session:', JSON.stringify(session?.user))
   if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) redirect('/dashboard')
 
   const now = new Date()
