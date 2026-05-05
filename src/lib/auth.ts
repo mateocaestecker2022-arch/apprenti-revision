@@ -41,19 +41,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id
+      if (user) {
+        token.id = user.id
+        token.email = user.email
+      }
       return token
     },
     async session({ session, token }) {
       if (token?.id) {
         session.user.id = token.id as string
-        const fresh = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { name: true, email: true },
-        })
-        if (fresh) {
-          session.user.name = fresh.name
-          session.user.email = fresh.email
+        // Utilise l'email du token comme base fiable
+        if (token.email) session.user.email = token.email as string
+        // Refresh depuis la DB pour avoir le nom à jour
+        try {
+          const fresh = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { name: true, email: true },
+          })
+          if (fresh) {
+            session.user.name = fresh.name
+            session.user.email = fresh.email
+          }
+        } catch {
+          // DB indisponible : on garde l'email du token
         }
       }
       return session
