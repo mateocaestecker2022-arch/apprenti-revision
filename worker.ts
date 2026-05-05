@@ -431,6 +431,46 @@ Format JSON :
 Sections du cours : ${titres}`
 }
 
+// ─── Fusion des sections identiques ──────────────────────────────────────────
+
+function mergeDuplicateSections(
+  sections: Array<{ title: string; notions: Array<{ term: string; definition: string }>; points: string[]; retenir?: string }>
+): typeof sections {
+  const merged: typeof sections = []
+  const indexByTitle = new Map<string, number>()
+
+  for (const section of sections) {
+    const key = section.title.toLowerCase().trim()
+    if (indexByTitle.has(key)) {
+      const idx = indexByTitle.get(key)!
+      // Fusionne les notions sans doublon (par term)
+      const existingTerms = new Set(merged[idx].notions.map(n => n.term.toLowerCase()))
+      for (const notion of section.notions) {
+        if (!existingTerms.has(notion.term.toLowerCase())) {
+          merged[idx].notions.push(notion)
+          existingTerms.add(notion.term.toLowerCase())
+        }
+      }
+      // Fusionne les points sans doublon
+      const existingPoints = new Set(merged[idx].points.map(p => p.trim()))
+      for (const point of section.points) {
+        if (!existingPoints.has(point.trim())) {
+          merged[idx].points.push(point)
+        }
+      }
+      // Garde le premier retenir non vide
+      if (!merged[idx].retenir && section.retenir) {
+        merged[idx].retenir = section.retenir
+      }
+    } else {
+      indexByTitle.set(key, merged.length)
+      merged.push({ ...section, notions: [...section.notions], points: [...section.points] })
+    }
+  }
+
+  return merged
+}
+
 // ─── Traitement principal ─────────────────────────────────────────────────────
 
 async function processCourse(content: string, subject: string = 'Général'): Promise<object> {
@@ -477,21 +517,22 @@ async function processCourse(content: string, subject: string = 'Général'): Pr
       }
     }
 
-    const titres = allSections.map(s => s.title).join(', ')
+    const mergedSections = mergeDuplicateSections(allSections)
+    const titres = mergedSections.map(s => s.title).join(', ')
     const metaRaw = await callGroq(
       `Tu es un assistant pédagogique. Génère un titre et un résumé pour un cours dont les sections sont : ${titres}
-Format JSON valide uniquement : {"title":"Titre du cours","plan":["Section 1","Section 2"],"summary":"Résumé en 4-5 phrases."}`
+Format JSON valide uniquement : {"title":"Titre du cours","summary":"Résumé en 4-5 phrases."}`
     )
     const metaMatch = metaRaw.match(/\{[\s\S]*\}/)
-    let meta: { title: string; plan: string[]; summary: string } = { title: 'Cours', plan: [], summary: '' }
+    let meta: { title: string; summary: string } = { title: 'Cours', summary: '' }
     if (metaMatch) {
       try { meta = JSON.parse(metaMatch[0]) } catch {}
     }
 
     result = {
       title: meta.title,
-      plan: meta.plan.length > 0 ? meta.plan : allSections.map(s => s.title),
-      sections: allSections,
+      plan: mergedSections.map(s => s.title),
+      sections: mergedSections,
       summary: meta.summary,
     }
   }
