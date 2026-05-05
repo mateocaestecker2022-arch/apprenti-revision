@@ -50,7 +50,7 @@ function splitIntoChunks(text: string): string[] {
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
-async function callGroq(prompt: string, retries = 3): Promise<string> {
+async function callGroq(prompt: string, retries = 5): Promise<string> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const res = await groq.chat.completions.create({
@@ -64,8 +64,9 @@ async function callGroq(prompt: string, retries = 3): Promise<string> {
     } catch (err: unknown) {
       const status = (err as { status?: number }).status
       if (status === 429) {
-        console.log(`[Worker] Rate limit Groq, attente 15s...`)
-        await sleep(15000)
+        const wait = 15000 * (attempt + 1) // backoff : 15s, 30s, 45s, 60s, 75s
+        console.log(`[Worker] Rate limit Groq, attente ${wait / 1000}s... (tentative ${attempt + 1}/${retries})`)
+        await sleep(wait)
       } else if (attempt < retries - 1) {
         await sleep(3000)
       } else {
@@ -599,13 +600,17 @@ const worker = new Worker(
       console.log(`[Worker] Course ${courseId} done`)
     } catch (err) {
       console.error(`[Worker] Error on course ${courseId}:`, err)
-      await prisma.course.update({
-        where: { id: courseId },
-        data: { status: 'error' },
-      })
+      const code = (err as { code?: string }).code
+      if (code !== 'P2025') {
+        // P2025 = cours supprimé pendant le traitement — pas la peine d'essayer de mettre à jour
+        await prisma.course.update({
+          where: { id: courseId },
+          data: { status: 'error' },
+        }).catch(() => {}) // ignore si supprimé entre temps
+      }
     }
   },
-  { connection, concurrency: 1, lockDuration: 600000 }
+  { connection, concurrency: 1, lockDuration: 1800000 }
 )
 
 worker.on('completed', (job) => console.log(`Job ${job.id} completed`))
