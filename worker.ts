@@ -64,11 +64,11 @@ async function callGroq(prompt: string, retries = 5): Promise<string> {
     } catch (err: unknown) {
       const status = (err as { status?: number }).status
       if (status === 429) {
-        const wait = 15000 * (attempt + 1) // backoff : 15s, 30s, 45s, 60s, 75s
+        const wait = 30000 * (attempt + 1) // backoff : 30s, 60s, 90s, 120s, 150s
         console.log(`[Worker] Rate limit Groq, attente ${wait / 1000}s... (tentative ${attempt + 1}/${retries})`)
         await sleep(wait)
       } else if (attempt < retries - 1) {
-        await sleep(3000)
+        await sleep(5000)
       } else {
         throw err
       }
@@ -621,5 +621,14 @@ const worker = new Worker(
 
 worker.on('completed', (job) => console.log(`Job ${job.id} completed`))
 worker.on('failed', (job, err) => console.error(`Job ${job?.id} failed:`, err))
+worker.on('error', (err) => console.error('[Worker] BullMQ worker error (non-fatal):', err))
+
+// Empêche le worker de mourir sur une exception non catchée
+process.on('uncaughtException', (err) => {
+  console.error('[Worker] uncaughtException (worker maintenu en vie):', err)
+})
+process.on('unhandledRejection', (reason) => {
+  console.error('[Worker] unhandledRejection (worker maintenu en vie):', reason)
+})
 
 console.log('[Worker] Started, waiting for jobs...')

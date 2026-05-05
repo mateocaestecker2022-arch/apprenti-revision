@@ -48,11 +48,16 @@ export default function ChangePasswordPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center px-4">
       <div className="bg-white dark:bg-gray-900 border border-transparent dark:border-gray-800 rounded-2xl shadow-lg p-8 w-full max-w-md">
-        <div className="mb-6">
-          <Link href="/dashboard" className="text-sm text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
-            ← Retour au dashboard
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <Link href="/dashboard" className="text-sm text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
+              ← Retour au dashboard
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-3">Changer le mot de passe</h1>
+          </div>
+          <Link href="/account/delete" className="text-xs text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition mt-1">
+            Supprimer le compte
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-3">Changer le mot de passe</h1>
         </div>
 
         {success ? (
