@@ -57,15 +57,15 @@ export default async function DashboardPage() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-7">
 
         {/* HEADER */}
-        <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between gap-3 mb-5">
           <div>
-            <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white">Mes révisions</h1>
-            <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">Gère tes cours et révise intelligemment</p>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">Mes révisions</h1>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gère tes cours et révise intelligemment</p>
           </div>
-          <a href="/courses/new" className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition text-sm shadow-md shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center gap-1.5 shrink-0">
+          <a href="/courses/new" className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition text-sm shadow-md shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center gap-1.5 shrink-0">
             <span>+</span> Nouveau cours
           </a>
         </div>
@@ -74,13 +74,13 @@ export default async function DashboardPage() {
         {flashcardCount > 0 && (
           <a
             href="/revision"
-            className={`flex items-center gap-3 rounded-xl px-4 py-3 mb-4 border transition group ${
+            className={`flex items-center gap-4 rounded-2xl px-5 py-4 mb-5 border transition group ${
               dueCount > 0
                 ? 'bg-indigo-600 border-indigo-500 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 dark:shadow-indigo-900/30'
                 : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
             }`}
           >
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 ${
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${
               dueCount > 0 ? 'bg-indigo-500' : 'bg-indigo-50 dark:bg-indigo-900/40'
             }`}>
               🧠
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
                   : 'Révision intelligente — tout est à jour !'}
               </p>
               <p className={`text-xs mt-0.5 ${dueCount > 0 ? 'text-indigo-200' : 'text-gray-400 dark:text-gray-500'}`}>
-                {dueCount > 0 ? 'Clique pour commencer' : 'Reviens demain pour ta prochaine session'}
+                {dueCount > 0 ? 'Clique pour commencer ta session' : 'Reviens demain pour ta prochaine session'}
               </p>
             </div>
             <svg className={`w-4 h-4 shrink-0 transition group-hover:translate-x-1 ${dueCount > 0 ? 'text-indigo-200' : 'text-gray-300 dark:text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,48 +102,48 @@ export default async function DashboardPage() {
         )}
 
         {/* STATS */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-3 sm:p-4 shadow-sm border dark:border-gray-800 flex items-center gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center justify-center text-lg shrink-0">📄</div>
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 shadow-sm border dark:border-gray-800 flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center text-xl shrink-0">📄</div>
             <div>
-              <p className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white">{courses.length}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium leading-tight">Cours</p>
+              <p className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">{courses.length}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Cours</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-3 sm:p-4 shadow-sm border dark:border-gray-800 flex items-center gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center text-lg shrink-0">✅</div>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 shadow-sm border dark:border-gray-800 flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-xl flex items-center justify-center text-xl shrink-0">✅</div>
             <div>
-              <p className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white">{ready}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium leading-tight">Prêts</p>
+              <p className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">{ready}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Prêts</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-3 sm:p-4 shadow-sm border dark:border-gray-800 flex items-center gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900/40 rounded-lg flex items-center justify-center text-lg shrink-0">📁</div>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 shadow-sm border dark:border-gray-800 flex items-center gap-3">
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/40 rounded-xl flex items-center justify-center text-xl shrink-0">📁</div>
             <div>
-              <p className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white">{folders.length}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium leading-tight">Classeurs</p>
+              <p className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">{folders.length}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Classeurs</p>
             </div>
           </div>
         </div>
 
         {/* CLASSEURS */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold text-gray-900 dark:text-white text-sm">Classeurs</h2>
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-gray-900 dark:text-white">Classeurs</h2>
             <CreateFolderButton />
           </div>
           {folders.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center text-gray-400 dark:text-gray-600 flex items-center justify-center gap-2">
+            <div className="bg-white dark:bg-gray-900 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-5 text-center text-gray-400 dark:text-gray-600 flex items-center justify-center gap-2">
               <span>📁</span>
               <p className="text-sm">Aucun classeur — organise tes cours par matière</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {folders.map(f => (
                 <a key={f.id} href={`/folders/${f.id}`}
-                  className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 group">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
+                  className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 group">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
                     <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">{f.name}</p>
                   </div>
                   <p className="text-xs text-gray-400 dark:text-gray-600">{f._count.courses} cours</p>
@@ -155,8 +155,8 @@ export default async function DashboardPage() {
 
         {/* TOUS LES COURS */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold text-gray-900 dark:text-white text-sm">Tous les cours</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-gray-900 dark:text-white">Tous les cours</h2>
             {processing > 0 && (
               <span className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-1 rounded-full flex items-center gap-1">
                 <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
