@@ -6,6 +6,7 @@ import { CreateFolderButton } from '@/components/CreateFolderButton'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { SuggestionForm } from '@/components/SuggestionForm'
 import { AvisForm } from '@/components/AvisForm'
+import { BugReportForm } from '@/components/BugReportForm'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -233,14 +234,22 @@ export default async function DashboardPage() {
         {/* BAS DE PAGE : Paramètres + Suggestion + Avis */}
         <div className="mt-4 sm:mt-5 flex flex-col lg:flex-row gap-4 items-start">
 
-          {/* Suggestion + Avis */}
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          {/* Suggestion + Bug + Avis */}
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-4 sm:p-5">
               <div className="mb-3 sm:mb-4">
                 <h2 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">💡 Suggestion</h2>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Une idée, un bug, une amélioration ? Je lis tout.</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Une idée, une amélioration ? Je lis tout.</p>
               </div>
               <SuggestionForm />
+            </div>
+
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-4 sm:p-5">
+              <div className="mb-3 sm:mb-4">
+                <h2 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">🐛 Signaler un bug</h2>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Quelque chose ne marche pas ? Dis-moi tout.</p>
+              </div>
+              <BugReportForm />
             </div>
 
             {!existingAvis && (

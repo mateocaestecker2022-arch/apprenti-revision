@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-    const { content, anonymous, isAvis } = await req.json()
+    const { content, anonymous, isAvis, isBug } = await req.json()
     if (!content || content.trim().length < 5) {
       return NextResponse.json({ error: 'Message trop court' }, { status: 400 })
     }
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     })
 
     const displayName = anonymous ? 'Anonyme' : (suggestion.user.name || suggestion.user.email)
-    const type = isAvis ? 'Avis' : 'Suggestion'
+    const type = isAvis ? 'Avis' : isBug ? 'Bug' : 'Suggestion'
     console.log(`[${type}] De ${displayName} (${suggestion.user.filiere}) : "${content.trim().slice(0, 80)}${content.trim().length > 80 ? '…' : ''}"`)
 
     const adminEmail = process.env.ADMIN_EMAIL
@@ -34,10 +34,10 @@ export async function POST(req: Request) {
       resend.emails.send({
         from: 'Apprenti Révision <noreply@apprenti-revision.fr>',
         to: adminEmail,
-        subject: `${isAvis ? '⭐ Nouvel avis' : '💡 Nouvelle suggestion'} — ${displayName}`,
+        subject: `${isAvis ? '⭐ Nouvel avis' : isBug ? '🐛 Nouveau bug' : '💡 Nouvelle suggestion'} — ${displayName}`,
         html: `
           <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:24px;">
-            <h2 style="color:#4f46e5;">Apprenti Révision — ${isAvis ? 'Nouvel avis' : 'Nouvelle suggestion'}</h2>
+            <h2 style="color:#4f46e5;">Apprenti Révision — ${isAvis ? 'Nouvel avis' : isBug ? 'Nouveau bug signalé' : 'Nouvelle suggestion'}</h2>
             <p><strong>De :</strong> ${anonymous ? 'Anonyme' : suggestion.user.name || 'N/A'} (${suggestion.user.email})</p>
             <p><strong>Filière :</strong> ${suggestion.user.filiere}</p>
             ${isAvis ? `<p><strong>Anonyme :</strong> ${anonymous ? 'Oui' : 'Non'}</p>` : ''}
