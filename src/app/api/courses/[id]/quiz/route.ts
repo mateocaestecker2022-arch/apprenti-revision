@@ -42,26 +42,26 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       })()
     : course.rawContent.slice(0, 2000)
 
-  // Récupérer les 3 derniers quiz pour éviter les répétitions
+  // Récupérer les 6 derniers quiz pour éviter les répétitions
   const pastQuizzes = await prisma.quiz.findMany({
     where: { courseId: params.id },
     orderBy: { createdAt: 'desc' },
-    take: 3,
+    take: 6,
   })
   const pastQuestions = pastQuizzes
     .flatMap(q => (q.questions as Array<{ question: string }>))
-    .map(q => q.question.slice(0, 80))
-    .slice(0, 20)
+    .map(q => q.question.slice(0, 100))
+    .slice(0, 40)
 
   const avoidSection = pastQuestions.length > 0
-    ? `\nINTERDIT ABSOLU — ces questions ont déjà été posées, ne les reprends PAS même reformulées :\n${pastQuestions.map(q => `- ${q}`).join('\n')}\n`
+    ? `\nCES QUESTIONS SONT INTERDITES — ne les pose PAS ni de près ni de loin, même avec des mots différents :\n${pastQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}\n\nSi tu reprends l'un de ces sujets, tu as ÉCHOUÉ. Trouve des angles NOUVEAUX.\n`
     : ''
 
-  const prompt = `Génère 20 QCM niveau Licence/Master en ${subject} couvrant équitablement toutes les sections. Max 2 questions par section.
-Mélange obligatoire : au moins 7 questions sur des DÉFINITIONS ("Qu'est-ce que...", "Définissez..."), au moins 6 questions d'APPLICATION, au moins 4 d'ANALYSE.
-"answer" = index 0-3, varie-le.
+  const prompt = `Génère 20 QCM originaux niveau Licence/Master en ${subject}. Couvre équitablement TOUTES les sections. Max 2 questions par section.
+Mélange OBLIGATOIRE : 7 DÉFINITIONS minimum, 6 APPLICATION minimum, 4 ANALYSE minimum.
+Varie l'"answer" (0, 1, 2, 3) de façon équilibrée.
 ${avoidSection}
-JSON uniquement :
+JSON uniquement, 20 questions exactement :
 {"questions":[{"question":"?","options":["A","B","C","D"],"answer":0,"explanation":"Explication courte."}]}
 
 COURS :
@@ -74,7 +74,7 @@ ${context}`
         model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
-        temperature: 0.7,
+        temperature: 0.85,
         response_format: { type: 'json_object' },
       })
       const raw = res.choices[0]?.message?.content || ''
