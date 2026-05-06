@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { DeleteCourseButton } from '@/components/DeleteCourseButton'
 import { CreateFolderButton } from '@/components/CreateFolderButton'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { SuggestionForm } from '@/components/SuggestionForm'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -193,6 +194,19 @@ export default async function DashboardPage() {
               </ul>
             </div>
           )}
+        </div>
+
+        {/* DONNER MON AVIS */}
+        <div className="mt-8">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-6">
+            <div className="mb-4">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">💡 Donner mon avis</h2>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
+                Une idée, un bug, une suggestion ? Dis-moi tout — les meilleurs avis apparaissent sur la page d&apos;accueil.
+              </p>
+            </div>
+            <SuggestionForm />
+          </div>
         </div>
       </main>
     </div>

@@ -145,6 +145,7 @@ model Suggestion {
   userId    String
   content   String
   public    Boolean  @default(false)
+  anonymous Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

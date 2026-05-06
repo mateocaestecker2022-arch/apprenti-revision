@@ -7,6 +7,7 @@ type Suggestion = {
   id: string
   content: string
   public: boolean
+  anonymous: boolean
   createdAt: string
   user: { name: string | null; email: string; filiere: string }
 }
@@ -77,9 +78,12 @@ export default function AdminSuggestionsPage() {
                       {(s.user.name || s.user.email)?.[0]?.toUpperCase()}
                     </div>
                     <div>
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{s.user.name || 'Anonyme'}</span>
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{s.user.name || s.user.email}</span>
                       <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">{s.user.email}</span>
                       <span className="text-xs text-indigo-500 dark:text-indigo-400 ml-2 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded">{s.user.filiere}</span>
+                      {s.anonymous && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">Anonyme sur accueil</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">

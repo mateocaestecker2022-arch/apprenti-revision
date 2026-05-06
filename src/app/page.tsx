@@ -11,7 +11,7 @@ export default async function Home() {
   const avis = await prisma.suggestion.findMany({
     where: { public: true },
     orderBy: { createdAt: 'desc' },
-    include: { user: { select: { name: true, filiere: true } } },
+    select: { id: true, content: true, anonymous: true, user: { select: { name: true, filiere: true } } },
   })
 
   return (
@@ -196,11 +196,15 @@ export default async function Home() {
                   <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex-1">&ldquo;{a.content}&rdquo;</p>
                   <div className="flex items-center gap-2 pt-2 border-t dark:border-gray-800">
                     <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs shrink-0">
-                      {(a.user.name || '?')[0].toUpperCase()}
+                      {a.anonymous ? '?' : (a.user.name || '?')[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{a.user.name || 'Étudiant'}</p>
-                      <p className="text-xs text-indigo-500 dark:text-indigo-400">{a.user.filiere}</p>
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                        {a.anonymous ? 'Anonyme' : (a.user.name || 'Étudiant')}
+                      </p>
+                      <p className="text-xs text-indigo-500 dark:text-indigo-400">
+                        {a.anonymous ? 'Étudiant' : a.user.filiere}
+                      </p>
                     </div>
                   </div>
                 </div>
