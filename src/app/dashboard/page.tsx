@@ -215,7 +215,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Avis — masqué si déjà soumis */}
-            {!existingAvis ? (
+            {!existingAvis && (
               <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-5">
                 <div className="mb-4">
                   <h2 className="text-base font-bold text-gray-900 dark:text-white">⭐ Laisser un avis</h2>
@@ -224,12 +224,6 @@ export default async function DashboardPage() {
                   </p>
                 </div>
                 <AvisForm filiere={userInfo?.filiere || 'Général'} />
-              </div>
-            ) : (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-5 flex flex-col items-center justify-center text-center gap-2">
-                <p className="text-2xl">⭐</p>
-                <p className="font-semibold text-green-700 dark:text-green-400 text-sm">Ton avis est en ligne !</p>
-                <p className="text-xs text-green-600 dark:text-green-500">Il est visible sur la page d&apos;accueil.</p>
               </div>
             )}
 
