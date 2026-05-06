@@ -183,9 +183,10 @@ export default async function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {[
               { icon: '🤖', title: 'Structuration IA', desc: 'Ton cours brut devient une fiche structurée avec définitions, points clés, carte mentale et références.', color: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-100 dark:border-indigo-800/30' },
-              { icon: '🧠', title: 'Quiz QCM', desc: '20 questions générées sur mesure. Difficulté variée, explication après chaque réponse.', color: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-100 dark:border-purple-800/30' },
-              { icon: '🃏', title: 'Flashcards', desc: 'Mode révision intelligent : les cartes ratées repassent en boucle jusqu\'à les maîtriser.', color: 'bg-pink-50 dark:bg-pink-900/20', border: 'border-pink-100 dark:border-pink-800/30' },
-              { icon: '✍️', title: 'Exercices pratiques', desc: 'Exercices adaptés à ta matière avec correction IA personnalisée et feedback détaillé.', color: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-800/30' },
+              { icon: '🧠', title: 'Quiz QCM', desc: '20 questions sur mesure. Difficulté variée, explication après chaque réponse.', color: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-100 dark:border-purple-800/30' },
+              { icon: '🃏', title: 'Flashcards', desc: 'Crée des cartes de révision sur tes cours. Les cartes ratées repassent en boucle jusqu\'à les maîtriser.', color: 'bg-pink-50 dark:bg-pink-900/20', border: 'border-pink-100 dark:border-pink-800/30' },
+              { icon: '🔁', title: 'Révision intelligente', desc: 'Répétition espacée (algorithme SM-2) : chaque carte est programmée au bon moment pour une mémorisation durable.', color: 'bg-violet-50 dark:bg-violet-900/20', border: 'border-violet-100 dark:border-violet-800/30' },
+              { icon: '✍️', title: 'Exercices pratiques', desc: 'Exercices adaptés à ta matière avec correction personnalisée et feedback détaillé.', color: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-800/30' },
               { icon: '📁', title: 'Classeurs', desc: 'Organise tes cours par matière dans des dossiers colorés. Exercices générés pour tout le dossier.', color: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-100 dark:border-emerald-800/30' },
               { icon: '📄', title: 'Export', desc: 'Télécharge ta fiche structurée en DOCX, ODT ou imprime en PDF en un clic.', color: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-100 dark:border-sky-800/30' },
             ].map((f) => (
