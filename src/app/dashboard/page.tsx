@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
 
-  const [courses, folders, userInfo] = await Promise.all([
+  const [courses, folders, userInfo, existingAvis] = await Promise.all([
     prisma.course.findMany({
       where: { userId: session.user.id },
       orderBy: { updatedAt: 'desc' },
@@ -24,6 +24,9 @@ export default async function DashboardPage() {
     prisma.user.findUnique({
       where: { id: session.user.id },
       select: { filiere: true },
+    }),
+    prisma.suggestion.findFirst({
+      where: { userId: session.user.id, public: true },
     }),
   ])
 
@@ -40,18 +43,11 @@ export default async function DashboardPage() {
           <span className="text-xl">📚</span>
           <span className="font-extrabold text-indigo-600 text-base sm:text-lg">Apprenti Révision</span>
         </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+        <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-gray-600 dark:text-gray-300 hidden sm:block">
             👋 {firstName}
           </span>
           <ThemeToggle />
-          <a href="/account/password" className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-lg hover:border-indigo-200 dark:hover:border-indigo-700 hidden sm:block">
-            Mot de passe
-          </a>
-          <a href="/api/auth/signout" className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-lg hover:border-red-200 dark:hover:border-red-800">
-            <span className="hidden sm:inline">Déconnexion</span>
-            <span className="sm:hidden">↪</span>
-          </a>
         </div>
       </nav>
 
@@ -201,30 +197,11 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* PARAMÈTRES + SUGGESTION + AVIS */}
-        <div className="mt-8 space-y-4">
+        {/* BAS DE PAGE : Suggestion + Avis à gauche, Paramètres à droite */}
+        <div className="mt-8 flex flex-col lg:flex-row gap-4 items-start">
 
-          {/* Paramètres */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-5">
-            <h2 className="text-base font-bold text-gray-900 dark:text-white mb-4">⚙️ Paramètres</h2>
-            <div className="flex flex-wrap gap-3">
-              <a href="/account/password"
-                className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
-                🔑 Changer le mot de passe
-              </a>
-              <a href="/account/delete"
-                className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg hover:border-red-300 dark:hover:border-red-700 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
-                🗑️ Supprimer le compte
-              </a>
-              <a href="/api/auth/signout"
-                className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg hover:border-red-300 dark:hover:border-red-700 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
-                ↪ Se déconnecter
-              </a>
-            </div>
-          </div>
-
-          {/* Suggestion + Avis côte à côte */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Gauche : Suggestion + Avis */}
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             {/* Suggestion */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-5">
@@ -237,18 +214,71 @@ export default async function DashboardPage() {
               <SuggestionForm />
             </div>
 
-            {/* Avis */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-5">
-              <div className="mb-4">
-                <h2 className="text-base font-bold text-gray-900 dark:text-white">⭐ Laisser un avis</h2>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                  Ton avis sera affiché sur la page d&apos;accueil.
-                </p>
+            {/* Avis — masqué si déjà soumis */}
+            {!existingAvis ? (
+              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-5">
+                <div className="mb-4">
+                  <h2 className="text-base font-bold text-gray-900 dark:text-white">⭐ Laisser un avis</h2>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    Affiché sur la page d&apos;accueil pour les futurs utilisateurs.
+                  </p>
+                </div>
+                <AvisForm filiere={userInfo?.filiere || 'Général'} />
               </div>
-              <AvisForm filiere={userInfo?.filiere || 'Général'} />
-            </div>
+            ) : (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-5 flex flex-col items-center justify-center text-center gap-2">
+                <p className="text-2xl">⭐</p>
+                <p className="font-semibold text-green-700 dark:text-green-400 text-sm">Ton avis est en ligne !</p>
+                <p className="text-xs text-green-600 dark:text-green-500">Il est visible sur la page d&apos;accueil.</p>
+              </div>
+            )}
 
           </div>
+
+          {/* Droite : Paramètres */}
+          <div className="w-full lg:w-60 shrink-0">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 overflow-hidden">
+              <div className="px-5 py-4 border-b dark:border-gray-800">
+                <h2 className="text-sm font-bold text-gray-900 dark:text-white tracking-wide uppercase">⚙️ Paramètres</h2>
+              </div>
+              <div className="divide-y dark:divide-gray-800">
+                <a href="/account/password" className="flex items-center gap-3 px-5 py-4 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition group">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/60 transition">
+                    <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">Mot de passe</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">Modifier mon mot de passe</p>
+                  </div>
+                </a>
+                <a href="/api/auth/signout" className="flex items-center gap-3 px-5 py-4 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition group">
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shrink-0 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50 transition">
+                    <svg className="w-4 h-4 text-orange-500 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition">Déconnexion</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">Quitter ma session</p>
+                  </div>
+                </a>
+                <a href="/account/delete" className="flex items-center gap-3 px-5 py-4 hover:bg-red-50 dark:hover:bg-red-900/20 transition group">
+                  <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0 group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition">
+                    <svg className="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-red-500 dark:text-red-400">Supprimer le compte</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">Action irréversible</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+
         </div>
       </main>
     </div>
