@@ -4,7 +4,6 @@ import { useState } from 'react'
 
 export function SuggestionForm() {
   const [content, setContent] = useState('')
-  const [anonymous, setAnonymous] = useState(false)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [error, setError] = useState('')
 
@@ -20,7 +19,7 @@ export function SuggestionForm() {
       const res = await fetch('/api/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content.trim(), anonymous }),
+        body: JSON.stringify({ content: content.trim() }),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -30,7 +29,6 @@ export function SuggestionForm() {
       }
       setStatus('sent')
       setContent('')
-      setAnonymous(false)
     } catch {
       setError('Erreur réseau, réessaie.')
       setStatus('error')
@@ -64,27 +62,15 @@ export function SuggestionForm() {
         className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-600 resize-none"
         disabled={status === 'sending'}
       />
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={anonymous}
-            onChange={e => setAnonymous(e.target.checked)}
-            className="w-4 h-4 rounded accent-indigo-600"
-            disabled={status === 'sending'}
-          />
-          <span className="text-sm text-gray-600 dark:text-gray-400">Rester anonyme sur la page d&apos;accueil</span>
-        </label>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400 dark:text-gray-600">{content.length}/600</span>
-          <button
-            type="submit"
-            disabled={status === 'sending' || content.trim().length < 5}
-            className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {status === 'sending' ? 'Envoi…' : 'Envoyer'}
-          </button>
-        </div>
+      <div className="flex items-center justify-end gap-3">
+        <span className="text-xs text-gray-400 dark:text-gray-600">{content.length}/600</span>
+        <button
+          type="submit"
+          disabled={status === 'sending' || content.trim().length < 5}
+          className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {status === 'sending' ? 'Envoi…' : 'Envoyer'}
+        </button>
       </div>
       {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
     </form>

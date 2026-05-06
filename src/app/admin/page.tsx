@@ -29,6 +29,7 @@ export default async function AdminStatsPage() {
     recentCourses,
     users,
     recentSuggestions,
+    publishedAvis,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.course.count(),
@@ -64,6 +65,11 @@ export default async function AdminStatsPage() {
       take: 5,
       orderBy: { createdAt: 'desc' },
       include: { user: { select: { name: true, email: true, filiere: true } } },
+    }),
+    prisma.suggestion.findMany({
+      where: { public: true },
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { name: true, filiere: true } } },
     }),
   ])
 
@@ -210,6 +216,42 @@ export default async function AdminStatsPage() {
                   </div>
                   <div className="px-5 py-4">
                     <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{s.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ── AVIS PUBLIÉS ── */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">⭐ Avis publiés sur la landing</h2>
+            <a href="/admin/suggestions" className="text-xs text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+              Gérer les avis
+            </a>
+          </div>
+          {publishedAvis.length === 0 ? (
+            <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-10 text-center shadow-sm">
+              <p className="text-3xl mb-2">⭐</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">Aucun avis publié sur la page d&apos;accueil.</p>
+              <a href="/admin/suggestions" className="mt-3 inline-block text-xs text-indigo-600 dark:text-indigo-400 underline">
+                Publier des suggestions comme avis →
+              </a>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {publishedAvis.map((a) => (
+                <div key={a.id} className="bg-white dark:bg-gray-900 border border-green-200 dark:border-green-800 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex-1">&ldquo;{a.content}&rdquo;</p>
+                  <div className="flex items-center gap-2 pt-2 border-t dark:border-gray-800">
+                    <div className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center text-green-600 dark:text-green-400 font-bold text-xs shrink-0">
+                      {(a.user.name || '?')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{a.user.name || 'Étudiant'}</p>
+                      <p className="text-xs text-green-600 dark:text-green-400">{a.user.filiere}</p>
+                    </div>
                   </div>
                 </div>
               ))}
