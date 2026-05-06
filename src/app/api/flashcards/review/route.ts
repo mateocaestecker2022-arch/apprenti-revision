@@ -10,9 +10,13 @@ export async function GET() {
   const userId = session.user.id
   const now = new Date()
 
-  // 1. Cartes avec une révision en retard
+  // Minuit aujourd'hui — pour exclure les cartes déjà révisées aujourd'hui
+  const todayMidnight = new Date()
+  todayMidnight.setHours(0, 0, 0, 0)
+
+  // 1. Cartes avec une révision en retard ET pas encore révisées aujourd'hui
   const dueReviews = await prisma.flashcardReview.findMany({
-    where: { userId, nextReview: { lte: now } },
+    where: { userId, nextReview: { lte: now }, updatedAt: { lt: todayMidnight } },
     include: {
       flashcard: {
         include: { course: { select: { title: true, id: true } } },
@@ -66,6 +70,12 @@ export async function GET() {
       isNew: true,
     })),
   ]
+
+  // Mélange aléatoire pour alterner les matières
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[cards[i], cards[j]] = [cards[j], cards[i]]
+  }
 
   return NextResponse.json({ cards })
 }
