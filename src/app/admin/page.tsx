@@ -182,36 +182,37 @@ export default async function AdminStatsPage() {
           </div>
         </section>
 
-        {/* ── SUGGESTIONS ── */}
+        {/* ── SUGGESTIONS PRIVÉES ── */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">💡 Suggestions récentes</h2>
-            {totalSuggestions > 0 && (
-              <a href="/admin/suggestions" className="text-xs text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
-                Voir toutes ({totalSuggestions})
-              </a>
-            )}
+            <div>
+              <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">💡 Suggestions des utilisateurs</h2>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Idées, bugs et retours privés — non visibles sur le site</p>
+            </div>
+            <a href="/admin/suggestions" className="text-xs text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+              Gérer tout →
+            </a>
           </div>
-          {recentSuggestions.length === 0 ? (
+          {recentSuggestions.filter((s: { public: boolean }) => !s.public).length === 0 ? (
             <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-10 text-center shadow-sm">
               <p className="text-3xl mb-2">💬</p>
-              <p className="text-gray-400 dark:text-gray-500 text-sm">Aucune suggestion pour l&apos;instant.</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">Aucune suggestion privée pour l&apos;instant.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {recentSuggestions.map((s) => (
-                <div key={s.id} className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between px-5 py-3 border-b dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
+              {recentSuggestions.filter((s: { public: boolean }) => !s.public).map((s) => (
+                <div key={s.id} className="bg-white dark:bg-gray-900 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-3 border-b dark:border-gray-800 bg-indigo-50/50 dark:bg-indigo-900/10">
                     <div className="flex items-center gap-2 min-w-0">
                       <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs shrink-0">
                         {(s.user.name || s.user.email)?.[0]?.toUpperCase()}
                       </div>
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{s.user.name || 'Anonyme'}</span>
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{s.user.name || s.user.email}</span>
                       <span className="text-xs text-gray-400 dark:text-gray-500 truncate hidden sm:block">{s.user.email}</span>
                       <span className="text-xs text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded shrink-0">{s.user.filiere}</span>
                     </div>
                     <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 ml-3">
-                      {new Date(s.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(s.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                   <div className="px-5 py-4">
@@ -219,6 +220,11 @@ export default async function AdminStatsPage() {
                   </div>
                 </div>
               ))}
+              {recentSuggestions.filter((s: { public: boolean }) => !s.public).length < recentSuggestions.filter((s: { public: boolean }) => !s.public).length && (
+                <a href="/admin/suggestions" className="block text-center text-xs text-indigo-600 dark:text-indigo-400 py-2 hover:underline">
+                  Voir toutes →
+                </a>
+              )}
             </div>
           )}
         </section>
