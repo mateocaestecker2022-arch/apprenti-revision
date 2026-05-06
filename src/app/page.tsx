@@ -150,7 +150,7 @@ export default async function Home() {
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
-                        {a.anonymous ? 'Anonyme' : (a.user.name || 'Étudiant')}
+                        {a.anonymous ? 'Anonyme' : (a.user.name?.split(' ')[0] || 'Étudiant')}
                       </p>
                       <p className="text-xs text-indigo-500 dark:text-indigo-400">
                         {a.anonymous ? 'Étudiant' : a.user.filiere}
