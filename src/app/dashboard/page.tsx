@@ -5,12 +5,13 @@ import { DeleteCourseButton } from '@/components/DeleteCourseButton'
 import { CreateFolderButton } from '@/components/CreateFolderButton'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { SuggestionForm } from '@/components/SuggestionForm'
+import { AvisForm } from '@/components/AvisForm'
 
 export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
 
-  const [courses, folders] = await Promise.all([
+  const [courses, folders, userInfo] = await Promise.all([
     prisma.course.findMany({
       where: { userId: session.user.id },
       orderBy: { updatedAt: 'desc' },
@@ -19,6 +20,10 @@ export default async function DashboardPage() {
     prisma.folder.findMany({
       where: { userId: session.user.id },
       include: { _count: { select: { courses: true } } },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { filiere: true },
     }),
   ])
 
@@ -196,16 +201,53 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* DONNER MON AVIS */}
-        <div className="mt-8">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-6">
-            <div className="mb-4">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">💡 Donner mon avis</h2>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
-                Une idée, un bug, une suggestion ? Dis-moi tout — les meilleurs avis apparaissent sur la page d&apos;accueil.
-              </p>
+        {/* PARAMÈTRES + SUGGESTION + AVIS */}
+        <div className="mt-8 space-y-4">
+
+          {/* Paramètres */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-5">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white mb-4">⚙️ Paramètres</h2>
+            <div className="flex flex-wrap gap-3">
+              <a href="/account/password"
+                className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+                🔑 Changer le mot de passe
+              </a>
+              <a href="/account/delete"
+                className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg hover:border-red-300 dark:hover:border-red-700 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                🗑️ Supprimer le compte
+              </a>
+              <a href="/api/auth/signout"
+                className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg hover:border-red-300 dark:hover:border-red-700 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                ↪ Se déconnecter
+              </a>
             </div>
-            <SuggestionForm />
+          </div>
+
+          {/* Suggestion + Avis côte à côte */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            {/* Suggestion */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-5">
+              <div className="mb-4">
+                <h2 className="text-base font-bold text-gray-900 dark:text-white">💡 Suggestion</h2>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                  Une idée, un bug, une amélioration ? Je lis tout.
+                </p>
+              </div>
+              <SuggestionForm />
+            </div>
+
+            {/* Avis */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 p-5">
+              <div className="mb-4">
+                <h2 className="text-base font-bold text-gray-900 dark:text-white">⭐ Laisser un avis</h2>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                  Ton avis sera affiché sur la page d&apos;accueil.
+                </p>
+              </div>
+              <AvisForm filiere={userInfo?.filiere || 'Général'} />
+            </div>
+
           </div>
         </div>
       </main>
