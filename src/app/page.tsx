@@ -119,6 +119,57 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* AVIS — juste après le hero pour crédibilité immédiate */}
+      {avis.length > 0 && (
+        <section className="py-16 px-4 bg-slate-50 dark:bg-gray-900">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <span className="inline-flex items-center gap-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                {avis.length} étudiant{avis.length > 1 ? 's' : ''} témoignent
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
+                Ce qu&apos;ils en pensent
+              </h2>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">Des étudiants qui utilisent Apprenti Révision au quotidien.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              {avis.map((a) => (
+                <div key={a.id} className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex gap-0.5">
+                    {[1,2,3,4,5].map(i => (
+                      <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex-1">&ldquo;{a.content}&rdquo;</p>
+                  <div className="flex items-center gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm shrink-0">
+                      {a.anonymous ? '?' : (a.user.name || '?')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                        {a.anonymous ? 'Anonyme' : (a.user.name || 'Étudiant')}
+                      </p>
+                      <p className="text-xs text-indigo-500 dark:text-indigo-400">
+                        {a.anonymous ? 'Étudiant' : a.user.filiere}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-8">
+              Tu utilises Apprenti Révision ?{' '}
+              <a href="/login" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+                Connecte-toi pour laisser un avis →
+              </a>
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* FEATURES */}
       <section className="py-20 px-4 bg-white dark:bg-gray-950">
         <div className="max-w-5xl mx-auto">
@@ -185,54 +236,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      {/* AVIS */}
-      {avis.length > 0 && (
-        <section className="py-20 px-4 bg-white dark:bg-gray-950">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-3">
-                Ce qu&apos;ils en pensent
-              </h2>
-              <p className="text-gray-400 dark:text-gray-500 text-sm">Des étudiants qui utilisent Apprenti Révision au quotidien.</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {avis.map((a) => (
-                <div key={a.id} className="bg-slate-50 dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-6 flex flex-col gap-4 hover:shadow-md transition-shadow">
-                  {/* Étoiles */}
-                  <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map(i => (
-                      <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex-1">&ldquo;{a.content}&rdquo;</p>
-                  <div className="flex items-center gap-3 pt-3 border-t dark:border-gray-800">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm shrink-0">
-                      {a.anonymous ? '?' : (a.user.name || '?')[0].toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
-                        {a.anonymous ? 'Anonyme' : (a.user.name || 'Étudiant')}
-                      </p>
-                      <p className="text-xs text-indigo-500 dark:text-indigo-400">
-                        {a.anonymous ? 'Étudiant' : a.user.filiere}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-10">
-              Tu utilises Apprenti Révision ?{' '}
-              <a href="/login" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
-                Connecte-toi pour laisser un avis →
-              </a>
-            </p>
-          </div>
-        </section>
-      )}
 
       {/* CTA FINAL */}
       <section className="py-20 px-4 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 relative overflow-hidden">
