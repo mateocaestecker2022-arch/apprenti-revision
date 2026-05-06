@@ -18,6 +18,10 @@ export default function AdminSuggestionsPage() {
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
   const [tab, setTab] = useState<'suggestions' | 'bugs' | 'avis'>('suggestions')
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyMessage, setReplyMessage] = useState('')
+  const [sendingReply, setSendingReply] = useState(false)
+  const [replySent, setReplySent] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/suggestions/list')
@@ -38,6 +42,27 @@ export default function AdminSuggestionsPage() {
     })
     setSuggestions(prev => prev.map(s => s.id === id ? { ...s, public: !current } : s))
     setToggling(null)
+  }
+
+  async function sendReply(s: Suggestion) {
+    if (!replyMessage.trim()) return
+    setSendingReply(true)
+    const originalContent = s.content.startsWith('[BUG] ') ? s.content.slice(6) : s.content
+    await fetch('/api/admin/reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        toEmail: s.user.email,
+        toName: s.user.name,
+        message: replyMessage,
+        originalContent,
+      }),
+    })
+    setSendingReply(false)
+    setReplyingTo(null)
+    setReplyMessage('')
+    setReplySent(s.id)
+    setTimeout(() => setReplySent(null), 3000)
   }
 
   const bugs = suggestions.filter(s => !s.public && s.content.startsWith('[BUG] '))
@@ -145,11 +170,10 @@ export default function AdminSuggestionsPage() {
                       <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">Anonyme</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 shrink-0 ml-2">
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
                     <span className="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">
                       {new Date(s.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
-                    {/* Bouton toggle uniquement sur l'onglet suggestions privées */}
                     {tab === 'suggestions' && (
                       <button
                         onClick={() => toggle(s.id, s.public)}
@@ -170,12 +194,55 @@ export default function AdminSuggestionsPage() {
                     )}
                   </div>
                 </div>
+
                 {/* Contenu */}
                 <div className="px-5 py-4">
                   <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
                     {s.content.startsWith('[BUG] ') ? s.content.slice(6) : s.content}
                   </p>
                 </div>
+
+                {/* Zone réponse */}
+                {tab !== 'avis' && (
+                  <div className="px-5 pb-4">
+                    {replySent === s.id ? (
+                      <p className="text-xs text-green-600 dark:text-green-400 font-medium">✓ Réponse envoyée à {s.user.email}</p>
+                    ) : replyingTo === s.id ? (
+                      <div className="border dark:border-gray-700 rounded-xl overflow-hidden mt-1">
+                        <textarea
+                          autoFocus
+                          value={replyMessage}
+                          onChange={e => setReplyMessage(e.target.value)}
+                          placeholder={`Répondre à ${s.user.name || s.user.email}…`}
+                          rows={3}
+                          className="w-full px-3 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none resize-none"
+                        />
+                        <div className="flex items-center justify-end gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800/60 border-t dark:border-gray-700">
+                          <button
+                            onClick={() => { setReplyingTo(null); setReplyMessage('') }}
+                            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 px-2 py-1"
+                          >
+                            Annuler
+                          </button>
+                          <button
+                            onClick={() => sendReply(s)}
+                            disabled={sendingReply || !replyMessage.trim()}
+                            className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+                          >
+                            {sendingReply ? 'Envoi…' : 'Envoyer →'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setReplyingTo(s.id); setReplyMessage('') }}
+                        className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-1"
+                      >
+                        ↩ Répondre par email
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
