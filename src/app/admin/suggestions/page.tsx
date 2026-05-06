@@ -17,7 +17,7 @@ export default function AdminSuggestionsPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
-  const [tab, setTab] = useState<'suggestions' | 'avis'>('suggestions')
+  const [tab, setTab] = useState<'suggestions' | 'bugs' | 'avis'>('suggestions')
 
   useEffect(() => {
     fetch('/api/admin/suggestions/list')
@@ -40,9 +40,10 @@ export default function AdminSuggestionsPage() {
     setToggling(null)
   }
 
-  const privees = suggestions.filter(s => !s.public)
+  const bugs = suggestions.filter(s => !s.public && s.content.startsWith('[BUG] '))
+  const privees = suggestions.filter(s => !s.public && !s.content.startsWith('[BUG] '))
   const avis = suggestions.filter(s => s.public)
-  const displayed = tab === 'suggestions' ? privees : avis
+  const displayed = tab === 'suggestions' ? privees : tab === 'bugs' ? bugs : avis
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
@@ -59,7 +60,9 @@ export default function AdminSuggestionsPage() {
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">💬 Suggestions & Avis</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm">
-            <span className="text-indigo-600 dark:text-indigo-400 font-medium">{privees.length} suggestion{privees.length !== 1 ? 's' : ''} privée{privees.length !== 1 ? 's' : ''}</span>
+            <span className="text-indigo-600 dark:text-indigo-400 font-medium">{privees.length} suggestion{privees.length !== 1 ? 's' : ''}</span>
+            {' · '}
+            <span className="text-red-500 font-medium">{bugs.length} bug{bugs.length !== 1 ? 's' : ''}</span>
             {' · '}
             <span className="text-green-600 dark:text-green-400 font-medium">{avis.length} avis publié{avis.length !== 1 ? 's' : ''}</span>
           </p>
@@ -69,7 +72,7 @@ export default function AdminSuggestionsPage() {
         <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
           <button
             onClick={() => setTab('suggestions')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold transition ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition ${
               tab === 'suggestions'
                 ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
@@ -83,8 +86,23 @@ export default function AdminSuggestionsPage() {
             )}
           </button>
           <button
+            onClick={() => setTab('bugs')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition ${
+              tab === 'bugs'
+                ? 'bg-white dark:bg-gray-900 text-red-500 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >
+            🐛 Bugs
+            {bugs.length > 0 && (
+              <span className="bg-red-100 dark:bg-red-900/40 text-red-500 text-xs px-1.5 py-0.5 rounded-full">
+                {bugs.length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setTab('avis')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold transition ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition ${
               tab === 'avis'
                 ? 'bg-white dark:bg-gray-900 text-green-600 dark:text-green-400 shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
@@ -103,16 +121,16 @@ export default function AdminSuggestionsPage() {
           <div className="text-center py-16 text-gray-400">Chargement...</div>
         ) : displayed.length === 0 ? (
           <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-14 text-center shadow-sm">
-            <p className="text-4xl mb-3">{tab === 'suggestions' ? '💡' : '⭐'}</p>
+            <p className="text-4xl mb-3">{tab === 'suggestions' ? '💡' : tab === 'bugs' ? '🐛' : '⭐'}</p>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              {tab === 'suggestions' ? 'Aucune suggestion pour l\'instant.' : 'Aucun avis publié.'}
+              {tab === 'suggestions' ? 'Aucune suggestion.' : tab === 'bugs' ? 'Aucun bug signalé.' : 'Aucun avis publié.'}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {displayed.map((s) => (
               <div key={s.id} className={`bg-white dark:bg-gray-900 border rounded-2xl shadow-sm overflow-hidden ${
-                s.public ? 'border-green-200 dark:border-green-800' : 'border-gray-100 dark:border-gray-800'
+                s.public ? 'border-green-200 dark:border-green-800' : tab === 'bugs' ? 'border-red-200 dark:border-red-900' : 'border-gray-100 dark:border-gray-800'
               }`}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3 border-b dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
@@ -154,7 +172,9 @@ export default function AdminSuggestionsPage() {
                 </div>
                 {/* Contenu */}
                 <div className="px-5 py-4">
-                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{s.content}</p>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                    {s.content.startsWith('[BUG] ') ? s.content.slice(6) : s.content}
+                  </p>
                 </div>
               </div>
             ))}

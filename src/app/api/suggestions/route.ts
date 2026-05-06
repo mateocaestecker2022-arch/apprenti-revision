@@ -15,10 +15,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message trop court' }, { status: 400 })
     }
 
+    const finalContent = isBug ? `[BUG] ${content.trim()}` : content.trim()
+
     const suggestion = await prisma.suggestion.create({
       data: {
         userId: session.user.id,
-        content: content.trim(),
+        content: finalContent,
         anonymous: !!anonymous,
         public: !!isAvis,
       },
