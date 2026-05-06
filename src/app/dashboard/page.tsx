@@ -197,10 +197,10 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* BAS DE PAGE : Suggestion + Avis à gauche, Paramètres à droite */}
+        {/* BAS DE PAGE : Paramètres à gauche, Suggestion + Avis à droite */}
         <div className="mt-8 flex flex-col lg:flex-row gap-4 items-start">
 
-          {/* Gauche : Suggestion + Avis */}
+          {/* Droite : Suggestion + Avis */}
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             {/* Suggestion */}
@@ -235,8 +235,8 @@ export default async function DashboardPage() {
 
           </div>
 
-          {/* Droite : Paramètres */}
-          <div className="w-full lg:w-60 shrink-0">
+          {/* Gauche : Paramètres */}
+          <div className="w-full lg:w-60 shrink-0 lg:order-first">
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 overflow-hidden">
               <div className="px-5 py-4 border-b dark:border-gray-800">
                 <h2 className="text-sm font-bold text-gray-900 dark:text-white tracking-wide uppercase">⚙️ Paramètres</h2>
