@@ -20,6 +20,7 @@ export async function POST(req: Request) {
         userId: session.user.id,
         content: content.trim(),
         anonymous: !!anonymous,
+        public: true,
       },
       include: { user: { select: { name: true, email: true, filiere: true } } },
     })

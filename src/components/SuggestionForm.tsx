@@ -39,8 +39,8 @@ export function SuggestionForm() {
     return (
       <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6 text-center">
         <p className="text-2xl mb-2">✅</p>
-        <p className="font-semibold text-green-700 dark:text-green-400">Merci pour ton retour !</p>
-        <p className="text-sm text-green-600 dark:text-green-500 mt-1">Ton avis a bien été envoyé.</p>
+        <p className="font-semibold text-green-700 dark:text-green-400">Merci pour ton avis !</p>
+        <p className="text-sm text-green-600 dark:text-green-500 mt-1">Il est maintenant visible sur la page d&apos;accueil.</p>
         <button
           onClick={() => setStatus('idle')}
           className="mt-4 text-xs text-green-600 dark:text-green-400 underline hover:no-underline"
