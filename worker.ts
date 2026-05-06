@@ -50,11 +50,11 @@ function splitIntoChunks(text: string): string[] {
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
-async function callGroq(prompt: string, retries = 5): Promise<string> {
+async function callGroq(prompt: string, retries = 3, model = 'llama-3.1-8b-instant'): Promise<string> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const res = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+        model,
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 4500,
         temperature: 0.2,
@@ -64,8 +64,8 @@ async function callGroq(prompt: string, retries = 5): Promise<string> {
     } catch (err: unknown) {
       const status = (err as { status?: number }).status
       if (status === 429) {
-        const wait = 30000 * (attempt + 1) // backoff : 30s, 60s, 90s, 120s, 150s
-        console.log(`[Worker] Rate limit Groq, attente ${wait / 1000}s... (tentative ${attempt + 1}/${retries})`)
+        const wait = 20000 * (attempt + 1) // backoff : 20s, 40s, 60s
+        console.log(`[Worker] Rate limit Groq (${model}), attente ${wait / 1000}s... (tentative ${attempt + 1}/${retries})`)
         await sleep(wait)
       } else if (attempt < retries - 1) {
         await sleep(5000)
@@ -533,7 +533,7 @@ Format JSON valide uniquement : {"title":"Titre du cours","summary":"Résumé en
       .join('\n')
 
     const enrichPrompt = getEnrichPrompt(subject, synthese)
-    const enrichRaw = await callGroq(enrichPrompt)
+    const enrichRaw = await callGroq(enrichPrompt, 3, 'llama-3.3-70b-versatile')
     const enrichMatch = enrichRaw.match(/\{[\s\S]*\}/)
     if (enrichMatch) {
       const enrichData = JSON.parse(enrichMatch[0])
@@ -551,7 +551,7 @@ Format JSON valide uniquement : {"title":"Titre du cours","summary":"Résumé en
     const titres = (enrichResult2.sections || []).map(s => s.title).join(', ')
 
     const recherchePrompt = getRecherchePrompt(subject, enrichResult2.title || 'ce sujet', titres)
-    const rechercheRaw = await callGroq(recherchePrompt)
+    const rechercheRaw = await callGroq(recherchePrompt, 3, 'llama-3.3-70b-versatile')
     const rechercheMatch = rechercheRaw.match(/\{[\s\S]*\}/)
     if (rechercheMatch) {
       const rechercheData = JSON.parse(rechercheMatch[0])
@@ -616,7 +616,7 @@ const worker = new Worker(
       }
     }
   },
-  { connection, concurrency: 1, lockDuration: 1800000 }
+  { connection, concurrency: 1, lockDuration: 3600000 }
 )
 
 worker.on('completed', (job) => console.log(`Job ${job.id} completed`))
