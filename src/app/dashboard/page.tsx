@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
 
-  const [courses, folders, userInfo, existingAvis] = await Promise.all([
+  const [courses, folders, userInfo, existingAvis, dueCount, flashcardCount] = await Promise.all([
     prisma.course.findMany({
       where: { userId: session.user.id },
       orderBy: { updatedAt: 'desc' },
@@ -27,6 +27,12 @@ export default async function DashboardPage() {
     }),
     prisma.suggestion.findFirst({
       where: { userId: session.user.id, public: true },
+    }),
+    prisma.flashcardReview.count({
+      where: { userId: session.user.id, nextReview: { lte: new Date() } },
+    }),
+    prisma.flashcard.count({
+      where: { course: { userId: session.user.id } },
     }),
   ])
 
@@ -63,6 +69,39 @@ export default async function DashboardPage() {
             <span>+</span> Nouveau cours
           </a>
         </div>
+
+        {/* RÉVISION DU JOUR */}
+        {flashcardCount > 0 && (
+          <a
+            href="/revision"
+            className={`flex items-center gap-4 rounded-2xl px-5 py-4 mb-6 border transition group ${
+              dueCount > 0
+                ? 'bg-indigo-600 border-indigo-500 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30'
+                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
+            }`}
+          >
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 ${
+              dueCount > 0 ? 'bg-indigo-500' : 'bg-indigo-50 dark:bg-indigo-900/40'
+            }`}>
+              🧠
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`font-bold text-sm ${dueCount > 0 ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                {dueCount > 0
+                  ? `${dueCount} carte${dueCount > 1 ? 's' : ''} à réviser aujourd'hui`
+                  : 'Révision intelligente'}
+              </p>
+              <p className={`text-xs mt-0.5 ${dueCount > 0 ? 'text-indigo-200' : 'text-gray-400 dark:text-gray-500'}`}>
+                {dueCount > 0
+                  ? 'Clique pour commencer ta session de révision'
+                  : 'Aucune carte due — tout est à jour !'}
+              </p>
+            </div>
+            <svg className={`w-5 h-5 shrink-0 transition group-hover:translate-x-1 ${dueCount > 0 ? 'text-indigo-200' : 'text-gray-300 dark:text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        )}
 
         {/* STATS */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">

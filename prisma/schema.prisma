@@ -17,11 +17,13 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  folders     Folder[]
-  courses     Course[]
-  sessions    Session[]
-  accounts    Account[]
-  suggestions Suggestion[]
+  folders          Folder[]
+  courses          Course[]
+  sessions         Session[]
+  accounts         Account[]
+  suggestions      Suggestion[]
+  flashcardReviews FlashcardReview[]
+  studySessions    StudySession[]
 }
 
 model Account {
@@ -120,7 +122,37 @@ model Flashcard {
   question String
   answer   String
 
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course  Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  reviews FlashcardReview[]
+}
+
+model FlashcardReview {
+  id          String   @id @default(cuid())
+  flashcardId String
+  userId      String
+  easeFactor  Float    @default(2.5)
+  interval    Int      @default(0)
+  repetition  Int      @default(0)
+  nextReview  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  flashcard Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([flashcardId, userId])
+  @@index([userId, nextReview])
+}
+
+model StudySession {
+  id           String   @id @default(cuid())
+  userId       String
+  cardsStudied Int      @default(0)
+  date         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
 }
 
 model Score {
