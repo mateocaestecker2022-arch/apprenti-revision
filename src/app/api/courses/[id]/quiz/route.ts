@@ -110,6 +110,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
   try {
+    // [FIX #4] Vérifier que le cours appartient à l'user avant de retourner le quiz
+    const course = await prisma.course.findFirst({ where: { id: params.id, userId: session.user.id } })
+    if (!course) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+
     const quiz = await prisma.quiz.findFirst({
       where: { courseId: params.id },
       orderBy: { createdAt: 'desc' },

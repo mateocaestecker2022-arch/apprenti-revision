@@ -16,6 +16,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Aucun fichier' }, { status: 400 })
   }
 
+  // [FIX #3] Limite de taille — évite DoS par chargement en RAM
+  if (file.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Fichier trop volumineux (max 10 Mo)' }, { status: 413 })
+  }
+
   const ext = file.name.split('.').pop()?.toLowerCase()
   const buffer = Buffer.from(await file.arrayBuffer())
 

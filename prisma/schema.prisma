@@ -152,6 +152,7 @@ model StudySession {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, date]) // [FIX #9] Contrainte pour éviter les doublons de session par jour
   @@index([userId, date])
 }
 

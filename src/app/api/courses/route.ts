@@ -15,6 +15,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Contenu trop court' }, { status: 400 })
   }
 
+  // [FIX #8] Limite haute — évite des centaines de chunks Groq et un coût non maîtrisé
+  if (content.length > 150_000) {
+    return NextResponse.json({ error: 'Contenu trop volumineux (max 150 000 caractères)' }, { status: 413 })
+  }
+
   try {
     // Si aucun subject fourni, utilise la filière de l'utilisateur
     const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { filiere: true } })

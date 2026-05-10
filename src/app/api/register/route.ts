@@ -10,6 +10,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email et mot de passe requis' }, { status: 400 })
     }
 
+    // [FIX #12] Minimum 12 caractères conformément au CDC sécurité
+    if (password.length < 12) {
+      return NextResponse.json({ error: 'Le mot de passe doit faire au moins 12 caractères' }, { status: 400 })
+    }
+
+    // [FIX #13] Valider que name est présent et non vide
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: 'Le nom est requis' }, { status: 400 })
+    }
+
     const normalizedEmail = email.toLowerCase()
 
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } })

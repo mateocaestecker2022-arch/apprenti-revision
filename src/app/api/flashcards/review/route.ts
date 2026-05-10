@@ -91,6 +91,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
   }
 
+  // [FIX #7] Valider que quality est une valeur attendue par SM-2
+  if (![1, 3, 5].includes(quality)) {
+    return NextResponse.json({ error: 'Quality invalide (1, 3 ou 5 attendu)' }, { status: 400 })
+  }
+
+  // [FIX #6] Vérifier que la flashcard appartient bien à l'user
+  const flashcard = await prisma.flashcard.findFirst({
+    where: { id: flashcardId, course: { userId } },
+  })
+  if (!flashcard) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+
   // Récupérer l'état actuel de la carte
   const existing = await prisma.flashcardReview.findUnique({
     where: { flashcardId_userId: { flashcardId, userId } },
@@ -122,7 +133,7 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  // Incrémenter la session du jour
+  // [FIX #9] Incrémenter la session du jour — sans race condition (findFirst + update séquentiel sécurisé)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const tomorrow = new Date(today)
@@ -138,8 +149,16 @@ export async function POST(req: NextRequest) {
       data: { cardsStudied: { increment: 1 } },
     })
   } else {
-    await prisma.studySession.create({
-      data: { userId, cardsStudied: 1 },
+    // Utiliser createMany avec skipDuplicates pour absorber les doublons si race condition
+    await prisma.studySession.createMany({
+      data: [{ userId, date: today, cardsStudied: 1 }],
+      skipDuplicates: true,
+    }).catch(async () => {
+      // Fallback : si la session vient d'être créée par une autre req concurrente
+      await prisma.studySession.updateMany({
+        where: { userId, date: { gte: today, lt: tomorrow } },
+        data: { cardsStudied: { increment: 1 } },
+      })
     })
   }
 

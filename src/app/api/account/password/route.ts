@@ -16,8 +16,9 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json({ error: 'Le nouveau mot de passe doit faire au moins 8 caractères' }, { status: 400 })
+    // [FIX #12] Minimum 12 caractères conformément au CDC sécurité
+    if (newPassword.length < 12) {
+      return NextResponse.json({ error: 'Le nouveau mot de passe doit faire au moins 12 caractères' }, { status: 400 })
     }
 
     const user = await prisma.user.findUnique({ where: { id: session.user.id } })

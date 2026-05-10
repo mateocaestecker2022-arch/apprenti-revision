@@ -37,11 +37,12 @@ export async function POST(req: NextRequest) {
   const cutoff = new Date(Date.now() - STUCK_MINUTES * 60 * 1000)
 
   if (courseId) {
-    await prisma.course.update({
-      where: { id: courseId },
+    // [FIX #10] Filtre sur status 'processing' — évite de passer un cours 'ready' en 'error'
+    const result = await prisma.course.updateMany({
+      where: { id: courseId, status: 'processing' },
       data: { status: 'error' },
     })
-    return NextResponse.json({ unblocked: 1 })
+    return NextResponse.json({ unblocked: result.count })
   }
 
   const { count } = await prisma.course.updateMany({

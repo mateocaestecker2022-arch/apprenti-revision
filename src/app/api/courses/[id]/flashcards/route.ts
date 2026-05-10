@@ -80,6 +80,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
   try {
+    // [FIX #4] Vérifier que le cours appartient à l'user avant de retourner ses flashcards
+    const course = await prisma.course.findFirst({ where: { id: params.id, userId: session.user.id } })
+    if (!course) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+
     const cards = await prisma.flashcard.findMany({ where: { courseId: params.id } })
     return NextResponse.json(cards)
   } catch (error) {
