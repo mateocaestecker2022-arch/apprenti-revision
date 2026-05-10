@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { courseQueue } from '@/lib/queue'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -18,6 +19,16 @@ export async function POST(req: NextRequest) {
   // [FIX #8] Limite haute — évite des centaines de chunks Groq et un coût non maîtrisé
   if (content.length > 150_000) {
     return NextResponse.json({ error: 'Contenu trop volumineux (max 150 000 caractères)' }, { status: 413 })
+  }
+
+  // Quota Groq : 5 cours créés max par user par 24h
+  const rl = await rateLimit(`groq-quota:${session.user.id}`, 5, 24 * 60 * 60)
+  if (!rl.allowed) {
+    const h = Math.ceil(rl.retryAfter / 3600)
+    return NextResponse.json(
+      { error: `Quota atteint : 5 cours maximum par jour. Réessaie dans ${h}h.` },
+      { status: 429 }
+    )
   }
 
   try {

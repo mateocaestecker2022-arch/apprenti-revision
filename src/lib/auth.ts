@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
+import { rateLimit } from './rateLimit'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -19,11 +20,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Mot de passe', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null
 
+        // Rate limit : 5 tentatives / 15 min par email
+        const email = (credentials.email as string).toLowerCase()
+        const rl = await rateLimit(`login:${email}`, 5, 15 * 60)
+        if (!rl.allowed) return null
+
         const user = await prisma.user.findUnique({
-          where: { email: (credentials.email as string).toLowerCase() },
+          where: { email },
         })
 
         if (!user || !user.password) return null
@@ -32,6 +38,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           credentials.password as string,
           user.password
         )
+
+        // Reset le compteur si login réussi
+        if (isValid) {
+          const { redis } = await import('./redis')
+          await redis.del(`rl:login:${email}`)
+        }
 
         if (!isValid) return null
 

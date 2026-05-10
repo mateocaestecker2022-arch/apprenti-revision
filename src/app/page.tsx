@@ -266,6 +266,11 @@ export default async function Home() {
             <span className="font-bold text-gray-400 text-sm">Apprenti Révision</span>
           </div>
           <p className="text-xs">© 2026 Apprenti Révision — Conçu pour les étudiants</p>
+          <div className="flex gap-4 mt-2 justify-center flex-wrap">
+            <Link href="/mentions-legales" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">Mentions légales</Link>
+            <Link href="/cgu" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">CGU</Link>
+            <Link href="/politique-confidentialite" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">Politique de confidentialité</Link>
+          </div>
           <div className="flex items-center gap-4 text-xs">
             <Link href="/login" className="hover:text-gray-300 transition">Se connecter</Link>
             <Link href="/register" className="hover:text-gray-300 transition">Créer un compte</Link>
