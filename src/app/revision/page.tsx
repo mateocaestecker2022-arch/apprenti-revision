@@ -254,12 +254,41 @@ export default function RevisionPage() {
           </button>
         )}
 
-        {/* Légende SM-2 discrète */}
-        {flipped && (
-          <p className="text-xs text-gray-400 dark:text-gray-600 text-center mt-4">
-            À revoir = demain · Moyen = dans 6j · Maîtrisé = intervalle long
+        {/* Légende SM-2 */}
+        <div className="mt-8 bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-4 text-sm">
+          <p className="font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+            <span>🔁</span> Comment fonctionne la révision intelligente ?
           </p>
-        )}
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
+            L&apos;algorithme <span className="font-semibold text-indigo-600 dark:text-indigo-400">SM-2</span> (SuperMemo 2) adapte automatiquement la fréquence de révision de chaque carte selon tes réponses. Plus tu maîtrises une carte, plus l&apos;intervalle s&apos;allonge — tu la reverras de moins en moins souvent.
+          </p>
+          <div className="space-y-2">
+            <div className="flex items-start gap-3 p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800">
+              <span className="text-base shrink-0 mt-0.5">✗</span>
+              <div>
+                <p className="font-semibold text-red-600 dark:text-red-400 text-xs">À revoir</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tu n&apos;as pas su répondre. La carte revient <span className="font-medium">demain</span>, et le compteur repart à zéro.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
+              <span className="text-base shrink-0 mt-0.5">〜</span>
+              <div>
+                <p className="font-semibold text-amber-600 dark:text-amber-400 text-xs">Moyen</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tu hésites. La carte revient dans <span className="font-medium">6 jours</span>, l&apos;intervalle progresse doucement.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-2.5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
+              <span className="text-base shrink-0 mt-0.5">✓</span>
+              <div>
+                <p className="font-semibold text-green-600 dark:text-green-400 text-xs">Maîtrisé</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tu savais parfaitement. L&apos;intervalle <span className="font-medium">double à chaque fois</span> — quelques semaines, puis des mois.</p>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-600 mt-3 text-center">
+            Chaque carte a son propre rythme · Max 20 cartes par session
+          </p>
+        </div>
       </main>
     </div>
   )
