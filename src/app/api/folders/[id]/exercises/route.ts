@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const sectionsText = sections.map((s) => {
       const parts = [`[${s.title}]`]
-      if (s.notions?.length) parts.push(`${s.notions[0].term}: ${s.notions[0].definition}`.slice(0, charsPerSection))
+      if (s.notions?.length) s.notions.slice(0, 3).forEach(n => parts.push(`${n.term}: ${n.definition}`.slice(0, Math.floor(charsPerSection / 2))))
       if (s.retenir) parts.push(s.retenir.slice(0, 60))
       return parts.join(' ')
     }).join(' | ')
@@ -115,11 +115,14 @@ ${context}`
         return NextResponse.json({ error: 'Erreur génération' }, { status: 500 })
       }
       // Valider que chaque exercice a les champs attendus
+      const VALID_TYPES = isLegal
+        ? ['cas_pratique', 'consultation', 'qualification']
+        : ['analyse', 'application', 'synthese']
       const validExercises = exercises.filter(
         (e: unknown) =>
           e !== null &&
           typeof e === 'object' &&
-          typeof (e as Record<string, unknown>).type === 'string' &&
+          VALID_TYPES.includes((e as Record<string, unknown>).type as string) &&
           typeof (e as Record<string, unknown>).question === 'string' &&
           typeof (e as Record<string, unknown>).answer === 'string'
       )

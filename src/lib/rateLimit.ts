@@ -1,4 +1,5 @@
 import { redis } from './redis'
+import crypto from 'crypto'
 
 /**
  * Rate limiter Redis — sliding window
@@ -23,7 +24,7 @@ export async function rateLimit(key: string, max: number, windowS: number) {
     return { allowed: false, remaining: 0, retryAfter }
   }
 
-  await redis.zadd(redisKey, now, `${now}-${Math.random()}`)
+  await redis.zadd(redisKey, now, `${now}-${crypto.randomUUID()}`)
   await redis.expire(redisKey, windowS)
 
   return { allowed: true, remaining: max - count - 1, retryAfter: 0 }

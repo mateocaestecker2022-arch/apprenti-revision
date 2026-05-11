@@ -24,6 +24,12 @@ export async function POST(req: NextRequest) {
   const ext = file.name.split('.').pop()?.toLowerCase()
   const buffer = Buffer.from(await file.arrayBuffer())
 
+  // Validation magic bytes — évite les fichiers malveillants renommés
+  const isPdf = buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46
+  const isZip = buffer[0] === 0x50 && buffer[1] === 0x4B && buffer[2] === 0x03 && buffer[3] === 0x04
+  if (ext === 'pdf' && !isPdf) return NextResponse.json({ error: 'Fichier PDF invalide' }, { status: 400 })
+  if ((ext === 'docx' || ext === 'odt') && !isZip) return NextResponse.json({ error: `Fichier ${ext.toUpperCase()} invalide` }, { status: 400 })
+
   let text = ''
 
   try {

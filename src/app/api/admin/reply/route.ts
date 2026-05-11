@@ -10,9 +10,8 @@ async function isAdmin() {
   return cookieStore.get('admin_token')?.value === process.env.ADMIN_TOKEN
 }
 
-// [FIX #14] Validation basique d'adresse email
 function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  return /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email) && email.length <= 254
 }
 
 export async function POST(req: NextRequest) {
