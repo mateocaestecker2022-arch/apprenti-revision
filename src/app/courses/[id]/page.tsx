@@ -50,8 +50,12 @@ export default function CoursePage() {
   const [elapsed, setElapsed] = useState(0)
   const [folders, setFolders] = useState<Folder[]>([])
   const [showExport, setShowExport] = useState(false)
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleValue, setTitleValue] = useState('')
+  const [savingTitle, setSavingTitle] = useState(false)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const titleInputRef = useRef<HTMLInputElement | null>(null)
 
   function fetchCourse() {
     fetch(`/api/courses/${id}`)
@@ -88,6 +92,27 @@ export default function CoursePage() {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [id])
+
+  function startEditTitle() {
+    if (!course) return
+    setTitleValue(course.title)
+    setEditingTitle(true)
+    setTimeout(() => titleInputRef.current?.select(), 0)
+  }
+
+  async function saveTitle() {
+    if (!course || !titleValue.trim() || savingTitle) return
+    if (titleValue.trim() === course.title) { setEditingTitle(false); return }
+    setSavingTitle(true)
+    const res = await fetch(`/api/courses/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: titleValue.trim() }),
+    })
+    if (res.ok) setCourse(c => c ? { ...c, title: titleValue.trim() } : c)
+    setSavingTitle(false)
+    setEditingTitle(false)
+  }
 
   async function handleDelete() {
     if (!confirm('Supprimer ce cours ?')) return
@@ -246,8 +271,34 @@ export default function CoursePage() {
           </div>
         ) : (
           <>
-            {/* Titre */}
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{course.title}</h1>
+            {/* Titre — éditable au clic */}
+            {editingTitle ? (
+              <div className="flex items-center gap-2 mb-6">
+                <input
+                  ref={titleInputRef}
+                  value={titleValue}
+                  onChange={e => setTitleValue(e.target.value)}
+                  onBlur={saveTitle}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') saveTitle()
+                    if (e.key === 'Escape') setEditingTitle(false)
+                  }}
+                  maxLength={200}
+                  className="flex-1 text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-b-2 border-indigo-500 focus:outline-none py-0.5"
+                  autoFocus
+                />
+                {savingTitle && <span className="text-xs text-gray-400">Sauvegarde…</span>}
+              </div>
+            ) : (
+              <h1
+                className="text-2xl font-bold text-gray-900 dark:text-white mb-6 group flex items-center gap-2 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                onClick={startEditTitle}
+                title="Cliquer pour modifier le titre"
+              >
+                {course.title}
+                <span className="text-base text-gray-300 dark:text-gray-600 group-hover:text-indigo-400 transition opacity-0 group-hover:opacity-100">✏️</span>
+              </h1>
+            )}
 
             {/* Résumé */}
             {s.summary && (

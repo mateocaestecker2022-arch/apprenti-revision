@@ -30,11 +30,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
   try {
-    const { folderId } = await req.json()
+    const body = await req.json()
+    const data: Record<string, unknown> = {}
+
+    if ('folderId' in body) data.folderId = body.folderId || null
+
+    if ('title' in body) {
+      const title = typeof body.title === 'string' ? body.title.trim() : ''
+      if (!title) return NextResponse.json({ error: 'Titre requis' }, { status: 400 })
+      if (title.length > 200) return NextResponse.json({ error: 'Titre trop long (max 200 caractères)' }, { status: 400 })
+      data.title = title
+    }
+
+    if (Object.keys(data).length === 0) return NextResponse.json({ error: 'Aucun champ à mettre à jour' }, { status: 400 })
 
     const result = await prisma.course.updateMany({
       where: { id: params.id, userId: session.user.id },
-      data: { folderId: folderId || null },
+      data,
     })
 
     if (result.count === 0) return NextResponse.json({ error: 'Cours introuvable' }, { status: 404 })
