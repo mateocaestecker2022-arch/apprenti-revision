@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { Resend } from 'resend'
+import { escHtml } from '@/lib/escHtml'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-
-// [FIX #1] Échappement HTML pour éviter XSS dans les emails
-function escHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
 
 async function isAdmin() {
   const cookieStore = await cookies()

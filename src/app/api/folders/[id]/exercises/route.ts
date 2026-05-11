@@ -111,15 +111,27 @@ ${context}`
       if (!match) throw new Error('Pas de JSON dans la réponse')
 
       const { exercises } = JSON.parse(match[0])
-      if (!exercises || exercises.length === 0) {
+      if (!Array.isArray(exercises) || exercises.length === 0) {
         return NextResponse.json({ error: 'Erreur génération' }, { status: 500 })
+      }
+      // Valider que chaque exercice a les champs attendus
+      const validExercises = exercises.filter(
+        (e: unknown) =>
+          e !== null &&
+          typeof e === 'object' &&
+          typeof (e as Record<string, unknown>).type === 'string' &&
+          typeof (e as Record<string, unknown>).question === 'string' &&
+          typeof (e as Record<string, unknown>).answer === 'string'
+      )
+      if (validExercises.length === 0) {
+        return NextResponse.json({ error: 'Erreur génération — structure invalide' }, { status: 500 })
       }
 
       const record = await prisma.folderExercise.create({
-        data: { folderId: params.id, exercises },
+        data: { folderId: params.id, exercises: validExercises },
       })
 
-      return NextResponse.json({ id: record.id, exercises })
+      return NextResponse.json({ id: record.id, exercises: validExercises })
     } catch (err: unknown) {
       const status = (err as { status?: number })?.status
       if (status === 429 && attempt < maxRetries) {

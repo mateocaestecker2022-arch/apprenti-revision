@@ -23,3 +23,15 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true })
 }
+
+export async function DELETE(req: NextRequest) {
+  const admin = await isAdmin()
+  if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+
+  const { id } = await req.json().catch(() => ({}))
+  if (!id) return NextResponse.json({ error: 'id manquant' }, { status: 400 })
+
+  await prisma.suggestion.delete({ where: { id } })
+
+  return NextResponse.json({ ok: true })
+}

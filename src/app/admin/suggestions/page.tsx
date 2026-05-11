@@ -17,6 +17,7 @@ export default function AdminSuggestionsPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const [tab, setTab] = useState<'suggestions' | 'bugs' | 'avis'>('suggestions')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyMessage, setReplyMessage] = useState('')
@@ -29,7 +30,7 @@ export default function AdminSuggestionsPage() {
         if (r.status === 403) { router.push('/admin/login'); return null }
         return r.json()
       })
-      .then(data => { if (data) setSuggestions(data) })
+      .then(data => { if (data) setSuggestions(data.suggestions ?? data) })
       .finally(() => setLoading(false))
   }, [router])
 
@@ -42,6 +43,18 @@ export default function AdminSuggestionsPage() {
     })
     setSuggestions(prev => prev.map(s => s.id === id ? { ...s, public: !current } : s))
     setToggling(null)
+  }
+
+  async function deleteSuggestion(id: string) {
+    if (!confirm('Supprimer définitivement ce message ?')) return
+    setDeleting(id)
+    await fetch('/api/admin/suggestions', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    setSuggestions(prev => prev.filter(s => s.id !== id))
+    setDeleting(null)
   }
 
   async function sendReply(s: Suggestion) {
@@ -192,6 +205,14 @@ export default function AdminSuggestionsPage() {
                         {toggling === s.id ? '...' : '✓ Publié · Dépublier'}
                       </button>
                     )}
+                    <button
+                      onClick={() => deleteSuggestion(s.id)}
+                      disabled={deleting === s.id}
+                      className="text-xs px-2 py-1.5 rounded-lg font-medium transition text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                      title="Supprimer"
+                    >
+                      {deleting === s.id ? '...' : '🗑️'}
+                    </button>
                   </div>
                 </div>
 

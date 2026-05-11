@@ -8,4 +8,10 @@ const connection = {
   port: parseInt(url.port) || 6379,
 }
 
-export const courseQueue = new Queue('course-processing', { connection })
+export const courseQueue = new Queue('course-processing', {
+  connection,
+  defaultJobOptions: {
+    removeOnComplete: true,  // Supprime les jobs terminés de Redis pour éviter la saturation mémoire
+    removeOnFail: false,     // Garde les jobs échoués pour diagnostic
+  },
+})

@@ -9,7 +9,7 @@ const connection = { host: url.hostname, port: parseInt(url.port) || 6379 }
 
 const redis = new Redis(connection)
 const prisma = new PrismaClient()
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 }) // 90s timeout par appel Groq
 
 const CHUNK_SIZE = 2500
 
@@ -64,8 +64,9 @@ async function callGroq(prompt: string, retries = 3, model = 'llama-3.1-8b-insta
     } catch (err: unknown) {
       const status = (err as { status?: number }).status
       if (status === 429) {
-        const wait = 20000 * (attempt + 1) // backoff : 20s, 40s, 60s
-        console.log(`[Worker] Rate limit Groq (${model}), attente ${wait / 1000}s... (tentative ${attempt + 1}/${retries})`)
+        const jitter = Math.floor(Math.random() * 5000) // jitter 0-5s pour éviter thundering herd
+        const wait = 20000 * (attempt + 1) + jitter // backoff : ~20s, ~40s, ~60s
+        console.log(`[Worker] Rate limit Groq (${model}), attente ${Math.round(wait / 1000)}s... (tentative ${attempt + 1}/${retries})`)
         await sleep(wait)
       } else if (attempt < retries - 1) {
         await sleep(5000)
@@ -492,7 +493,7 @@ async function processCourse(content: string, subject: string = 'Général'): Pr
       if (match) {
         try {
           const parsed = JSON.parse(match[0])
-          const secs = parsed.sections || []
+          const secs = Array.isArray(parsed.sections) ? parsed.sections : []
           console.log(`[Worker] Chunk ${ci + 1}/${chunks.length} traité → ${secs.length} sections`)
           allSections.push(...secs)
         } catch (e) {
@@ -630,5 +631,16 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason) => {
   console.error('[Worker] unhandledRejection (worker maintenu en vie):', reason)
 })
+
+// Libère proprement les connexions Prisma et Redis à l'arrêt
+async function shutdown() {
+  console.log('[Worker] Arrêt propre...')
+  await worker.close()
+  await prisma.$disconnect()
+  redis.disconnect()
+  process.exit(0)
+}
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
 
 console.log('[Worker] Started, waiting for jobs...')

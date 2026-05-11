@@ -42,11 +42,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       })()
     : course.rawContent.slice(0, 2000)
 
-  // Récupérer les 6 derniers quiz pour éviter les répétitions
+  // Récupérer les 6 derniers quiz pour éviter les répétitions (select minimal pour éviter N+1)
   const pastQuizzes = await prisma.quiz.findMany({
     where: { courseId: params.id },
     orderBy: { createdAt: 'desc' },
     take: 6,
+    select: { questions: true },
   })
   const pastQuestions = pastQuizzes
     .flatMap(q => (q.questions as Array<{ question: string }>))

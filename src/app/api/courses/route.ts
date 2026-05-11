@@ -31,10 +31,13 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const VALID_SUBJECTS = ['Droit', 'Médecine', 'Informatique', 'Histoire', 'Économie', 'Sciences', 'Philosophie', 'Mathématiques', 'Général']
+
   try {
     // Si aucun subject fourni, utilise la filière de l'utilisateur
     const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { filiere: true } })
-    const resolvedSubject = subject || user?.filiere || 'Général'
+    const rawSubject = subject || user?.filiere || 'Général'
+    const resolvedSubject = VALID_SUBJECTS.includes(rawSubject) ? rawSubject : 'Général'
 
     // Créer le cours immédiatement avec status "processing"
     const course = await prisma.course.create({

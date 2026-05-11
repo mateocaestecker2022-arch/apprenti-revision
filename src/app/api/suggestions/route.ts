@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Resend } from 'resend'
+import { escHtml } from '@/lib/escHtml'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
             <p><strong>Filière :</strong> ${suggestion.user.filiere}</p>
             ${isAvis ? `<p><strong>Anonyme :</strong> ${anonymous ? 'Oui' : 'Non'}</p>` : ''}
             <div style="background:#f8fafc;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #4f46e5;">
-              <p style="margin:0;color:#374151;">${content.trim().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g, '<br>')}</p>
+              <p style="margin:0;color:#374151;">${escHtml(content.trim()).replace(/\n/g, '<br>')}</p>
             </div>
             <a href="${process.env.NEXTAUTH_URL}/admin/suggestions" style="display:inline-block;background:#4f46e5;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
               Voir dans l'admin →

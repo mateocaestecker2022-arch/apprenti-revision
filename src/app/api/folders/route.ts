@@ -26,8 +26,10 @@ export async function POST(req: NextRequest) {
     const { name, color } = await req.json()
     if (!name?.trim()) return NextResponse.json({ error: 'Nom requis' }, { status: 400 })
 
+    const safeColor = /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(color) ? color : '#6366f1'
+
     const folder = await prisma.folder.create({
-      data: { name: name.trim(), color: color || '#6366f1', userId: session.user.id },
+      data: { name: name.trim(), color: safeColor, userId: session.user.id },
     })
     return NextResponse.json(folder)
   } catch (error) {

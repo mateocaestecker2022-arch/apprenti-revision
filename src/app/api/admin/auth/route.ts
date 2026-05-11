@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
+  // Rate limit : 10 tentatives / 15 min par IP pour bloquer le brute-force
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
+  const rl = await rateLimit(`admin-auth:${ip}`, 10, 15 * 60)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Trop de tentatives. Réessaie dans ${Math.ceil(rl.retryAfter / 60)} min.` },
+      { status: 429 }
+    )
+  }
+
   const { password } = await req.json().catch(() => ({}))
 
   if (!password || password !== process.env.ADMIN_PASSWORD) {

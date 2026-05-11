@@ -10,8 +10,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
     }
 
-    if (password.length < 8) {
-      return NextResponse.json({ error: 'Le mot de passe doit faire au moins 8 caractères' }, { status: 400 })
+    if (password.length < 12) {
+      return NextResponse.json({ error: 'Le mot de passe doit faire au moins 12 caractères' }, { status: 400 })
     }
 
     const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } })
