@@ -8,11 +8,38 @@ import { SuggestionForm } from '@/components/SuggestionForm'
 import { AvisForm } from '@/components/AvisForm'
 import { BugReportForm } from '@/components/BugReportForm'
 
+function calculateStreak(sessions: { date: Date }[]): number {
+  if (sessions.length === 0) return 0
+  const days = new Set(
+    sessions.map(s => {
+      const d = new Date(s.date)
+      d.setHours(0, 0, 0, 0)
+      return d.getTime()
+    })
+  )
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const startTs = days.has(today.getTime()) ? today.getTime()
+    : days.has(yesterday.getTime()) ? yesterday.getTime()
+    : null
+  if (startTs === null) return 0
+  let streak = 0
+  let ts = startTs
+  while (days.has(ts)) { streak++; ts -= 86400000 }
+  return streak
+}
+
 export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
 
-  const [courses, folders, userInfo, existingAvis, dueCount, flashcardCount] = await Promise.all([
+  const sixtyDaysAgo = new Date()
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
+  sixtyDaysAgo.setHours(0, 0, 0, 0)
+
+  const [courses, folders, userInfo, existingAvis, dueCount, flashcardCount, studySessions, reviewedCount] = await Promise.all([
     prisma.course.findMany({
       where: { userId: session.user.id },
       orderBy: { updatedAt: 'desc' },
@@ -35,11 +62,21 @@ export default async function DashboardPage() {
     prisma.flashcard.count({
       where: { course: { userId: session.user.id } },
     }),
+    prisma.studySession.findMany({
+      where: { userId: session.user.id, date: { gte: sixtyDaysAgo } },
+      orderBy: { date: 'desc' },
+      select: { date: true },
+    }),
+    prisma.flashcardReview.count({
+      where: { userId: session.user.id },
+    }),
   ])
 
   const ready = courses.filter(c => c.status === 'ready').length
   const processing = courses.filter(c => c.status === 'processing').length
   const firstName = session.user.name?.split(' ')[0] || session.user.email?.split('@')[0] || 'toi'
+  const streak = calculateStreak(studySessions)
+  const progressionPct = flashcardCount > 0 ? Math.round((reviewedCount / flashcardCount) * 100) : 0
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
@@ -104,11 +141,12 @@ export default async function DashboardPage() {
         )}
 
         {/* STATS */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-5">
           {[
             { icon: '📄', value: courses.length, label: 'Cours', bg: 'bg-indigo-100 dark:bg-indigo-900/40' },
             { icon: '✅', value: ready, label: 'Prêts', bg: 'bg-green-100 dark:bg-green-900/40' },
             { icon: '📁', value: folders.length, label: 'Classeurs', bg: 'bg-purple-100 dark:bg-purple-900/40' },
+            { icon: '🔥', value: streak, label: streak === 1 ? 'jour de suite' : 'jours de suite', bg: streak > 0 ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-gray-100 dark:bg-gray-800' },
           ].map(s => (
             <div key={s.label} className="bg-white dark:bg-gray-900 rounded-2xl p-3 sm:p-5 shadow-sm border dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3">
               <div className={`w-8 h-8 sm:w-10 sm:h-10 ${s.bg} rounded-xl flex items-center justify-center text-base sm:text-xl shrink-0`}>
@@ -121,6 +159,31 @@ export default async function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* PROGRESSION FLASHCARDS */}
+        {flashcardCount > 0 && (
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 px-4 sm:px-5 py-3 sm:py-4 mb-4 sm:mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">📈 Progression flashcards</span>
+                {progressionPct === 100 && <span className="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-semibold">Complété !</span>}
+              </div>
+              <span className="text-sm font-extrabold text-gray-900 dark:text-white">{progressionPct}%</span>
+            </div>
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 overflow-hidden">
+              <div
+                className={`h-2.5 rounded-full transition-all duration-500 ${
+                  progressionPct >= 75 ? 'bg-green-500' :
+                  progressionPct >= 40 ? 'bg-indigo-500' : 'bg-indigo-400'
+                }`}
+                style={{ width: `${progressionPct}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+              {reviewedCount} carte{reviewedCount !== 1 ? 's' : ''} révisée{reviewedCount !== 1 ? 's' : ''} sur {flashcardCount} au total
+            </p>
+          </div>
+        )}
 
         {/* CLASSEURS */}
         <div className="mb-4 sm:mb-5">
