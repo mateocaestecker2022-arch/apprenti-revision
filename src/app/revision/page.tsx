@@ -26,7 +26,54 @@ function LoadingScreen() {
 }
 
 // ─── Écran vide ────────────────────────────────────────────────────────────
-function EmptyScreen() {
+function EmptyScreen({ hasFlashcards }: { hasFlashcards: boolean }) {
+  if (!hasFlashcards) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+        <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-6 py-4 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+          <a href="/dashboard" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Dashboard</a>
+          <span className="text-gray-300 dark:text-gray-700">/</span>
+          <span className="font-bold text-indigo-600">Révision du jour</span>
+        </nav>
+        <main className="max-w-lg mx-auto px-4 py-16">
+          <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-8 text-center shadow-sm mb-6">
+            <p className="text-5xl mb-4">🃏</p>
+            <h2 className="text-xl font-extrabold text-gray-900 dark:text-white mb-2">Pas encore de flashcards</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+              Pour utiliser la révision intelligente, tu dois d&apos;abord générer des flashcards sur au moins un cours.
+            </p>
+          </div>
+
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl p-5 mb-6">
+            <p className="font-bold text-indigo-700 dark:text-indigo-300 text-sm mb-3">Comment faire ?</p>
+            <ol className="space-y-2.5">
+              {[
+                { n: '1', text: 'Va sur un de tes cours prêts (statut ✅)' },
+                { n: '2', text: <>Clique sur le bouton <span className="font-bold">🃏 Flashcards</span> en haut du cours</> },
+                { n: '3', text: "Génère tes flashcards — l'IA les crée automatiquement" },
+                { n: '4', text: 'Reviens ici pour commencer ta révision intelligente' },
+              ].map(step => (
+                <li key={step.n} className="flex items-start gap-3 text-sm text-indigo-800 dark:text-indigo-300">
+                  <span className="w-5 h-5 rounded-full bg-indigo-200 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                    {step.n}
+                  </span>
+                  <span>{step.text}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <a
+            href="/dashboard"
+            className="block w-full text-center bg-indigo-600 text-white px-6 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition text-sm"
+          >
+            Aller sur mes cours →
+          </a>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
       <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-6 py-4 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
@@ -39,7 +86,7 @@ function EmptyScreen() {
         <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">Tout est à jour !</h2>
         <p className="text-gray-500 dark:text-gray-400 mb-8 text-sm leading-relaxed">
           Tu n&apos;as aucune carte à réviser aujourd&apos;hui.<br />
-          Reviens demain ou génère des flashcards sur un cours.
+          Reviens demain pour ta prochaine session.
         </p>
         <a
           href="/dashboard"
@@ -106,12 +153,14 @@ export default function RevisionPage() {
   const [done, setDone] = useState(false)
   const [stats, setStats] = useState<Stats>({ difficult: 0, medium: 0, mastered: 0 })
   const [submitting, setSubmitting] = useState(false)
+  const [hasFlashcards, setHasFlashcards] = useState(true)
 
   useEffect(() => {
     fetch('/api/flashcards/review')
       .then((r) => r.json())
       .then((data) => {
         setCards(data.cards || [])
+        setHasFlashcards(data.totalFlashcards > 0)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -142,7 +191,7 @@ export default function RevisionPage() {
   }
 
   if (loading) return <LoadingScreen />
-  if (!loading && cards.length === 0) return <EmptyScreen />
+  if (!loading && cards.length === 0) return <EmptyScreen hasFlashcards={hasFlashcards} />
   if (done) return <DoneScreen stats={stats} total={cards.length} />
 
   const card = cards[current]

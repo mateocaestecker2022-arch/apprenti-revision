@@ -110,7 +110,32 @@ export default async function DashboardPage() {
         </div>
 
         {/* RÉVISION DU JOUR */}
-        {flashcardCount > 0 && (
+        {flashcardCount === 0 ? (
+          (() => {
+            const firstReadyCourse = courses.find(c => c.status === 'ready')
+            return (
+              <a
+                href={firstReadyCourse ? `/courses/${firstReadyCourse.id}/flashcards` : '/dashboard'}
+                className="flex items-center gap-3 sm:gap-4 rounded-2xl px-4 sm:px-5 py-3 sm:py-4 mb-4 sm:mb-5 border border-dashed border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-900/10 hover:border-indigo-400 dark:hover:border-indigo-600 transition group"
+              >
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-lg sm:text-xl shrink-0">
+                  🃏
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-gray-900 dark:text-white">
+                    Génère des flashcards pour commencer
+                  </p>
+                  <p className="text-xs mt-0.5 text-gray-400 dark:text-gray-500 hidden sm:block">
+                    Va sur un cours → clique sur 🃏 → reviens réviser ici
+                  </p>
+                </div>
+                <svg className="w-4 h-4 shrink-0 text-gray-300 dark:text-gray-600 transition group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            )
+          })()
+        ) : (
           <a
             href="/revision"
             className={`flex items-center gap-3 sm:gap-4 rounded-2xl px-4 sm:px-5 py-3 sm:py-4 mb-4 sm:mb-5 border transition group ${

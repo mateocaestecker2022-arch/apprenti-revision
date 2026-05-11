@@ -77,7 +77,8 @@ export async function GET() {
     ;[cards[i], cards[j]] = [cards[j], cards[i]]
   }
 
-  return NextResponse.json({ cards })
+  const totalFlashcards = await prisma.flashcard.count({ where: { course: { userId } } })
+  return NextResponse.json({ cards, totalFlashcards })
 }
 
 // POST — enregistrer une réponse { flashcardId, quality: 1|3|5 }
