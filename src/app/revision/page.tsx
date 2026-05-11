@@ -144,6 +144,91 @@ function DoneScreen({ stats, total }: { stats: Stats; total: number }) {
   )
 }
 
+// ─── Écran d'intro (première visite) ──────────────────────────────────────
+function IntroScreen({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+      <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 px-6 py-4 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+        <a href="/dashboard" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">← Dashboard</a>
+        <span className="text-gray-300 dark:text-gray-700">/</span>
+        <span className="font-bold text-indigo-600">Révision du jour</span>
+      </nav>
+      <main className="max-w-lg mx-auto px-4 py-10">
+        <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-8 shadow-sm mb-5">
+          <p className="text-4xl mb-4 text-center">🧠</p>
+          <h2 className="text-xl font-extrabold text-gray-900 dark:text-white text-center mb-2">Bienvenue dans la révision intelligente</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm text-center leading-relaxed mb-6">
+            Le système <span className="font-semibold text-indigo-600 dark:text-indigo-400">SM-2</span> adapte automatiquement la fréquence de révision de chaque carte selon tes réponses — plus tu maîtrises une carte, moins souvent tu la reverras.
+          </p>
+
+          <div className="space-y-3 mb-6">
+            <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">Comment ça marche</p>
+
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-gray-800 border dark:border-gray-700">
+              <span className="text-lg shrink-0">👀</span>
+              <div>
+                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">1. Lis la question</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Réfléchis à la réponse dans ta tête avant de retourner la carte.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-gray-800 border dark:border-gray-700">
+              <span className="text-lg shrink-0">🃏</span>
+              <div>
+                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">2. Retourne la carte</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Clique sur la carte ou sur "Voir la réponse" pour découvrir la réponse.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-gray-800 border dark:border-gray-700">
+              <span className="text-lg shrink-0">⚡</span>
+              <div>
+                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">3. Évalue-toi honnêtement</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Choisis parmi les 3 boutons selon comment tu t&apos;en es sorti :</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2 mb-6">
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800">
+              <span className="text-base font-bold text-red-500 w-5 text-center shrink-0">✗</span>
+              <div className="flex-1">
+                <span className="font-semibold text-red-600 dark:text-red-400 text-xs">À revoir</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">— tu n&apos;as pas su répondre → revient demain</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
+              <span className="text-base font-bold text-amber-500 w-5 text-center shrink-0">〜</span>
+              <div className="flex-1">
+                <span className="font-semibold text-amber-600 dark:text-amber-400 text-xs">Moyen</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">— tu hésitais → revient dans 6 jours</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
+              <span className="text-base font-bold text-green-500 w-5 text-center shrink-0">✓</span>
+              <div className="flex-1">
+                <span className="font-semibold text-green-600 dark:text-green-400 text-xs">Maîtrisé</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">— tu savais parfaitement → intervalle qui double</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={onStart}
+            className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition text-sm"
+          >
+            Commencer ma révision →
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-400 dark:text-gray-600 text-center">
+          Cette explication ne s&apos;affiche qu&apos;une seule fois
+        </p>
+      </main>
+    </div>
+  )
+}
+
 // ─── Page principale ───────────────────────────────────────────────────────
 export default function RevisionPage() {
   const [cards, setCards] = useState<ReviewCard[]>([])
@@ -154,8 +239,12 @@ export default function RevisionPage() {
   const [stats, setStats] = useState<Stats>({ difficult: 0, medium: 0, mastered: 0 })
   const [submitting, setSubmitting] = useState(false)
   const [hasFlashcards, setHasFlashcards] = useState(true)
+  const [introSeen, setIntroSeen] = useState(true)
 
   useEffect(() => {
+    const seen = localStorage.getItem('revision_intro_seen')
+    if (!seen) setIntroSeen(false)
+
     fetch('/api/flashcards/review')
       .then((r) => r.json())
       .then((data) => {
@@ -190,7 +279,13 @@ export default function RevisionPage() {
     }
   }
 
+  function handleStartIntro() {
+    localStorage.setItem('revision_intro_seen', '1')
+    setIntroSeen(true)
+  }
+
   if (loading) return <LoadingScreen />
+  if (!loading && !introSeen && cards.length > 0) return <IntroScreen onStart={handleStartIntro} />
   if (!loading && cards.length === 0) return <EmptyScreen hasFlashcards={hasFlashcards} />
   if (done) return <DoneScreen stats={stats} total={cards.length} />
 
