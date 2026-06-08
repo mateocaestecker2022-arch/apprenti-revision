@@ -17,53 +17,61 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const subject = (course as { subject?: string }).subject || 'Général'
 
   const structured = course.structuredContent as {
-    sections?: Array<{ title: string; points?: string[]; notions?: Array<{ term: string; definition: string }> }>
+    sections?: Array<{ title: string; points?: string[]; notions?: Array<{ term: string; definition: string }>; retenir?: string }>
   } | null
 
-  // Construire un contexte qui couvre TOUTES les sections proportionnellement
-  // Budget réduit à 1000 chars pour rester sous la limite de 6000 tokens Groq
-  const context = structured?.sections
-    ? (() => {
-        const sections = structured.sections!
-        const charsPerSection = Math.max(80, Math.floor(2000 / sections.length))
-        return sections.map(s => {
-          const sec = s as { retenir?: string }
-          const parts = [`## ${s.title}`]
-          // Inclure toutes les notions (définitions)
-          if (s.notions?.length) {
-            s.notions.slice(0, 4).forEach(n => {
-              parts.push(`${n.term}: ${n.definition}`.slice(0, 120))
-            })
-          }
-          if (sec.retenir) parts.push(sec.retenir.slice(0, 80))
-          else if (s.points?.length) parts.push(s.points[0].slice(0, 80))
-          return parts.join('\n')
-        }).join('\n\n').slice(0, 2000)
-      })()
-    : course.rawContent.slice(0, 2000)
+  const sections = structured?.sections || []
+  const totalQuestions = 20
+  const nbSections = sections.length
 
-  // Récupérer les 6 derniers quiz pour éviter les répétitions (select minimal pour éviter N+1)
+  // Quota par section : au minimum 1, réparti proportionnellement
+  const quotas: number[] = []
+  if (nbSections > 0) {
+    const base = Math.floor(totalQuestions / nbSections)
+    const remainder = totalQuestions - base * nbSections
+    for (let i = 0; i < nbSections; i++) {
+      quotas.push(base + (i < remainder ? 1 : 0))
+    }
+  }
+
+  // Construire le contexte + plan de génération par section
+  const charsPerSection = nbSections > 0 ? Math.max(300, Math.floor(7000 / nbSections)) : 7000
+  const sectionBlocks = sections.map((s, i) => {
+    const parts = [`### SECTION ${i + 1} — ${s.title} (génère ${quotas[i]} question(s))`]
+    if (s.notions?.length) {
+      s.notions.forEach(n => parts.push(`- ${n.term}: ${n.definition}`.slice(0, 180)))
+    }
+    if (s.points?.length) parts.push(...s.points.slice(0, 4).map(p => `• ${p}`.slice(0, 120)))
+    if (s.retenir) parts.push(`À retenir: ${s.retenir}`.slice(0, 150))
+    return parts.join('\n').slice(0, charsPerSection)
+  })
+
+  const context = nbSections > 0
+    ? sectionBlocks.join('\n\n').slice(0, 7000)
+    : course.rawContent.slice(0, 7000)
+
+  // Récupérer les questions passées pour dédupliquer côté code
   const pastQuizzes = await prisma.quiz.findMany({
     where: { courseId: params.id },
     orderBy: { createdAt: 'desc' },
-    take: 6,
+    take: 10,
     select: { questions: true },
   })
-  const pastQuestions = pastQuizzes
-    .flatMap(q => (q.questions as Array<{ question: string }>))
-    .map(q => q.question.slice(0, 100))
-    .slice(0, 40)
+  const pastQuestionTexts = new Set(
+    pastQuizzes
+      .flatMap(q => (q.questions as Array<{ question: string }>))
+      .map(q => q.question.trim().toLowerCase().slice(0, 80))
+  )
 
-  const avoidSection = pastQuestions.length > 0
-    ? `\nCES QUESTIONS SONT INTERDITES — ne les pose PAS ni de près ni de loin, même avec des mots différents :\n${pastQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}\n\nSi tu reprends l'un de ces sujets, tu as ÉCHOUÉ. Trouve des angles NOUVEAUX.\n`
+  const sectionPlan = nbSections > 0
+    ? `\nRÉPARTITION OBLIGATOIRE — respecte exactement ces quotas :\n${sections.map((s, i) => `• Section "${s.title}" : ${quotas[i]} question(s)`).join('\n')}\n`
     : ''
 
-  const prompt = `Génère 20 QCM originaux niveau Licence/Master en ${subject}. Couvre équitablement TOUTES les sections. Max 2 questions par section.
-Mélange OBLIGATOIRE : 7 DÉFINITIONS minimum, 6 APPLICATION minimum, 4 ANALYSE minimum.
-Varie l'"answer" (0, 1, 2, 3) de façon équilibrée.
-${avoidSection}
-JSON uniquement, 20 questions exactement :
-{"questions":[{"question":"?","options":["A","B","C","D"],"answer":0,"explanation":"Explication courte."}]}
+  const prompt = `Tu es un professeur. Génère exactement ${totalQuestions} QCM niveau Licence/Master en ${subject} basés UNIQUEMENT sur le cours ci-dessous.
+${sectionPlan}
+Mélange : définitions, applications, analyses. Varie l'"answer" (0, 1, 2, 3) de façon équilibrée.
+JSON uniquement :
+{"questions":[{"question":"?","options":["A","B","C","D"],"answer":0,"explanation":"Explication courte.","section":"Titre de la section"}]}
 
 COURS :
 ${context}`
@@ -74,17 +82,29 @@ ${context}`
       const res = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2000,
+        max_tokens: 4500,
         temperature: 0.85,
         response_format: { type: 'json_object' },
       })
       const raw = res.choices[0]?.message?.content || ''
       const match = raw.match(/\{[\s\S]*\}/)
       if (!match) throw new Error('Pas de JSON dans la réponse')
-      const { questions } = JSON.parse(match[0])
+      const parsed = JSON.parse(match[0])
+      const seenInBatch = new Set<string>()
+      const questions = (parsed.questions || []).filter((q: {
+        question?: string; options?: string[]; answer?: number; explanation?: string
+      }) => {
+        if (!q.question || !Array.isArray(q.options) || q.options.length !== 4) return false
+        if (typeof q.answer !== 'number' || q.answer < 0 || q.answer > 3) return false
+        // Déduplique contre les anciens quiz ET dans le batch courant
+        const key = q.question.trim().toLowerCase().slice(0, 80)
+        if (pastQuestionTexts.has(key) || seenInBatch.has(key)) return false
+        seenInBatch.add(key)
+        return true
+      })
 
       if (!questions || questions.length === 0) {
-        return NextResponse.json({ error: 'Erreur génération' }, { status: 500 })
+        throw new Error('Aucune question valide générée')
       }
 
       const quiz = await prisma.quiz.create({
@@ -97,6 +117,11 @@ ${context}`
       if (status === 429 && attempt < maxRetries) {
         console.warn(`[QUIZ] Rate limit, retry ${attempt}/${maxRetries}...`)
         await new Promise(r => setTimeout(r, 15000 * attempt))
+        continue
+      }
+      if (attempt < maxRetries) {
+        console.warn(`[QUIZ] Erreur tentative ${attempt}, retry...`, (err as Error).message)
+        await new Promise(r => setTimeout(r, 3000))
         continue
       }
       console.error(`[QUIZ] Erreur (tentative ${attempt}):`, err)

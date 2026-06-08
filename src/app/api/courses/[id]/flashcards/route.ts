@@ -24,10 +24,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   ) || []
 
   const context = structured?.sections
-    ?.map(s => `${s.title}: ${(s.points || []).join(' ')}`)
-    .join('\n') || course.rawContent.slice(0, 3000)
+    ? (() => {
+        const sections = structured.sections!
+        const charsPerSection = Math.max(150, Math.floor(6000 / sections.length))
+        return sections.map(s => {
+          const sec = s as { retenir?: string }
+          const parts = [`## ${s.title}`]
+          if (s.notions?.length) {
+            s.notions.forEach(n => parts.push(`${n.term}: ${n.definition}`.slice(0, 150)))
+          }
+          if (s.points?.length) parts.push(...s.points.slice(0, 3).map(p => p.slice(0, 100)))
+          if (sec.retenir) parts.push(sec.retenir.slice(0, 120))
+          return parts.join('\n').slice(0, charsPerSection)
+        }).join('\n\n').slice(0, 6000)
+      })()
+    : course.rawContent.slice(0, 6000)
 
-  const prompt = `Tu es un professeur. Génère 10 flashcards supplémentaires sur ce cours.
+  const prompt = `Tu es un professeur. Génère 10 flashcards supplémentaires basées UNIQUEMENT sur ce cours, en couvrant différentes sections.
 Réponds UNIQUEMENT avec ce JSON valide :
 {"cards":[{"question":"Question courte ?","answer":"Réponse claire et complète"}]}
 
@@ -38,25 +51,27 @@ ${context}`
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const res = await groq.chat.completions.create({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2000,
+        max_tokens: 3000,
         temperature: 0.4,
         response_format: { type: 'json_object' },
       })
       const raw = res.choices[0]?.message?.content || ''
       const matchRaw = raw.match(/\{[\s\S]*\}/)
       if (!matchRaw) throw new Error('Pas de JSON dans la réponse')
-      const generatedCards: Array<{ question: string; answer: string }> = JSON.parse(matchRaw[0]).cards || []
+      const generatedCards: Array<{ question: string; answer: string }> = (JSON.parse(matchRaw[0]).cards || [])
+        .filter((c: { question?: string; answer?: string }) => c.question && c.answer)
 
       const allCards = [...notionCards, ...generatedCards]
+      if (allCards.length === 0) throw new Error('Aucune carte générée')
 
       await prisma.flashcard.deleteMany({ where: { courseId: params.id } })
       await prisma.flashcard.createMany({
         data: allCards.map((c) => ({
           courseId: params.id,
-          question: c.question,
-          answer: c.answer,
+          question: String(c.question),
+          answer: String(c.answer),
         })),
       })
 
@@ -65,7 +80,12 @@ ${context}`
       const status = (err as { status?: number })?.status
       if (status === 429 && attempt < maxRetries) {
         console.warn(`[FLASHCARDS] Rate limit, retry ${attempt}/${maxRetries}...`)
-        await new Promise(r => setTimeout(r, 10000 * attempt))
+        await new Promise(r => setTimeout(r, 15000 * attempt))
+        continue
+      }
+      if (attempt < maxRetries) {
+        console.warn(`[FLASHCARDS] Erreur tentative ${attempt}, retry...`, (err as Error).message)
+        await new Promise(r => setTimeout(r, 3000))
         continue
       }
       console.error(`[FLASHCARDS] Erreur (tentative ${attempt}):`, err)
