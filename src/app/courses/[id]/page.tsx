@@ -251,6 +251,19 @@ export default function CoursePage() {
               </>
             )}
           </div>
+          {course && /droit|juridique|loi|jurisprudence/i.test(course.subject || '') && (
+            <>
+              <a href={`/courses/${id}/methodo`} className="border border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-purple-50 dark:hover:bg-purple-900/20 transition">
+                📋 <span className="hidden sm:inline">Méthodo</span>
+              </a>
+              <a href={`/courses/${id}/correction`} className="border border-green-300 dark:border-green-700 text-green-600 dark:text-green-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition">
+                ✍️ <span className="hidden sm:inline">Correction</span>
+              </a>
+              <a href={`/courses/${id}/exercice-guide`} className="border border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-amber-50 dark:hover:bg-amber-900/20 transition">
+                ⚖️ <span className="hidden sm:inline">Exercice</span>
+              </a>
+            </>
+          )}
           <a href={`/courses/${id}/flashcards`} className="border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
             🃏 <span className="hidden sm:inline">Flashcards</span>
           </a>

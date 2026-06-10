@@ -2,6 +2,7 @@ import { Worker } from 'bullmq'
 import { PrismaClient, Prisma } from '@prisma/client'
 import { Redis } from 'ioredis'
 import Groq from 'groq-sdk'
+import { storeChunks } from './src/lib/rag'
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
 const url = new URL(redisUrl)
@@ -605,6 +606,13 @@ const worker = new Worker(
       })
 
       console.log(`[Worker] Course ${courseId} done`)
+
+      // RAG : génération des chunks pour les cours de droit (non bloquant)
+      if (isLegalSubject(subject)) {
+        storeChunks(courseId, content).catch(e =>
+          console.error('[Worker] RAG chunk generation failed (non bloquant):', e)
+        )
+      }
     } catch (err) {
       console.error(`[Worker] Error on course ${courseId}:`, err)
       const code = (err as { code?: string }).code

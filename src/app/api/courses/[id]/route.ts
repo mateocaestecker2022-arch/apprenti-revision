@@ -42,6 +42,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       data.title = title
     }
 
+    if ('niveau' in body) {
+      const niveaux = ['L1', 'L2', 'L3', 'M1', 'M2']
+      const niveau = typeof body.niveau === 'string' ? body.niveau : ''
+      if (!niveaux.includes(niveau)) return NextResponse.json({ error: 'Niveau invalide' }, { status: 400 })
+      data.niveau = niveau
+    }
+
     if (Object.keys(data).length === 0) return NextResponse.json({ error: 'Aucun champ à mettre à jour' }, { status: 400 })
 
     const result = await prisma.course.updateMany({
