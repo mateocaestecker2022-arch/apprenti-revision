@@ -10,7 +10,7 @@ const ETAPES = ['', 'Faits pertinents', 'Problème de droit', 'Règle applicable
 interface Message { role: 'assistant' | 'user'; content: string }
 
 export default function ExerciceGuidePage() {
-  const { id } = useParams()
+  const id = useParams().id as string
   const [niveau, setNiveau] = useState('L1')
   const [exerciceId, setExerciceId] = useState<string | null>(null)
   const [enonce, setEnonce] = useState('')

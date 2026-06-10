@@ -2,11 +2,11 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@apprenti-revision.fr'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL
 
 export default async function SignalementsPage() {
   const session = await auth()
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) redirect('/dashboard')
+  if (!session?.user?.email || !ADMIN_EMAIL || session.user.email !== ADMIN_EMAIL) redirect('/dashboard')
 
   const signalements = await prisma.signalement.findMany({
     orderBy: { createdAt: 'desc' },

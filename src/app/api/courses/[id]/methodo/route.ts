@@ -5,7 +5,7 @@ import { retrieveChunks } from '@/lib/rag'
 import { getNiveauInstruction, AI_WARNING } from '@/lib/droit'
 import Groq from 'groq-sdk'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
 
 const TYPE_LABELS: Record<string, string> = {
   cas_pratique: 'Cas pratique',

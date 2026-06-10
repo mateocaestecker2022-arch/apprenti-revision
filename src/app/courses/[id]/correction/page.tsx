@@ -29,7 +29,7 @@ function getColor(note: number): string {
 }
 
 export default function CorrectionPage() {
-  const { id } = useParams()
+  const id = useParams().id as string
   const [texte, setTexte] = useState('')
   const [niveau, setNiveau] = useState('L1')
   const [result, setResult] = useState<CorrectionResult | null>(null)

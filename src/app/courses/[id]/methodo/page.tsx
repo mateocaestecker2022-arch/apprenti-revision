@@ -28,7 +28,7 @@ interface MethtodoData {
 const NIVEAUX = ['L1', 'L2', 'L3', 'M1', 'M2']
 
 export default function MethodoPage() {
-  const { id } = useParams()
+  const id = useParams().id as string
   const [activeType, setActiveType] = useState<TypeMethodo>('cas_pratique')
   const [niveau, setNiveau] = useState('L1')
   const [data, setData] = useState<Record<string, MethtodoData>>({})

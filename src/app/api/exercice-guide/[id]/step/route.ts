@@ -5,7 +5,7 @@ import { retrieveChunks } from '@/lib/rag'
 import { getNiveauInstruction } from '@/lib/droit'
 import Groq from 'groq-sdk'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
 
 const ETAPES_LABELS = ['', 'Faits pertinents', 'Problème de droit', 'Règle applicable', 'Application au cas', 'Conclusion']
 
@@ -95,7 +95,7 @@ Génère en JSON strict. Si les 5 étapes sont validées, "termine" est true et 
       const etapeSuivante = data.valide
         ? Math.min((exercice.etapeActuelle + 1), 5)
         : exercice.etapeActuelle
-      const termine = data.termine === true || etapeSuivante >= 5 && data.valide
+      const termine = data.termine === true || (etapeSuivante >= 5 && data.valide === true)
 
       const newHistorique = [
         ...updatedHistorique,
