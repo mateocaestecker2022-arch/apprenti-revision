@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 interface Props {
-  type: 'correction' | 'methodo' | 'exercice_guide'
+  type: 'correction' | 'methodo' | 'exercice_guide' | 'analyse'
   refId: string
   contenuIA: string
   niveau?: string
