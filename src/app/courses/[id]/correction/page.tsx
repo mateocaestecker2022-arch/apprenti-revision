@@ -14,11 +14,17 @@ interface Critere {
   suggestions: string
 }
 
+interface CitationEtudiant {
+  type: 'article' | 'arret'
+  reference: string
+  statut: 'present_dans_le_cours' | 'non_precise_dans_le_cours'
+}
 interface CorrectionResult {
   criteres: Critere[]
   noteGlobale: number
   commentaireGeneral: string
   prioriteProgression: string
+  citationsEtudiant?: CitationEtudiant[]
   avertissement: string
 }
 
@@ -142,6 +148,28 @@ export default function CorrectionPage() {
                 </div>
               ))}
             </div>
+
+            {/* Citations étudiant */}
+            {result.citationsEtudiant && result.citationsEtudiant.length > 0 && (
+              <div className="border dark:border-gray-800 rounded-xl p-5 mb-6">
+                <h2 className="font-bold text-gray-800 dark:text-gray-200 mb-3">🔍 Références citées dans ta copie</h2>
+                <ul className="space-y-2">
+                  {result.citationsEtudiant.map((c, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        c.statut === 'present_dans_le_cours'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                          : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                      }`}>
+                        {c.statut === 'present_dans_le_cours' ? '✓ cours' : '⚠ non précisé'}
+                      </span>
+                      <span className="text-gray-700 dark:text-gray-300">{c.reference}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs text-gray-400 mt-3">Les références marquées &quot;⚠ non précisé&quot; n&apos;ont pas été trouvées dans ton cours — vérifie leur exactitude.</p>
+              </div>
+            )}
 
             {/* Priorité */}
             <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 rounded-xl p-4 mb-6">

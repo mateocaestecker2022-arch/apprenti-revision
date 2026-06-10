@@ -46,7 +46,7 @@ ${niveauInstruction}
 EXTRAITS DU COURS :
 ${ragContext}
 
-Génère en JSON strict :
+Génère en JSON strict. Pour "citationsVerifiees", liste TOUTES les références juridiques (articles, arrêts) que tu mentionnes dans la fiche. Pour chaque référence, indique si elle est littéralement présente dans les extraits du cours ci-dessus ("present_dans_le_cours") ou non ("non_precise_dans_le_cours").
 {
   "type": "${type}",
   "typeLabel": "${typeLabel}",
@@ -56,6 +56,10 @@ Génère en JSON strict :
   "planType": ["I. ...", "A. ...", "B. ...", "II. ...", "A. ...", "B. ..."],
   "vocabulaireCle": [{ "terme": "...", "definition": "..." }],
   "piegesAEviter": ["..."],
+  "citationsVerifiees": [
+    { "type": "article", "reference": "article 1240 du Code civil", "statut": "present_dans_le_cours" },
+    { "type": "arret", "reference": "Cass. civ. 1ère, 13 févr. 2001", "statut": "non_precise_dans_le_cours" }
+  ],
   "avertissement": "${AI_WARNING}"
 }`
 

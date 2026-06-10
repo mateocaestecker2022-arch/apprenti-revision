@@ -14,6 +14,11 @@ const TYPES: { value: TypeMethodo; label: string; icon: string }[] = [
 
 interface Etape { numero: number; titre: string; objectif: string; conseils: string; erreurFrequente: string }
 interface TermeVocab { terme: string; definition: string }
+interface CitationVerifiee {
+  type: 'article' | 'arret'
+  reference: string
+  statut: 'present_dans_le_cours' | 'non_precise_dans_le_cours'
+}
 interface MethtodoData {
   id?: string
   type: string
@@ -22,6 +27,7 @@ interface MethtodoData {
   planType: string[]
   vocabulaireCle: TermeVocab[]
   piegesAEviter: string[]
+  citationsVerifiees?: CitationVerifiee[]
   avertissement: string
 }
 
@@ -186,6 +192,28 @@ export default function MethodoPage() {
                     <li key={i} className="text-sm text-gray-700 dark:text-gray-300">• {p}</li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Citations vérifiées */}
+            {current.citationsVerifiees && current.citationsVerifiees.length > 0 && (
+              <div className="border dark:border-gray-800 rounded-xl p-5 mb-6">
+                <h2 className="font-bold text-gray-800 dark:text-gray-200 mb-3">🔍 Traçabilité des références</h2>
+                <ul className="space-y-2">
+                  {current.citationsVerifiees.map((c, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        c.statut === 'present_dans_le_cours'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                          : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                      }`}>
+                        {c.statut === 'present_dans_le_cours' ? '✓ cours' : '⚠ non précisé'}
+                      </span>
+                      <span className="text-gray-700 dark:text-gray-300">{c.reference}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs text-gray-400 mt-3">Les références marquées &quot;⚠ non précisé&quot; n&apos;ont pas été trouvées dans ton cours — vérifie avec ton chargé de TD.</p>
               </div>
             )}
 

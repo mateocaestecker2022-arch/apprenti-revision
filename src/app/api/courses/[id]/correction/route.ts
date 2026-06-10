@@ -42,7 +42,7 @@ ${ragContext}
 COPIE À CORRIGER :
 ${texte}
 
-Génère en JSON strict :
+Génère en JSON strict. Pour "citationsEtudiant", liste les articles et arrêts cités dans la copie de l'étudiant. Pour chacun, indique s'il est présent dans les références du cours ci-dessus ("present_dans_le_cours") ou non ("non_precise_dans_le_cours").
 {
   "criteres": [
     { "nom": "Syllogisme juridique", "note": 0, "pointsForts": "...", "pointsFaibles": "...", "suggestions": "..." },
@@ -54,6 +54,10 @@ Génère en JSON strict :
   "noteGlobale": 0,
   "commentaireGeneral": "...",
   "prioriteProgression": "Le point le plus urgent à améliorer en une phrase.",
+  "citationsEtudiant": [
+    { "type": "article", "reference": "article 1240 du Code civil", "statut": "present_dans_le_cours" },
+    { "type": "arret", "reference": "Cass. civ., 2001", "statut": "non_precise_dans_le_cours" }
+  ],
   "avertissement": "${AI_WARNING}"
 }`
 
