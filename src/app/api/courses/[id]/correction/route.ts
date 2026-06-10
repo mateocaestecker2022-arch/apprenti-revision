@@ -77,6 +77,12 @@ Génère en JSON strict. Pour "citationsEtudiant", liste les articles et arrêts
       if (!data.criteres || !Array.isArray(data.criteres) || data.criteres.length !== 5) {
         throw new Error('JSON invalide')
       }
+      // #26 — Sauvegarder la note pour les KPI de progression
+      if (typeof data.noteGlobale === 'number') {
+        prisma.score.create({
+          data: { courseId: params.id, userId: session.user.id, score: data.noteGlobale, source: 'correction' },
+        }).catch(() => {/* non-bloquant */})
+      }
       return NextResponse.json(data)
     } catch (err) {
       if (attempt < 3) { await new Promise(r => setTimeout(r, 3000)); continue }

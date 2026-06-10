@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { retrieveChunks } from '@/lib/rag'
 import { getNiveauInstruction, AI_WARNING } from '@/lib/droit'
+import { getStructurePedagogique, reorderChunksByPeda } from '@/lib/pedagogie'
 import Groq from 'groq-sdk'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
@@ -31,10 +32,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const typeLabel = TYPE_LABELS[type]
   const niveauInstruction = getNiveauInstruction(niveau)
-  const chunks = await retrieveChunks(params.id, `méthode ${typeLabel} droit`, 6)
-  const ragContext = chunks.length > 0
-    ? chunks.join('\n\n')
+  const rawChunks = await retrieveChunks(params.id, `méthode ${typeLabel} droit`, 8)
+
+  // #21 — Réordonner les chunks selon la structure pédagogique si disponible
+  const structure = await getStructurePedagogique(params.id, course.rawContent).catch(() => null)
+  const orderedChunks = structure ? reorderChunksByPeda(rawChunks, structure) : rawChunks
+
+  const ragContext = orderedChunks.length > 0
+    ? orderedChunks.join('\n\n')
     : course.rawContent.slice(0, 3000)
+
+  const structureNote = structure
+    ? `\nORDRE PÉDAGOGIQUE DES NOTIONS (du fondamental au complexe) : ${structure.ordrePedagogique.join(' → ')}\n`
+    : ''
 
   const prompt = `Tu es un professeur de droit niveau Licence/Master.
 Génère une fiche de méthodologie juridique pour "${typeLabel}" adaptée à ce cours.
@@ -42,8 +52,8 @@ Génère une fiche de méthodologie juridique pour "${typeLabel}" adaptée à ce
 CONSIGNE ANTI-INVENTION ABSOLUE : toutes les références juridiques (articles, arrêts, principes) doivent provenir UNIQUEMENT des extraits du cours ci-dessous. Si une information n'est pas dans le cours, écris "non précisé dans le cours".
 
 ${niveauInstruction}
-
-EXTRAITS DU COURS :
+${structureNote}
+EXTRAITS DU COURS (ordonnés du fondamental au complexe) :
 ${ragContext}
 
 Génère en JSON strict. Pour "citationsVerifiees", liste TOUTES les références juridiques (articles, arrêts) que tu mentionnes dans la fiche. Pour chaque référence, indique si elle est littéralement présente dans les extraits du cours ci-dessus ("present_dans_le_cours") ou non ("non_precise_dans_le_cours").

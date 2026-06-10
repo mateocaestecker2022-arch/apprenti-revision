@@ -163,10 +163,14 @@ model StudySession {
 model Score {
   id        String   @id @default(cuid())
   courseId  String
+  userId    String?
   score     Int
+  source    String?  @default("quiz")
   createdAt DateTime @default(now())
 
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId, courseId])
 }
 
 model PasswordResetToken {

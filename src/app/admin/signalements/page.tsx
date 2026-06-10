@@ -15,7 +15,10 @@ export default async function SignalementsPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
-      <h1 className="text-xl font-bold mb-6">Signalements — {signalements.length}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-bold">Signalements — {signalements.length}</h1>
+        <a href="/admin/kpi" className="text-sm text-indigo-400 hover:text-indigo-300 transition border border-indigo-800 px-3 py-1.5 rounded-lg">📊 KPI</a>
+      </div>
       <div className="space-y-4">
         {signalements.map(s => (
           <div key={s.id} className="bg-gray-900 border border-gray-800 rounded-xl p-5">

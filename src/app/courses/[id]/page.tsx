@@ -265,6 +265,9 @@ export default function CoursePage() {
               <a href={`/courses/${id}/analyse`} className="border border-teal-300 dark:border-teal-700 text-teal-600 dark:text-teal-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-teal-50 dark:hover:bg-teal-900/20 transition">
                 🔬 <span className="hidden sm:inline">Analyse</span>
               </a>
+              <a href={`/courses/${id}/structure`} className="border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">
+                🧩 <span className="hidden sm:inline">Structure</span>
+              </a>
             </>
           )}
           <a href={`/courses/${id}/flashcards`} className="border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
