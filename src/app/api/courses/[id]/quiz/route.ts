@@ -67,9 +67,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     ? `\nRÉPARTITION OBLIGATOIRE — respecte exactement ces quotas :\n${sections.map((s, i) => `• Section "${s.title}" : ${quotas[i]} question(s)`).join('\n')}\n`
     : ''
 
+  const isDroit = /droit|juridique|loi|jurisprudence/i.test(subject)
+
+  const styleInstruction = isDroit
+    ? `Mélange : définitions, applications, analyses ET mises en situation.
+Pour les mises en situation (au moins 8 questions sur ${totalQuestions}) : présente un cas concret inventé (ex : "M. Dupont signe un contrat avec…", "Une société refuse de…", "Un employeur licencie…") que l'étudiant doit analyser pour choisir la règle applicable, la qualification juridique ou l'issue légale correcte.`
+    : `Mélange : définitions, applications, analyses.`
+
   const prompt = `Tu es un professeur. Génère exactement ${totalQuestions} QCM niveau Licence/Master en ${subject} basés UNIQUEMENT sur le cours ci-dessous.
 ${sectionPlan}
-Mélange : définitions, applications, analyses. Varie l'"answer" (0, 1, 2, 3) de façon équilibrée.
+${styleInstruction}
+Varie l'"answer" (0, 1, 2, 3) de façon équilibrée.
 JSON uniquement :
 {"questions":[{"question":"?","options":["A","B","C","D"],"answer":0,"explanation":"Explication courte.","section":"Titre de la section"}]}
 
