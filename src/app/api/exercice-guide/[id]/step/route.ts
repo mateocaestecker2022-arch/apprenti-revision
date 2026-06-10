@@ -39,7 +39,41 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     { role: 'user', content: reponse },
   ]
 
-  const prompt = `Tu es un professeur de droit qui guide un étudiant pas à pas sur un cas pratique.
+  const isCopie = exercice.type === 'copie_td'
+  const nbEchanges = updatedHistorique.filter(h => h.role === 'user').length
+
+  const prompt = isCopie
+    ? `Tu es un chargé de TD de droit. Tu aides un étudiant à améliorer sa copie par questionnement socratique.
+
+RÈGLES ABSOLUES :
+- Ne donne JAMAIS la réponse directement
+- Pose une seule question à la fois, ciblée
+- Si l'étudiant a compris un point, valide brièvement et passe au suivant
+- Référence UNIQUEMENT les notions du cours ci-dessous
+- Après ${Math.max(5, nbEchanges)} échanges et que les points essentiels sont traités, tu peux conclure
+
+${niveauInstruction}
+
+EXTRAITS DU COURS (références autorisées) :
+${ragContext}
+
+COPIE ORIGINALE DE L'ÉTUDIANT :
+${exercice.enonce}
+
+HISTORIQUE DU DIALOGUE :
+${JSON.stringify(updatedHistorique)}
+
+DERNIÈRE RÉPONSE : ${reponse}
+
+Génère en JSON strict. "termine" est true uniquement si les points essentiels ont été traités ET que tu as posé au moins 4 questions :
+{
+  "feedback": "Réaction bienveillante à la réponse",
+  "valide": true,
+  "questionSuivante": "Prochaine question ou null si termine",
+  "termine": false,
+  "recapitulatif": null
+}`
+    : `Tu es un professeur de droit qui guide un étudiant pas à pas sur un cas pratique.
 
 RÈGLES STRICTES :
 - Ne donne JAMAIS la réponse directement
@@ -92,10 +126,10 @@ Génère en JSON strict. Si les 5 étapes sont validées, "termine" est true et 
       const data = JSON.parse(match[0])
       if (typeof data.feedback !== 'string') throw new Error('JSON invalide')
 
-      const etapeSuivante = data.valide
-        ? Math.min((exercice.etapeActuelle + 1), 5)
-        : exercice.etapeActuelle
-      const termine = data.termine === true || (etapeSuivante >= 5 && data.valide === true)
+      const etapeSuivante = isCopie
+        ? exercice.etapeActuelle
+        : (data.valide ? Math.min((exercice.etapeActuelle + 1), 5) : exercice.etapeActuelle)
+      const termine = data.termine === true || (!isCopie && etapeSuivante >= 5 && data.valide === true)
 
       const newHistorique = [
         ...updatedHistorique,
