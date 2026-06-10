@@ -42,7 +42,7 @@ interface Course {
 }
 
 export default function CoursePage() {
-  const { id } = useParams()
+  const id = useParams().id as string
   const router = useRouter()
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)

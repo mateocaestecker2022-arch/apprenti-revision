@@ -33,7 +33,8 @@ export async function POST(req: Request) {
       data: { email: normalizedEmail, token, expiresAt },
     })
 
-    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
+    const baseUrl = process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+    const resetUrl = `${baseUrl}/reset-password?token=${token}`
 
     await resend.emails.send({
       from: 'Apprenti Révision <noreply@apprenti-revision.fr>',
