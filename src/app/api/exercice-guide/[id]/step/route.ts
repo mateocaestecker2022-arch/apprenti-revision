@@ -154,6 +154,9 @@ Génère en JSON strict. Si les 5 étapes sont validées, "termine" est true et 
         recapitulatif: termine ? (data.recapitulatif || null) : null,
       })
     } catch (err) {
+      if ((err as { status?: number })?.status === 429) {
+        return NextResponse.json({ error: 'Quota IA journalier dépassé. Réessaie dans quelques heures.' }, { status: 429 })
+      }
       if (attempt < 3) { await new Promise(r => setTimeout(r, 3000)); continue }
       console.error('[STEP] Erreur:', err)
       return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

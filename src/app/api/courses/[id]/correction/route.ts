@@ -85,6 +85,9 @@ Génère en JSON strict. Pour "citationsEtudiant", liste les articles et arrêts
       }
       return NextResponse.json(data)
     } catch (err) {
+      if ((err as { status?: number })?.status === 429) {
+        return NextResponse.json({ error: 'Quota IA journalier dépassé. Réessaie dans quelques heures.' }, { status: 429 })
+      }
       if (attempt < 3) { await new Promise(r => setTimeout(r, 3000)); continue }
       console.error('[CORRECTION] Erreur:', err)
       return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

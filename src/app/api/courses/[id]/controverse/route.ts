@@ -10,6 +10,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   for (let attempt = 1; attempt <= 3; attempt++) {
     try { return await fn() } catch (err) {
+      if ((err as { status?: number })?.status === 429) throw err
       if (attempt < 3) { await new Promise(r => setTimeout(r, 3000)); continue }
       throw err
     }
@@ -89,6 +90,9 @@ Génère en JSON strict :
       })
       return NextResponse.json(data)
     } catch (err) {
+      if ((err as { status?: number })?.status === 429) {
+        return NextResponse.json({ error: 'Quota IA journalier dépassé. Réessaie dans quelques heures.' }, { status: 429 })
+      }
       console.error('[CONTROVERSE] controverses:', err)
       return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
@@ -148,6 +152,9 @@ Génère en JSON strict :
       })
       return NextResponse.json(data)
     } catch (err) {
+      if ((err as { status?: number })?.status === 429) {
+        return NextResponse.json({ error: 'Quota IA journalier dépassé. Réessaie dans quelques heures.' }, { status: 429 })
+      }
       console.error('[CONTROVERSE] comparative:', err)
       return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }

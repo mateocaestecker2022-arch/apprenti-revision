@@ -16,6 +16,7 @@ const DIFFICULTE_INSTRUCTION: Record<string, string> = {
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   for (let attempt = 1; attempt <= 3; attempt++) {
     try { return await fn() } catch (err) {
+      if ((err as { status?: number })?.status === 429) throw err
       if (attempt < 3) { await new Promise(r => setTimeout(r, 3000)); continue }
       throw err
     }
@@ -86,6 +87,9 @@ Génère en JSON strict — 5 questions variées (pas toutes des définitions) :
       })
       return NextResponse.json(data)
     } catch (err) {
+      if ((err as { status?: number })?.status === 429) {
+        return NextResponse.json({ error: 'Quota IA journalier dépassé. Réessaie dans quelques heures.' }, { status: 429 })
+      }
       console.error('[QUESTIONS-TD] generate:', err)
       return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
@@ -142,6 +146,9 @@ Génère en JSON strict. Sois bienveillant mais précis. Ne complète jamais ave
       })
       return NextResponse.json(data)
     } catch (err) {
+      if ((err as { status?: number })?.status === 429) {
+        return NextResponse.json({ error: 'Quota IA journalier dépassé. Réessaie dans quelques heures.' }, { status: 429 })
+      }
       console.error('[QUESTIONS-TD] feedback:', err)
       return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
