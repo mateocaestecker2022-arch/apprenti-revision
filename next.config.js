@@ -57,8 +57,18 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
-        headers: securityHeaders,
+        // Pages HTML : no-cache pour éviter les problèmes de hash JS après rebuild
+        source: '/((?!_next/static|_next/image|favicon.ico).*)',
+        headers: [
+          ...securityHeaders,
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+        ],
+      },
+      {
+        // Fichiers statiques Next.js : immutables, cachés longtemps
+        source: '/_next/static/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
     ]
   },
