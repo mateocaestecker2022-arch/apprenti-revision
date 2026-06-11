@@ -406,15 +406,20 @@ export default function CoursePage() {
                     <p className="text-xs font-bold text-green-600 uppercase tracking-widest mb-3 flex items-center gap-1">
                       📝 Points Essentiels
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {section.points.map((point: string | Record<string, string>, pi) => {
                         const text = typeof point === 'string'
                           ? point
                           : Object.values(point).filter(Boolean).join(' — ')
+                        const sentences = text.split(/(?<=\.)\s+/).filter(s => s.trim().length > 0)
                         return (
-                          <p key={pi} className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                            {text}
-                          </p>
+                          <div key={pi} className="space-y-1.5">
+                            {sentences.map((sentence, si) => (
+                              <p key={si} className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                                {sentence}
+                              </p>
+                            ))}
+                          </div>
                         )
                       })}
                     </div>
