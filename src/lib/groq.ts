@@ -23,7 +23,8 @@ export async function groqChat(params: ChatParams): Promise<ChatCompletion> {
     try {
       return await client.chat.completions.create(params) as ChatCompletion
     } catch (err) {
-      if ((err as { status?: number })?.status === 429) {
+      const status = (err as { status?: number })?.status
+      if (status === 429 || status === 401) {
         lastErr = err
         continue
       }
