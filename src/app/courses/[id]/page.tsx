@@ -406,20 +406,13 @@ export default function CoursePage() {
                     <p className="text-xs font-bold text-green-600 uppercase tracking-widest mb-3 flex items-center gap-1">
                       📝 Points Essentiels
                     </p>
-                    <ul className="space-y-3">
-                      {section.points.map((point, j) => {
-                        // Normalise si le modèle a retourné un objet au lieu d'une string
-                        const text = typeof point === 'string'
+                    <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                      {section.points.map((point: string | Record<string, string>) => {
+                        return typeof point === 'string'
                           ? point
-                          : Object.values(point as Record<string, string>).filter(Boolean).join(' — ')
-                        return (
-                          <li key={j} className="flex gap-2 text-sm leading-relaxed">
-                            <span className="text-gray-400 mt-1 shrink-0">•</span>
-                            <span className="text-gray-700 dark:text-gray-300">{text}</span>
-                          </li>
-                        )
-                      })}
-                    </ul>
+                          : Object.values(point).filter(Boolean).join(' — ')
+                      }).join(' ')}
+                    </p>
                   </div>
                 )}
 
