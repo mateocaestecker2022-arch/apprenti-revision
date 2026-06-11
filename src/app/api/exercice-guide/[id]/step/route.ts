@@ -3,9 +3,9 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { retrieveChunks } from '@/lib/rag'
 import { getNiveauInstruction } from '@/lib/droit'
-import Groq from 'groq-sdk'
+import { groqChat } from '@/lib/groq'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
+
 
 const ETAPES_LABELS = ['', 'Faits pertinents', 'Problème de droit', 'Règle applicable', 'Application au cas', 'Conclusion']
 
@@ -113,7 +113,7 @@ Génère en JSON strict. Si les 5 étapes sont validées, "termine" est true et 
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await groq.chat.completions.create({
+      const res = await groqChat({
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 1500,

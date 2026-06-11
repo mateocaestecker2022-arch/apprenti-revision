@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import Groq from 'groq-sdk'
+import { groqChat } from '@/lib/groq'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
+
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth()
@@ -50,7 +50,7 @@ ${context}`
   const maxRetries = 3
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const res = await groq.chat.completions.create({
+      const res = await groqChat({
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 3000,

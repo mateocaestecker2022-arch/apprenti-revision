@@ -3,9 +3,9 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { retrieveChunks } from '@/lib/rag'
 import { AI_WARNING } from '@/lib/droit'
-import Groq from 'groq-sdk'
+import { groqChat } from '@/lib/groq'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
+
 
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   for (let attempt = 1; attempt <= 3; attempt++) {
@@ -74,7 +74,7 @@ Génère en JSON strict :
 
     try {
       const data = await withRetry(async () => {
-        const res = await groq.chat.completions.create({
+        const res = await groqChat({
           model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 2500,
@@ -136,7 +136,7 @@ Génère en JSON strict :
 
     try {
       const data = await withRetry(async () => {
-        const res = await groq.chat.completions.create({
+        const res = await groqChat({
           model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 2500,

@@ -1,7 +1,5 @@
 import { prisma } from './prisma'
-import Groq from 'groq-sdk'
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
+import { groqChat } from './groq'
 
 export interface StructurePeda {
   notions: string[]
@@ -54,7 +52,7 @@ Règles :
 - Basé UNIQUEMENT sur ce qui est dans le cours`
 
   try {
-    const res = await groq.chat.completions.create({
+    const res = await groqChat({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1500,

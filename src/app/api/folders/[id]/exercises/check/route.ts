@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import Groq from 'groq-sdk'
+import { groqChat } from '@/lib/groq'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
+
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth()
@@ -26,7 +26,7 @@ JSON uniquement :
 {"score":"correct"|"partiel"|"incorrect","feedback":"Feedback en 2-3 phrases max."}`
 
   try {
-    const res = await groq.chat.completions.create({
+    const res = await groqChat({
       model: 'llama-3.1-8b-instant',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 300,

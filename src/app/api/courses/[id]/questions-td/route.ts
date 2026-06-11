@@ -3,9 +3,9 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { retrieveChunks } from '@/lib/rag'
 import { getNiveauInstruction, AI_WARNING } from '@/lib/droit'
-import Groq from 'groq-sdk'
+import { groqChat } from '@/lib/groq'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
+
 
 const DIFFICULTE_INSTRUCTION: Record<string, string> = {
   facile: `DIFFICULTÉ FACILE : Questions de définition, identification et restitution directe. L'étudiant retrouve et formule une notion ou règle du cours. Pas de qualification complexe exigée.`,
@@ -71,7 +71,7 @@ Génère en JSON strict — 5 questions variées (pas toutes des définitions) :
 
     try {
       const data = await withRetry(async () => {
-        const res = await groq.chat.completions.create({
+        const res = await groqChat({
           model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 2500,
@@ -130,7 +130,7 @@ Génère en JSON strict. Sois bienveillant mais précis. Ne complète jamais ave
 
     try {
       const data = await withRetry(async () => {
-        const res = await groq.chat.completions.create({
+        const res = await groqChat({
           model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 800,

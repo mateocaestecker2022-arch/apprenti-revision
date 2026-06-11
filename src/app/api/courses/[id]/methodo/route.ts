@@ -4,9 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { retrieveChunks } from '@/lib/rag'
 import { getNiveauInstruction, AI_WARNING } from '@/lib/droit'
 import { getStructurePedagogique, reorderChunksByPeda } from '@/lib/pedagogie'
-import Groq from 'groq-sdk'
+import { groqChat } from '@/lib/groq'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 90000 })
+
 
 const TYPE_LABELS: Record<string, string> = {
   cas_pratique: 'Cas pratique',
@@ -75,7 +75,7 @@ Génère en JSON strict. Pour "citationsVerifiees", liste TOUTES les référence
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await groq.chat.completions.create({
+      const res = await groqChat({
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 3000,
