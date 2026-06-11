@@ -268,6 +268,15 @@ export default function CoursePage() {
               <a href={`/courses/${id}/structure`} className="border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">
                 🧩 <span className="hidden sm:inline">Structure</span>
               </a>
+              <a href={`/courses/${id}/questions-td`} className="border border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-violet-50 dark:hover:bg-violet-900/20 transition">
+                🎓 <span className="hidden sm:inline">TD</span>
+              </a>
+              <a href={`/courses/${id}/controverse`} className="border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-orange-50 dark:hover:bg-orange-900/20 transition">
+                ⚡ <span className="hidden sm:inline">Débats</span>
+              </a>
+              <a href={`/courses/${id}/concours`} className="border border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-rose-50 dark:hover:bg-rose-900/20 transition">
+                🏆 <span className="hidden sm:inline">Concours</span>
+              </a>
             </>
           )}
           <a href={`/courses/${id}/flashcards`} className="border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
