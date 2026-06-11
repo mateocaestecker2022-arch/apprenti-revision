@@ -10,7 +10,7 @@ const API_KEYS = [
 
 const clients = API_KEYS.map(key => new Groq({ apiKey: key, timeout: 90000 }))
 
-type ChatParams = Groq.Chat.ChatCompletionCreateParamsNonStreaming
+type ChatParams = Parameters<Groq['chat']['completions']['create']>[0]
 
 /**
  * Appelle l'API Groq en basculant automatiquement sur la clé suivante
